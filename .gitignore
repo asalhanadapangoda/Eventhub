@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+*.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# User uploads & media files
+backend/public/uploads/
+# Ignore heavy video files in frontend uploads (GitHub rejects files > 100MB)
+frontend/public/uploads/*.mp4
+frontend/public/uploads/*.mov
+frontend/public/uploads/*.avi
+frontend/public/uploads/*.mkv
+frontend/public/uploads/*.webm
+

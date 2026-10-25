@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRACE Event Hub - Discover What's Happening at TRACE</title>
+  <meta name="description" content="TRACE Event Hub - Connecting professionals, fostering innovation, and building the future of tech in Sri Lanka. Free tech workshops, hackathons, and networking meetups.">
+  <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand" onclick="app.switchTab('upcoming')">
+        <span class="logo-text">TRACE <span class="logo-sub">Event Hub</span></span>
+      </div>
+
+      <nav class="nav-links">
+        <button class="nav-link active" id="tab-home" onclick="app.scrollToHero()">Home</button>
+        <button class="nav-link" id="tab-upcoming" onclick="app.switchTab('upcoming')">Upcoming Events</button>
+        <button class="nav-link" id="tab-past" onclick="app.switchTab('past')">Past Events</button>
+        <button class="nav-link" id="tab-my-registrations" onclick="app.openMyRegistrationsModal()">My Events</button>
+
+        <div class="nav-search-trigger" onclick="app.focusSearch()">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+
+        <!-- Auth Section (Logged Out) -->
+        <div id="nav-auth-logged-out" class="nav-auth-group">
+          <button class="btn btn-sm btn-outline" onclick="app.openLoginModal()">Log In</button>
+          <button class="btn btn-sm btn-primary" onclick="app.openSignupModal()">Sign Up</button>
+        </div>
+
+        <!-- Auth Section (Logged In) -->
+        <div id="nav-auth-logged-in" class="nav-auth-group hidden">
+          <div class="user-profile-badge">
+            <i class="fa-solid fa-circle-user"></i>
+            <span id="user-display-name">User</span>
+          </div>
+          <button class="btn btn-sm btn-outline" onclick="app.logout()">Logout</button>
+        </div>
+
+        <button class="btn btn-sm btn-admin" onclick="app.openAdminModal()" title="Admin Panel">
+          <i class="fa-solid fa-sliders"></i> Admin
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section" id="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1 class="hero-title">Discover What's Happening at TRACE</h1>
+      <p class="hero-subtitle">Join our vibrant community. Participate in free events, meet industry experts, and connect with peers to foster innovation and professional growth.</p>
+      <div class="hero-actions">
+        <button class="btn btn-blue-pill" onclick="app.scrollToEvents('upcoming')">Explore Upcoming Events</button>
+        <button class="btn btn-outline-pill" onclick="app.scrollToEvents('past')">View Past Events</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why TRACE Events and Spaces Section -->
+  <section class="features-section">
+    <div class="section-container">
+      <h2 class="features-title">Why TRACE Events and Spaces?</h2>
+      <div class="features-grid">
+        
+        <!-- Feature 1 -->
+        <div class="feature-card">
+          <div class="feature-icon icon-teal">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <h3 class="feature-heading">Learn from Experts</h3>
+          <p class="feature-desc">Gain insights from industry leaders and seasoned professionals through hands-on workshops and insightful keynotes.</p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-card">
+          <div class="feature-icon icon-indigo">
+            <i class="fa-solid fa-people-group"></i>
+          </div>
+          <h3 class="feature-heading">Connect with Community</h3>
+          <p class="feature-desc">Network with like-minded individuals, build lasting relationships, and find collaborators for your next big project.</p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-card">
+          <div class="feature-icon icon-purple">
+            <i class="fa-regular fa-lightbulb"></i>
+          </div>
+          <h3 class="feature-heading">Discover New Ideas</h3>
+          <p class="feature-desc">Stay ahead of the curve by exploring emerging technologies, innovative methodologies, and fresh perspectives.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Upcoming Events Section -->
+  <section class="events-main-section" id="events-section">
+    <div class="section-container">
+      
+      <div class="section-header-row">
+        <h2 class="section-title">Upcoming Events</h2>
+        <div class="header-right-controls">
+          <div class="search-box-inline">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="search-input" placeholder="Search events..." oninput="app.filterEvents()">
+          </div>
+          <a href="#events-section" class="view-all-link" onclick="app.switchTab('upcoming')">View all <i class="fa-solid fa-arrow-right-long"></i></a>
+        </div>
+      </div>
+
+      <!-- Tab Switchers Bar -->
+      <div class="tab-filter-bar">
+        <button class="tab-pill active" id="filter-upcoming" onclick="app.switchTab('upcoming')">
+          Upcoming Events <span class="badge" id="upcoming-count">0</span>
+        </button>
+        <button class="tab-pill" id="filter-past" onclick="app.switchTab('past')">
+          Past Events & Showcase <span class="badge" id="past-count">0</span>
+        </button>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading-state" id="loading-spinner">
+        <div class="spinner"></div>
+        <p>Loading events...</p>
+      </div>
+
+      <!-- Dynamic Events Grid -->
+      <div class="events-grid" id="events-grid"></div>
+
+      <!-- Empty State -->
+      <div class="empty-state hidden" id="empty-state">
+        <i class="fa-solid fa-calendar-xmark"></i>
+        <h3>No events found</h3>
+        <p>Try adjusting your search criteria or switch between upcoming and past tabs.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Explore Past Events Showcase Section -->
+  <section class="past-events-section" id="past-showcase">
+    <div class="section-container">
+      <div class="past-section-header">
+        <h2>Explore Past Events</h2>
+        <p>Catch up on what you missed and get a feel for the TRACE experience.</p>
+      </div>
+
+      <div class="past-grid-layout" id="past-grid-layout">
+        <!-- Full Archive Banner Card -->
+        <div class="past-card archive-banner-card">
+          <div class="archive-watermark">ARCHIVE</div>
+          <div class="past-card-content">
+            <h3 class="archive-title">Access the Full Archive</h3>
+            <p class="archive-desc">Browse through uploaded workshops, summits, and meetups.</p>
+            <button class="btn btn-white-pill" onclick="app.switchTab('past')">
+              Browse All Past Events <i class="fa-solid fa-arrow-right-long"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modals -->
+
+  <!-- Registration Modal -->
+  <div class="modal-overlay hidden" id="registration-modal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="app.closeModal('registration-modal')"><i class="fa-solid fa-xmark"></i></button>
+      
+      <div class="modal-header">
+        <span class="modal-badge"><i class="fa-solid fa-tag"></i> Free Registration</span>
+        <h2 id="reg-event-title">Event Registration</h2>
+        <p class="modal-sub" id="reg-event-meta"><i class="fa-regular fa-clock"></i> Date & Time</p>
+      </div>
+
+      <!-- Registration Form -->
+      <form id="registration-form" onsubmit="app.handleRegistrationSubmit(event)">
+        <input type="hidden" id="reg-event-id">
+
+        <div class="form-group">
+          <label for="reg-name">Full Name *</label>
+          <input type="text" id="reg-name" required placeholder="John Doe">
+        </div>
+
+        <div class="form-group">
+          <label for="reg-email">Email Address *</label>
+          <input type="email" id="reg-email" required placeholder="john.doe@example.com">
+        </div>
+
+        <div class="form-group">
+          <label for="reg-phone">Contact Phone Number *</label>
+          <input type="tel" id="reg-phone" required placeholder="+94 77 123 4567">
+        </div>
+
+        <div class="form-group">
+          <label for="reg-notes">Special Requirements / Description (Optional)</label>
+          <textarea id="reg-notes" rows="3" placeholder="Any questions for the speaker or dietary requirements..."></textarea>
+        </div>
+
+        <div class="form-notice">
+          <i class="fa-solid fa-bell"></i> After registering, you can download a <strong>Calendar Invite (.ics)</strong> to sync directly with your calendar!
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" onclick="app.closeModal('registration-modal')">Cancel</button>
+          <button type="submit" class="btn btn-teal-submit" id="reg-submit-btn">
+            <i class="fa-solid fa-check"></i> Complete Registration
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Registration Confirmation & Pass Modal -->
+  <div class="modal-overlay hidden" id="confirmation-modal">
+    <div class="modal-card ticket-modal">
+      <div class="success-icon"><i class="fa-solid fa-circle-check"></i></div>
+      <h2>Registration Successful!</h2>
+      <p class="success-sub">You are registered! Here is your official TRACE Event Pass.</p>
+
+      <div class="ticket-card">
+        <div class="ticket-header">
+          <span class="ticket-brand">TRACE Event Hub Official Pass</span>
+          <span class="ticket-id" id="ticket-id-display">EVT-XXXXXX</span>
+        </div>
+        <div class="ticket-body">
+          <h3 id="ticket-event-title">Event Title</h3>
+          <div class="ticket-meta">
+            <p><i class="fa-regular fa-calendar"></i> <span id="ticket-event-date">Date</span></p>
+            <p><i class="fa-solid fa-location-dot"></i> <span id="ticket-event-location">Location</span></p>
+            <p><i class="fa-regular fa-user"></i> Attendee: <strong id="ticket-attendee-name">Name</strong></p>
+          </div>
+        </div>
+        <div class="ticket-footer">
+          <div class="qr-placeholder">
+            <i class="fa-solid fa-qrcode"></i>
+            <span>Valid Pass</span>
+          </div>
+          <div class="reminder-tag">
+            <i class="fa-solid fa-bell"></i> 1-Day Prior Alarm Included
+          </div>
+        </div>
+      </div>
+
+      <div class="ticket-actions">
+        <button class="btn btn-teal-submit" id="btn-download-ics">
+          <i class="fa-regular fa-calendar-plus"></i> Download Calendar Invite (.ics)
+        </button>
+        <button class="btn btn-outline" id="btn-google-calendar" target="_blank">
+          <i class="fa-brands fa-google"></i> Add to Google Calendar
+        </button>
+        <button class="btn btn-outline" onclick="app.requestBrowserNotificationPermission()">
+          <i class="fa-solid fa-bell"></i> Enable Browser 1-Day Reminder
+        </button>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="app.closeModal('confirmation-modal')">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Past Event Photo Lightbox Modal -->
+  <div class="modal-overlay hidden" id="lightbox-modal">
+    <div class="modal-card lightbox-card">
+      <button class="modal-close" onclick="app.closeModal('lightbox-modal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="lightbox-container">
+        <img id="lightbox-img" src="" alt="Event Highlight">
+        <div class="lightbox-caption" id="lightbox-caption">Photo Caption</div>
+      </div>
+      <div class="lightbox-nav">
+        <button class="btn btn-outline" onclick="app.prevGalleryImage()"><i class="fa-solid fa-chevron-left"></i> Previous</button>
+        <span id="gallery-counter">1 of 4</span>
+        <button class="btn btn-outline" onclick="app.nextGalleryImage()">Next <i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Registrations Modal -->
+  <div class="modal-overlay hidden" id="my-registrations-modal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="app.closeModal('my-registrations-modal')"><i class="fa-solid fa-xmark"></i></button>
+      <h2><i class="fa-solid fa-ticket"></i> Find My Registrations</h2>
+      <p class="modal-sub">Enter your email address to view all your registered event tickets and calendar invites.</p>
+
+      <div class="search-form">
+        <input type="email" id="lookup-email-input" placeholder="Enter your email address..." required>
+        <button class="btn btn-blue-pill" onclick="app.lookupRegistrations()">
+          <i class="fa-solid fa-magnifying-glass"></i> Search
+        </button>
+      </div>
+
+      <div id="user-registrations-list" class="registrations-list"></div>
+    </div>
+  </div>
+
+  <!-- Admin Panel Modal -->
+  <div class="modal-overlay hidden" id="admin-modal">
+    <div class="modal-card admin-card">
+      <button class="modal-close" onclick="app.closeModal('admin-modal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-header">
+        <h2><i class="fa-solid fa-sliders"></i> TRACE Admin Portal</h2>
+        <p class="modal-sub">Create new events or publish past showcase events.</p>
+      </div>
+
+      <form id="admin-event-form" onsubmit="app.handleCreateEventSubmit(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="admin-title">Event Title *</label>
+            <input type="text" id="admin-title" required placeholder="e.g. AI & Cloud Masterclass">
+          </div>
+          <div class="form-group">
+            <label for="admin-category">Category</label>
+            <select id="admin-category">
+              <option value="Guest Talk Series">Guest Talk Series</option>
+              <option value="Community Meetup">Community Meetup</option>
+              <option value="Policy Discussion">Policy Discussion</option>
+              <option value="Workshop">Workshop</option>
+              <option value="Sprint">Sprint</option>
+              <option value="Keynote">Keynote</option>
+              <option value="Hackathon">Hackathon</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="admin-status">Event Status *</label>
+            <select id="admin-status">
+              <option value="upcoming">Upcoming (Open Registration)</option>
+              <option value="past">Past (Showcase & Gallery)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="admin-capacity">Capacity / Max Seats</label>
+            <input type="number" id="admin-capacity" value="100" min="1">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="admin-date">Date *</label>
+            <input type="date" id="admin-date" required>
+          </div>
+          <div class="form-group">
+            <label for="admin-time">Time *</label>
+            <input type="text" id="admin-time" required placeholder="e.g. 09:00 AM">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="admin-location">Location / Stream URL *</label>
+          <input type="text" id="admin-location" required placeholder="e.g. TRACE Expert City, Colombo">
+        </div>
+
+        <div class="form-group">
+          <label for="admin-description">Description *</label>
+          <textarea id="admin-description" rows="3" required placeholder="Event details and agenda..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="admin-image">Cover Image URL</label>
+          <input type="url" id="admin-image" placeholder="https://images.unsplash.com/...">
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" onclick="app.closeModal('admin-modal')">Cancel</button>
+          <button type="submit" class="btn btn-teal-submit"><i class="fa-solid fa-plus"></i> Create & Publish Event</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div class="modal-overlay hidden" id="login-modal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="app.closeModal('login-modal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-header">
+        <h2>Log In</h2>
+        <p class="modal-sub">Log in to your TRACE Event Hub account.</p>
+      </div>
+
+      <form id="login-form" onsubmit="app.handleLoginSubmit(event)">
+        <div class="form-group">
+          <label for="login-email">Email Address *</label>
+          <input type="email" id="login-email" required placeholder="john.doe@example.com">
+        </div>
+
+        <div class="form-group">
+          <label for="login-password">Password *</label>
+          <input type="password" id="login-password" required placeholder="Enter password">
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" onclick="app.closeModal('login-modal')">Cancel</button>
+          <button type="submit" class="btn btn-blue-pill" id="login-submit-btn">Log In</button>
+        </div>
+
+        <p class="auth-switch-text" style="margin-top: 15px; text-align: center; font-size: 0.9rem; color: var(--text-muted);">
+          Don't have an account? <a href="#" onclick="app.switchToSignup(event)" style="color: var(--primary); font-weight: 600; text-decoration: none;">Sign Up</a>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Signup Modal -->
+  <div class="modal-overlay hidden" id="signup-modal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="app.closeModal('signup-modal')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-header">
+        <h2>Create Account</h2>
+        <p class="modal-sub">Sign up for TRACE Event Hub to easily manage your event passes.</p>
+      </div>
+
+      <form id="signup-form" onsubmit="app.handleSignupSubmit(event)">
+        <div class="form-group">
+          <label for="signup-name">Full Name *</label>
+          <input type="text" id="signup-name" required placeholder="John Doe">
+        </div>
+
+        <div class="form-group">
+          <label for="signup-email">Email Address *</label>
+          <input type="email" id="signup-email" required placeholder="john.doe@example.com">
+        </div>
+
+        <div class="form-group">
+          <label for="signup-phone">Contact Phone Number</label>
+          <input type="tel" id="signup-phone" placeholder="+94 77 123 4567">
+        </div>
+
+        <div class="form-group">
+          <label for="signup-password">Password *</label>
+          <input type="password" id="signup-password" required minlength="6" placeholder="Min 6 characters">
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" onclick="app.closeModal('signup-modal')">Cancel</button>
+          <button type="submit" class="btn btn-blue-pill" id="signup-submit-btn">Sign Up</button>
+        </div>
+
+        <p class="auth-switch-text" style="margin-top: 15px; text-align: center; font-size: 0.9rem; color: var(--text-muted);">
+          Already have an account? <a href="#" onclick="app.switchToLogin(event)" style="color: var(--primary); font-weight: 600; text-decoration: none;">Log In</a>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div class="toast hidden" id="toast-notification">
+    <i class="fa-solid fa-circle-info toast-icon"></i>
+    <span class="toast-message" id="toast-message">Notification message</span>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-left">
+        <h3 class="footer-logo">TRACE <span class="logo-sub">Event Hub</span></h3>
+        <p class="footer-desc">Connecting professionals, fostering innovation, and building the future of tech in Sri Lanka.</p>
+      </div>
+
+      <div class="footer-links">
+        <a href="#">About us</a>
+        <a href="#">Contact</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 TRACE Event Hub. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
