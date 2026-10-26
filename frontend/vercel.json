@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://event-hub-backend-blush.vercel.app/api/$1"
+      "destination": "https://eventhub-kyn9.onrender.com/api/$1"
     },
     {
       "source": "/uploads/(.*)",
-      "destination": "https://event-hub-backend-blush.vercel.app/uploads/$1"
+      "destination": "https://eventhub-kyn9.onrender.com/uploads/$1"
     },
     {
       "source": "/(.*)",
