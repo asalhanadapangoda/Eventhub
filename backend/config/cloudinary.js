@@ -1,5 +1,5 @@
 const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const multerCloudinary = require('multer-storage-cloudinary');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -31,20 +31,33 @@ if (isCloudinaryConfigured) {
 // Setup Multer Storage (Cloudinary if valid credentials exist, else fast local static uploads)
 let storage;
 if (isCloudinaryConfigured) {
-  storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: async (req, file) => {
-      const isVideo = file.mimetype.startsWith('video/');
-      return {
-        folder: 'eventhub_uploads',
-        resource_type: isVideo ? 'video' : 'image',
-        allowed_formats: isVideo
-          ? ['mp4', 'mov', 'avi', 'mkv', 'webm']
-          : ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-        transformation: isVideo ? [{ quality: 'auto' }] : [{ width: 1200, crop: 'limit', quality: 'auto' }],
-      };
-    },
-  });
+  try {
+    const storageOptions = {
+      cloudinary: cloudinary,
+      params: async (req, file) => {
+        const isVideo = file.mimetype.startsWith('video/');
+        return {
+          folder: 'eventhub_uploads',
+          resource_type: isVideo ? 'video' : 'image',
+          allowed_formats: isVideo
+            ? ['mp4', 'mov', 'avi', 'mkv', 'webm']
+            : ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+          transformation: isVideo ? [{ quality: 'auto' }] : [{ width: 1200, crop: 'limit', quality: 'auto' }],
+        };
+      },
+    };
+
+    if (multerCloudinary.CloudinaryStorage) {
+      storage = new multerCloudinary.CloudinaryStorage(storageOptions);
+    } else if (typeof multerCloudinary === 'function') {
+      storage = multerCloudinary(storageOptions);
+    } else if (multerCloudinary.default) {
+      storage = new (multerCloudinary.default.CloudinaryStorage || multerCloudinary.default)(storageOptions);
+    }
+  } catch (err) {
+    console.error('Failed to initialize Cloudinary storage, falling back to local disk storage:', err.message);
+    storage = null;
+  }
 } else {
   storage = multer.diskStorage({
     destination: (req, file, cb) => {
