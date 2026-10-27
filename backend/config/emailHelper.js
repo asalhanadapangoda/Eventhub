@@ -1,22 +1,26 @@
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
 const nodemailer = require("nodemailer");
 
 /**
  * Send Email Notification helper using configured Gmail SMTP or Ethereal fallback
- * @param {Object} options { to, subject, html, replyTo }
+ * All emails are dispatched from programs@trace.lk
+ * @param {Object} options { to, subject, html, replyTo, from }
  */
-const sendEmail = async ({ to, subject, html, replyTo }) => {
+const sendEmail = async ({ to, subject, html, replyTo, from }) => {
   try {
     let transporter;
-    const cleanUser = (process.env.EMAIL_USER || "").trim();
+    const cleanUser = (process.env.EMAIL_USER || "programs@trace.lk").trim();
     const cleanPass = (process.env.EMAIL_PASS || "").replace(/\s+/g, "").trim();
 
     const isRealConfigured =
       cleanUser &&
       cleanPass &&
-      !cleanUser.includes("your_gmail_address");
+      !cleanUser.includes("your_gmail_address") &&
+      !cleanUser.includes("your_email");
 
     if (isRealConfigured) {
-      console.log(`[SMTP] Dispatching email to: ${to} | Subject: ${subject}`);
+      console.log(`[SMTP] Dispatching email to: ${to} | From: ${cleanUser} | Subject: ${subject}`);
       transporter = nodemailer.createTransport({
         host: process.env.EMAIL_HOST || "smtp.gmail.com",
         port: parseInt(process.env.EMAIL_PORT || "587", 10),
@@ -40,8 +44,9 @@ const sendEmail = async ({ to, subject, html, replyTo }) => {
       });
     }
 
+    const senderEmail = cleanUser || "programs@trace.lk";
     const mailOptions = {
-      from: `"TRACE Event Hub" <${process.env.EMAIL_USER || "admin@trace.lk"}>`,
+      from: from || `"TRACE Event Hub" <${senderEmail}>`,
       to,
       subject,
       html,

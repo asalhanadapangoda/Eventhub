@@ -898,7 +898,11 @@ export default function VenuesPage({ showToast }) {
           <div
             className="modal-card venue-split-modal-card"
             onClick={(e) => e.stopPropagation()}
-            style={{ position: 'relative' }}
+            style={{
+              position: 'relative',
+              height: modalActiveTab === 'booking' ? 'auto' : '90vh',
+              maxHeight: '90vh',
+            }}
           >
             {/* Floating Close Button */}
             <button
@@ -992,57 +996,62 @@ export default function VenuesPage({ showToast }) {
 
             {/* TAB CONTENT: EITHER BOOKING INQUIRY OR DETAILS OVERVIEW */}
             {modalActiveTab === 'booking' ? (
-              <div className="venue-booking-split-grid" style={{ minHeight: '560px', maxHeight: 'calc(90vh - 65px)', overflowY: 'auto' }}>
-                {/* Left Side: Space Snapshot */}
-                <div className="venue-booking-sidebar" style={{ padding: '1.75rem', background: '#f8fafc', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {activeVenueModal.coverImage && isRealVenuePhoto(activeVenueModal.coverImage) ? (
-                    <div style={{ height: '180px', borderRadius: '12px', overflow: 'hidden', background: '#0f172a' }}>
-                      <img
-                        src={optimizeImageUrl(activeVenueModal.coverImage, 600)}
-                        alt={activeVenueModal.name}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    </div>
-                  ) : null}
+              <div className="venue-booking-split-grid" style={{ maxHeight: 'calc(90vh - 65px)', overflowY: 'auto' }}>
+                {/* Left Side: Space Snapshot Column inside Frame */}
+                <div style={{ padding: '0.5rem', background: '#ffffff', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
+                  <div
+                    className="venue-booking-sidebar"
+                    style={{
+                      padding: '1rem',
+                      background: '#f8fafc',
+                      borderRadius: '16px',
+                      border: '1px solid #e2e8f0',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.9rem',
+                      height: 'fit-content',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                    }}
+                  >
+                    {activeVenueModal.coverImage && isRealVenuePhoto(activeVenueModal.coverImage) ? (
+                      <div style={{ height: '180px', borderRadius: '12px', overflow: 'hidden', background: '#0f172a' }}>
+                        <img
+                          src={optimizeImageUrl(activeVenueModal.coverImage, 600)}
+                          alt={activeVenueModal.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      </div>
+                    ) : null}
 
-                  <div>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#5d4df6', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                      Selected Facility
-                    </span>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: '4px 0 6px 0' }}>
-                      {activeVenueModal.name}
-                    </h3>
-                    <div style={{ fontSize: '0.82rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <i className="fa-solid fa-location-dot"></i> {activeVenueModal.branch || activeVenueModal.address}
+                    <div>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#5d4df6', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        Selected Facility
+                      </span>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: '4px 0 6px 0' }}>
+                        {activeVenueModal.name}
+                      </h3>
+                      <div style={{ fontSize: '0.82rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <i className="fa-solid fa-location-dot"></i> {activeVenueModal.branch || activeVenueModal.address}
+                      </div>
                     </div>
-                  </div>
 
-                  <div style={{ background: '#ffffff', borderRadius: '10px', padding: '0.85rem 1rem', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem' }}>
-                      <span style={{ color: '#64748b', fontWeight: 600 }}>Rate / Pricing:</span>
-                      <strong style={{ color: '#059669', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                        {getVenuePriceText(activeVenueModal)}
-                        {hasTaxBadge(activeVenueModal) && <span className="venue-tax-badge">+ Tax</span>}
-                      </strong>
+                    <div style={{ background: '#ffffff', borderRadius: '10px', padding: '0.85rem 1rem', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '8px', fontSize: '0.82rem' }}>
+                        <span style={{ color: '#64748b', fontWeight: 600 }}>Rate / Pricing:</span>
+                        <strong style={{ color: '#059669', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                          {getVenuePriceText(activeVenueModal)}
+                          {hasTaxBadge(activeVenueModal) && <span className="venue-tax-badge">+ Tax</span>}
+                        </strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '8px', fontSize: '0.82rem' }}>
+                        <span style={{ color: '#64748b', fontWeight: 600 }}>Capacity:</span>
+                        <strong style={{ color: '#0f172a' }}>
+                          {typeof activeVenueModal.capacity === 'number' && activeVenueModal.capacity > 0
+                            ? `${activeVenueModal.capacity} Guests`
+                            : (activeVenueModal.capacity || 'Custom Setup')}
+                        </strong>
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
-                      <span style={{ color: '#64748b', fontWeight: 600 }}>Capacity:</span>
-                      <strong style={{ color: '#0f172a' }}>
-                        {typeof activeVenueModal.capacity === 'number' && activeVenueModal.capacity > 0
-                          ? `${activeVenueModal.capacity} Guests`
-                          : (activeVenueModal.capacity || 'Custom Setup')}
-                      </strong>
-                    </div>
-                  </div>
-
-                  {/* Trust / Notification Box */}
-                  <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', padding: '0.85rem 1rem', marginTop: 'auto' }}>
-                    <div style={{ fontSize: '0.78rem', color: '#1e40af', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                      <i className="fa-solid fa-shield-halved"></i> Direct TRACE Inquiry
-                    </div>
-                    <p style={{ fontSize: '0.76rem', color: '#3b82f6', margin: 0, lineHeight: 1.45 }}>
-                      Inquiry requests are dispatched in real-time to <strong>connect@trace.lk</strong>. Our facilities coordinator will contact you promptly.
-                    </p>
                   </div>
                 </div>
 

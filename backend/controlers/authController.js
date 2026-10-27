@@ -297,13 +297,14 @@ const nodemailer = require("nodemailer");
 const sendRealEmail = async ({ to, subject, html }) => {
   try {
     let transporter;
-    const cleanUser = (process.env.EMAIL_USER || "").trim();
+    const cleanUser = (process.env.EMAIL_USER || "programs@trace.lk").trim();
     const cleanPass = (process.env.EMAIL_PASS || "").replace(/\s+/g, "").trim();
 
     const isRealConfigured =
       cleanUser &&
       cleanPass &&
-      !cleanUser.includes("your_gmail_address");
+      !cleanUser.includes("your_gmail_address") &&
+      !cleanUser.includes("your_email");
 
     if (isRealConfigured) {
       console.log(`Sending REAL email via Gmail SMTP (${cleanUser}) to: ${to}`);
@@ -330,8 +331,9 @@ const sendRealEmail = async ({ to, subject, html }) => {
       });
     }
 
+    const senderEmail = cleanUser || "programs@trace.lk";
     const info = await transporter.sendMail({
-      from: `"TRACE Event Hub Admin" <${process.env.EMAIL_USER || "admin@trace.lk"}>`,
+      from: `"TRACE Event Hub Admin" <${senderEmail}>`,
       to,
       subject,
       html,

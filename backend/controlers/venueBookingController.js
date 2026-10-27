@@ -188,46 +188,28 @@ const createVenueBooking = async (req, res) => {
       </html>
     `;
 
-    // Asynchronously dispatch email to connect@trace.lk
-    sendEmail({
-      to: "connect@trace.lk",
-      replyTo: email.trim().toLowerCase(),
-      subject: adminEmailSubject,
-      html: adminEmailHtml,
-    }).catch((err) => console.error("Error sending inquiry email to connect@trace.lk:", err));
-
-    // 2. Dispatch Confirmation Copy to the User
-    const userConfirmationSubject = `📋 TRACE Event Hub - Space Inquiry Received (${bookingRef})`;
-    const userConfirmationHtml = `
-      <!DOCTYPE html>
-      <html>
-      <body style="font-family: Arial, sans-serif; background-color: #f8fafc; padding: 20px; color: #334155;">
-        <div style="max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-          <div style="background: #1e1b4b; color: #ffffff; padding: 20px; text-align: center;">
-            <h2 style="margin: 0; font-size: 20px;">🏢 TRACE Event Hub</h2>
-            <p style="margin: 4px 0 0 0; color: #a5b4fc; font-size: 13px;">Booking Inquiry Confirmation</p>
-          </div>
-          <div style="padding: 24px;">
-            <p>Dear <strong>${name}</strong>,</p>
-            <p>Thank you for inquiring about <strong>${venueName}</strong> (${branch || "TRACE Expert City"}). We have received your space reservation request!</p>
-            <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 16px; margin: 16px 0;">
-              <div style="margin-bottom: 6px;">🔖 <strong>Booking Reference:</strong> <span style="color:#5d4df6;font-weight:700;font-family:monospace;">${bookingRef}</span></div>
-              <div style="margin-bottom: 6px;">📍 <strong>Venue Space:</strong> <strong>${venueName}</strong></div>
-              <div style="margin-bottom: 6px;">📅 <strong>Target Date:</strong> <strong>${eventDate}</strong> (${durationHours} hours)</div>
-              <div>👥 <strong>Event Purpose:</strong> ${eventTitle}</div>
-            </div>
-            <p style="font-size: 13px; color: #64748b;">Our team at <strong>connect@trace.lk</strong> is reviewing space availability and will reach out to you shortly via phone or email.</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-
-    sendEmail({
-      to: email.trim().toLowerCase(),
-      subject: userConfirmationSubject,
-      html: userConfirmationHtml,
-    }).catch((err) => console.error("Error sending user confirmation email:", err));
+    // 1. Dispatch Instant Real-Time Email Notification to connect@trace.lk from programs@trace.lk
+    // 2. Dispatch Confirmation Copy to the User from programs@trace.lk
+    try {
+      await Promise.allSettled([
+        sendEmail({
+          from: `"TRACE Event Hub" <programs@trace.lk>`,
+          to: "connect@trace.lk",
+          replyTo: email.trim().toLowerCase(),
+          subject: adminEmailSubject,
+          html: adminEmailHtml,
+        }),
+        sendEmail({
+          from: `"TRACE Event Hub" <programs@trace.lk>`,
+          to: email.trim().toLowerCase(),
+          subject: userConfirmationSubject,
+          html: userConfirmationHtml,
+        }),
+      ]);
+      console.log(`[Inquiry Mail] Space inquiry [${bookingRef}] successfully dispatched to connect@trace.lk from programs@trace.lk`);
+    } catch (mailErr) {
+      console.error("[Inquiry Mail Error] Error during email dispatch:", mailErr.message);
+    }
 
     res.status(201).json({ success: true, message: "Venue booking inquiry submitted successfully! Notification sent to connect@trace.lk.", data: booking });
   } catch (error) {
