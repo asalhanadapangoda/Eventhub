@@ -270,6 +270,13 @@ export default function VenuesPage({ showToast }) {
     return getVenuePriceText(v).toLowerCase().includes('demand');
   };
 
+  // Tax badge specifically for BAY 07 / BOY 07
+  const hasTaxBadge = (v) => {
+    if (!v) return false;
+    const name = String(v.name || '').toLowerCase();
+    return name.includes('bay 07') || name.includes('bay 7') || name.includes('boy 07') || name.includes('boy 7');
+  };
+
   // Modal State for Venue Details & Booking Inquiry
   const [activeVenueModal, setActiveVenueModal] = useState(null);
   const [modalActivePhotoIndex, setModalActivePhotoIndex] = useState(0);
@@ -536,7 +543,7 @@ export default function VenuesPage({ showToast }) {
           durationHours: Number(inquiryForm.durationHours) || 4,
           guests: Number(inquiryForm.guests) || 50,
           notes: inquiryForm.notes,
-          price: getVenuePriceText(activeVenueModal),
+          price: getVenuePriceText(activeVenueModal) + (hasTaxBadge(activeVenueModal) ? ' + Tax' : ''),
         }),
       });
 
@@ -804,6 +811,7 @@ export default function VenuesPage({ showToast }) {
                         style={isVenuePriceOnDemand(v) ? { color: '#059669', background: '#ecfdf5', borderColor: '#a7f3d0', fontWeight: '800' } : {}}
                       >
                         <i className="fa-solid fa-tag"></i> {getVenuePriceText(v)}
+                        {hasTaxBadge(v) && <span className="venue-tax-badge">+ Tax</span>}
                       </span>
                     </div>
 
@@ -1010,9 +1018,12 @@ export default function VenuesPage({ showToast }) {
                   </div>
 
                   <div style={{ background: '#ffffff', borderRadius: '10px', padding: '0.85rem 1rem', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem' }}>
                       <span style={{ color: '#64748b', fontWeight: 600 }}>Rate / Pricing:</span>
-                      <strong style={{ color: '#059669' }}>{getVenuePriceText(activeVenueModal)}</strong>
+                      <strong style={{ color: '#059669', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                        {getVenuePriceText(activeVenueModal)}
+                        {hasTaxBadge(activeVenueModal) && <span className="venue-tax-badge">+ Tax</span>}
+                      </strong>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
                       <span style={{ color: '#64748b', fontWeight: 600 }}>Capacity:</span>
@@ -1419,6 +1430,7 @@ export default function VenuesPage({ showToast }) {
                         }}
                       >
                         <i className="fa-solid fa-tag"></i> {getVenuePriceText(activeVenueModal)}
+                        {hasTaxBadge(activeVenueModal) && <span className="venue-tax-badge">+ Tax</span>}
                       </span>
                     </div>
 
