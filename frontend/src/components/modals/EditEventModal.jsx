@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import RichTextEditor from '../RichTextEditor';
-import { notifyEventUpdated } from '../../utils/eventUtils';
+import { notifyEventUpdated, optimizeImageUrl, DEFAULT_EVENT_BANNER } from '../../utils/eventUtils';
 
 export default function EditEventModal({
   isOpen,
@@ -380,12 +380,28 @@ export default function EditEventModal({
       if (result.success) {
         onClose();
         if (showToast) showToast('Event updated successfully!', 'success');
+        const targetId = String(event._id || event.id || '');
         const updatedData = {
           ...event,
           ...(result.data || {}),
-          _id: event._id,
+          _id: targetId,
           videoUrl: videoUrl.trim(),
         };
+        try {
+          const cachedStr = localStorage.getItem('eventhub_cached_events') || sessionStorage.getItem('eventhub_cached_events');
+          if (cachedStr) {
+            const list = JSON.parse(cachedStr);
+            const next = list.map((e) => (String(e._id || e.id) === targetId ? { ...e, ...updatedData } : e));
+            localStorage.setItem('eventhub_cached_events', JSON.stringify(next));
+            sessionStorage.setItem('eventhub_cached_events', JSON.stringify(next));
+          }
+          const adminCachedStr = sessionStorage.getItem('eventhub_admin_cached_events');
+          if (adminCachedStr) {
+            const adminList = JSON.parse(adminCachedStr);
+            const nextAdmin = adminList.map((e) => (String(e._id || e.id) === targetId ? { ...e, ...updatedData } : e));
+            sessionStorage.setItem('eventhub_admin_cached_events', JSON.stringify(nextAdmin));
+          }
+        } catch (e) { }
         notifyEventUpdated(updatedData);
         if (onEventUpdated) onEventUpdated(updatedData);
       } else {
@@ -436,7 +452,10 @@ export default function EditEventModal({
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               >
+                <option value="Midweek Boost">Midweek Boost</option>
                 <option value="Guest Talk Series">Guest Talk Series</option>
+                <option value="The SHED">The SHED</option>
+                <option value="REBOOT.health">REBOOT.health</option>
                 <option value="Community Meetup">Community Meetup</option>
                 <option value="Policy Discussion">Policy Discussion</option>
                 <option value="Workshop">Workshop</option>
@@ -561,9 +580,13 @@ export default function EditEventModal({
             {coverImage && (
               <div style={{ marginTop: '0.75rem', position: 'relative', borderRadius: '10px', overflow: 'hidden', border: '1px solid #cbd5e1', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', width: '100%', aspectRatio: '1 / 1', maxHeight: '360px' }}>
                 <img
-                  src={coverImage}
+                  src={optimizeImageUrl(coverImage, 800) || coverImage}
                   alt="Uploaded Cover Preview"
                   style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = DEFAULT_EVENT_BANNER;
+                  }}
                 />
                 <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(180deg, transparent 0%, rgba(15,23,42,0.85) 100%)', padding: '0.5rem 0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ color: '#ffffff', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px' }}>

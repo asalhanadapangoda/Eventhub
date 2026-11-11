@@ -1,4 +1,5 @@
-const cloudinary = require('cloudinary').v2;
+const cloudinaryModule = require('cloudinary');
+const cloudinary = cloudinaryModule.v2;
 const multerCloudinary = require('multer-storage-cloudinary');
 const multer = require('multer');
 const path = require('path');
@@ -28,37 +29,53 @@ if (isCloudinaryConfigured) {
   });
 }
 
+const buildUploadParams = (file) => {
+  const isVideo = file.mimetype && file.mimetype.startsWith('video/');
+  return {
+    folder: 'eventhub_uploads',
+    resource_type: isVideo ? 'video' : 'image',
+    allowed_formats: isVideo
+      ? ['mp4', 'mov', 'avi', 'mkv', 'webm']
+      : ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+    transformation: isVideo ? [{ quality: 'auto' }] : [{ width: 1200, crop: 'limit', quality: 'auto' }],
+  };
+};
+
 // Setup Multer Storage (Cloudinary if valid credentials exist, else fast local static uploads)
 let storage;
 if (isCloudinaryConfigured) {
   try {
-    const storageOptions = {
-      cloudinary: cloudinary,
-      params: async (req, file) => {
-        const isVideo = file.mimetype.startsWith('video/');
-        return {
-          folder: 'eventhub_uploads',
-          resource_type: isVideo ? 'video' : 'image',
-          allowed_formats: isVideo
-            ? ['mp4', 'mov', 'avi', 'mkv', 'webm']
-            : ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-          transformation: isVideo ? [{ quality: 'auto' }] : [{ width: 1200, crop: 'limit', quality: 'auto' }],
-        };
-      },
-    };
+    const StorageClass =
+      multerCloudinary.CloudinaryStorage ||
+      (multerCloudinary.default && multerCloudinary.default.CloudinaryStorage);
 
-    if (multerCloudinary.CloudinaryStorage) {
-      storage = new multerCloudinary.CloudinaryStorage(storageOptions);
-    } else if (typeof multerCloudinary === 'function') {
-      storage = multerCloudinary(storageOptions);
-    } else if (multerCloudinary.default) {
-      storage = new (multerCloudinary.default.CloudinaryStorage || multerCloudinary.default)(storageOptions);
+    if (StorageClass) {
+      // multer-storage-cloudinary v4+ class API
+      storage = new StorageClass({
+        cloudinary: cloudinary,
+        params: async (req, file) => buildUploadParams(file),
+      });
+    } else {
+      const storageFactory =
+        typeof multerCloudinary === 'function'
+          ? multerCloudinary
+          : multerCloudinary.default;
+
+      if (typeof storageFactory === 'function') {
+        // multer-storage-cloudinary v2.x factory API expects root cloudinary module (.v2) and callback params
+        storage = storageFactory({
+          cloudinary: cloudinaryModule,
+          params: (req, file, cb) => cb(null, buildUploadParams(file)),
+        });
+      }
     }
   } catch (err) {
     console.error('Failed to initialize Cloudinary storage, falling back to local disk storage:', err.message);
     storage = null;
   }
-} else {
+}
+
+if (!storage) {
   storage = multer.diskStorage({
     destination: (req, file, cb) => {
       cb(null, backendUploadDir);

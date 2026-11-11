@@ -11,17 +11,27 @@ export default function EventDetailsPage({
   onOpenMyEvents,
   onOpenCalendar,
   showToast,
+  openLoginModal,
+  openSignupModal,
 }) {
   const [activeEvent, setActiveEvent] = useState(initialEvent);
   const [loadingEvent, setLoadingEvent] = useState(!initialEvent);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [name, setName] = useState(currentUser?.name || '');
+  const [email, setEmail] = useState(currentUser?.email || '');
+  const [phone, setPhone] = useState(currentUser?.contactNumber || '');
   const [message, setMessage] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [registrationData, setRegistrationData] = useState(null);
+
+  useEffect(() => {
+    if (currentUser) {
+      if (!name) setName(currentUser.name || '');
+      if (!email) setEmail(currentUser.email || '');
+      if (!phone) setPhone(currentUser.contactNumber || '');
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     if (initialEvent) {
@@ -30,13 +40,15 @@ export default function EventDetailsPage({
       return;
     }
 
-    const hash = window.location.hash || '';
-    const match = hash.match(/[?&]id=([^&]+)/);
-    const eventId = match ? match[1] : sessionStorage.getItem('eventhub_details_event_id');
+    const searchParams = new URLSearchParams(window.location.search);
+    const eventId = searchParams.get('id') || (window.location.hash.match(/[?&]id=([^&]+)/)?.[1]) || sessionStorage.getItem('eventhub_details_event_id');
 
     if (eventId) {
       setLoadingEvent(true);
-      fetch(`/api/events/${eventId}`)
+      fetch(`/api/events/${eventId}?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store' },
+      })
         .then((res) => res.json())
         .then((data) => {
           if (data.success && data.data) {
@@ -219,28 +231,44 @@ export default function EventDetailsPage({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!currentUser) {
+      showToast('Please create an account or log in to register for this event.', 'error');
+      if (openLoginModal) openLoginModal();
+      return;
+    }
+
     if (!agreed) {
       showToast('Please agree to the Terms of Service and Privacy Policy.', 'error');
       return;
     }
 
-    const phoneRegex = /^\+?[0-9\s-]{9,15}$/;
-    if (!phoneRegex.test(phone.trim())) {
-      showToast('Please enter a valid contact phone number (e.g., +94 77 123 4567).', 'error');
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!email.trim() || !emailRegex.test(email.trim())) {
+      showToast('Please enter a valid email address (e.g., name@domain.com).', 'error');
+      return;
+    }
+
+    const cleanPhone = phone.replace(/[\s\-()]/g, '');
+    if (!/^\+?[0-9]{9,15}$/.test(cleanPhone)) {
+      showToast('Please enter a valid contact phone number (at least 9-10 digits).', 'error');
       return;
     }
 
     setSubmitting(true);
 
     try {
+      const authToken = localStorage.getItem('eventhub_token');
       const response = await fetch('/api/registrations', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        },
         body: JSON.stringify({
           eventId: event._id,
-          name,
-          email,
-          contactNumber: phone,
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          contactNumber: phone.trim(),
           notes: message,
         }),
       });
@@ -588,101 +616,229 @@ export default function EventDetailsPage({
               {/* Right Column: Registration Card Box */}
               <div className="details-right-column">
                 <div className="registration-card-box">
-                  <h2 className="registration-card-title">Register for this Event</h2>
-                  <p className="registration-card-subtitle">
-                    Secure your spot by providing your details below.
-                  </p>
-
-                  <form onSubmit={handleSubmit} className="registration-form">
-                    <div className="form-field-group">
-                      <label htmlFor="details-name">Full Name *</label>
-                      <input
-                        type="text"
-                        id="details-name"
-                        required
-                        placeholder="Jane Doe"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="form-field-group">
-                      <label htmlFor="details-email">Email Address *</label>
-                      <input
-                        type="email"
-                        id="details-email"
-                        required
-                        placeholder="jane@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="form-field-group">
-                      <label htmlFor="details-phone">Contact Number *</label>
-                      <input
-                        type="tel"
-                        id="details-phone"
-                        required
-                        placeholder="+94 77 123 4567"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="form-field-group">
-                      <label htmlFor="details-message">Description / Message</label>
-                      <textarea
-                        id="details-message"
-                        rows="3"
-                        placeholder="Any special requirements or questions?"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                      ></textarea>
-                    </div>
-
-                    <div className="form-checkbox-group">
-                      <label className="checkbox-label">
-                        <input
-                          type="checkbox"
-                          checked={agreed}
-                          onChange={(e) => setAgreed(e.target.checked)}
-                          required
-                        />
-                        <span>
-                          I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>. *
-                        </span>
-                      </label>
-                    </div>
-
-                    <div className="form-button-row">
-                      <button
-                        type="submit"
-                        className="btn-submit-registration"
-                        disabled={submitting}
+                  {!currentUser ? (
+                    <div style={{ textAlign: 'center', padding: '0.5rem 0' }}>
+                      <div
+                        style={{
+                          width: '56px',
+                          height: '56px',
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)',
+                          color: '#5d4df6',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '1.5rem',
+                          marginBottom: '1rem',
+                        }}
                       >
-                        {submitting ? (
-                          <>
-                            <i className="fa-solid fa-spinner fa-spin"></i> Submitting...
-                          </>
-                        ) : (
-                          <>
-                            Submit Registration <i className="fa-solid fa-arrow-right"></i>
-                          </>
-                        )}
-                      </button>
-                      <button type="button" className="btn-cancel-registration" onClick={onBack}>
-                        Cancel
-                      </button>
-                    </div>
+                        <i className="fa-solid fa-user-lock"></i>
+                      </div>
 
-                    <div className="security-notice-text">
-                      <i className="fa-solid fa-lock"></i>
-                      <span>
-                        Your information will only be used for event registration and event-related communication.
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          background: '#fef3c7',
+                          color: '#92400e',
+                          fontWeight: 800,
+                          fontSize: '0.75rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          padding: '4px 10px',
+                          borderRadius: '20px',
+                          marginBottom: '0.75rem',
+                        }}
+                      >
+                        Account Required
                       </span>
+
+                      <h2 className="registration-card-title" style={{ fontSize: '1.35rem', marginBottom: '0.5rem' }}>
+                        Register for this Event
+                      </h2>
+                      <p className="registration-card-subtitle" style={{ fontSize: '0.88rem', lineHeight: 1.5, marginBottom: '1.25rem' }}>
+                        You must create an account or log in to secure your ticket pass for <strong>{event.title}</strong>.
+                      </p>
+
+                      <div
+                        style={{
+                          background: '#f8fafc',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '12px',
+                          padding: '0.9rem',
+                          textAlign: 'left',
+                          marginBottom: '1.5rem',
+                          fontSize: '0.82rem',
+                          color: '#475569',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '6px',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <i className="fa-solid fa-circle-check" style={{ color: '#10b981' }}></i>
+                          <span>Instant digital ticket pass with QR Code</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <i className="fa-solid fa-circle-check" style={{ color: '#10b981' }}></i>
+                          <span>One-click registration for all future events</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <i className="fa-solid fa-circle-check" style={{ color: '#10b981' }}></i>
+                          <span>Calendar sync (.ics) and ticket recovery</span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (openSignupModal) openSignupModal();
+                          }}
+                          style={{
+                            width: '100%',
+                            padding: '0.85rem 1rem',
+                            fontSize: '0.95rem',
+                            fontWeight: 800,
+                            borderRadius: '12px',
+                            background: 'linear-gradient(135deg, #5d4df6 0%, #4338ca 100%)',
+                            color: '#ffffff',
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            boxShadow: '0 4px 14px rgba(93, 77, 246, 0.35)',
+                          }}
+                        >
+                          <i className="fa-solid fa-user-plus"></i> Create Account to Register
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (openLoginModal) openLoginModal();
+                          }}
+                          style={{
+                            width: '100%',
+                            padding: '0.75rem 1rem',
+                            fontSize: '0.9rem',
+                            fontWeight: 700,
+                            borderRadius: '12px',
+                            background: '#f8fafc',
+                            color: '#334155',
+                            border: '1px solid #cbd5e1',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Already have an account? Log In
+                        </button>
+                      </div>
                     </div>
-                  </form>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                        <h2 className="registration-card-title" style={{ margin: 0 }}>Register for this Event</h2>
+                        <span style={{ fontSize: '0.75rem', background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', padding: '2px 8px', borderRadius: '12px', fontWeight: 700 }}>
+                          ✓ Logged in
+                        </span>
+                      </div>
+                      <p className="registration-card-subtitle">
+                        Your registration details are pre-filled below. Review and submit!
+                      </p>
+
+                      <form onSubmit={handleSubmit} className="registration-form">
+                        <div className="form-field-group">
+                          <label htmlFor="details-name">Full Name *</label>
+                          <input
+                            type="text"
+                            id="details-name"
+                            required
+                            placeholder="Your full name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                          />
+                        </div>
+
+                        <div className="form-field-group">
+                          <label htmlFor="details-email">Email Address *</label>
+                          <input
+                            type="email"
+                            id="details-email"
+                            required
+                            placeholder="yourname@domain.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                          />
+                        </div>
+
+                        <div className="form-field-group">
+                          <label htmlFor="details-phone">Contact Number *</label>
+                          <input
+                            type="tel"
+                            id="details-phone"
+                            required
+                            placeholder="+94 77 123 4567"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                          />
+                        </div>
+
+                        <div className="form-field-group">
+                          <label htmlFor="details-message">Description / Special Requirements</label>
+                          <textarea
+                            id="details-message"
+                            rows="3"
+                            placeholder="Any special requirements or questions?"
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
+                          ></textarea>
+                        </div>
+
+                        <div className="form-checkbox-group">
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={agreed}
+                              onChange={(e) => setAgreed(e.target.checked)}
+                              required
+                            />
+                            <span>
+                              I agree to the Terms of Service and Privacy Policy. *
+                            </span>
+                          </label>
+                        </div>
+
+                        <div className="form-button-row">
+                          <button
+                            type="submit"
+                            className="btn-submit-registration"
+                            disabled={submitting}
+                          >
+                            {submitting ? (
+                              <>
+                                <i className="fa-solid fa-spinner fa-spin"></i> Submitting...
+                              </>
+                            ) : (
+                              <>
+                                Submit Registration <i className="fa-solid fa-arrow-right"></i>
+                              </>
+                            )}
+                          </button>
+                          <button type="button" className="btn-cancel-registration" onClick={onBack}>
+                            Cancel
+                          </button>
+                        </div>
+
+                        <div className="security-notice-text">
+                          <i className="fa-solid fa-lock"></i>
+                          <span>
+                            Your information will only be used for event registration and ticket issuance.
+                          </span>
+                        </div>
+                      </form>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

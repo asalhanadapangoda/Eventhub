@@ -13,7 +13,7 @@ const DEFAULT_HERO_SETTINGS = {
   heroBadge: "TRACE COMMUNITY HUB, SRI LANKA",
   heroTitle: "Where innovation meets community and culture.",
   heroSubtitle:
-    "From Shed sessions to Midweek Boost evenings, discover and register for the events shaping TRACE Expert City — then keep every one of them in view.",
+    "Be part of Sri Lanka's largest innovation ecosystem to make an impact.",
 };
 
 // In-memory cache for 0ms response time

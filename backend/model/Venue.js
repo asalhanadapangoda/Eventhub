@@ -44,6 +44,14 @@ const venueSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    includeTax: {
+      type: Boolean,
+      default: false,
+    },
+    taxLabelType: {
+      type: String,
+      default: "+ Tax",
+    },
     status: {
       type: String,
       enum: ["Available", "Reserved", "Under Maintenance"],

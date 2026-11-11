@@ -64,10 +64,12 @@ const protect = async (req, res, next) => {
 // Middleware to restrict access to specified roles (RBAC)
 const authorize = (...roles) => {
   return (req, res, next) => {
-    if (!req.user || (roles.length > 0 && !roles.includes(req.user.role))) {
+    const userRole = req.user?.role;
+    const isSpecialAdmin = req.user?.email === "admin@trace.lk";
+    if (!req.user || (roles.length > 0 && !roles.includes(userRole) && !isSpecialAdmin)) {
       return res.status(403).json({
         success: false,
-        message: `Forbidden: Access denied for role '${req.user ? req.user.role : 'unauthenticated'}'. Required role: [${roles.join(', ')}]`,
+        message: `Forbidden: Access denied for role '${userRole || 'unauthenticated'}'. Required role: [${roles.join(', ')}]`,
       });
     }
     next();

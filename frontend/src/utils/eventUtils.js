@@ -193,4 +193,217 @@ export function optimizeImageUrl(url, width = 800) {
   return cleanUrl;
 }
 
+export const SERIES_CATEGORIES = [
+  {
+    id: 'midweek',
+    name: 'Midweek Boost',
+    slug: 'midweek-boost',
+    description: 'Casual evening gatherings at The Third Place with live music, games, food & great networking.',
+    badgeText: 'MIDWEEK BOOST',
+    badgeClass: 'cat-badge-midweek',
+    icon: 'fa-solid fa-guitar',
+    accentColor: '#0d9488',
+    gradient: 'linear-gradient(135deg, #0d9488 0%, #115e59 100%)',
+    bgLight: '#f0fdfa',
+    borderLight: '#99f6e4',
+    defaultCover: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=75',
+    match: (evt) => {
+      const title = (evt?.title || '').toLowerCase();
+      const cat = (evt?.category || '').toLowerCase();
+      return title.includes('midweek') || cat.includes('midweek');
+    },
+  },
+  {
+    id: 'guest-talk',
+    name: 'Guest Talk',
+    displayName: 'Guest Talk Series',
+    slug: 'guest-talk',
+    description: 'Thought-provoking sessions with global founders, researchers, and technology leaders.',
+    badgeText: 'GUEST TALK',
+    badgeClass: 'cat-badge-talk',
+    icon: 'fa-solid fa-microphone-lines',
+    accentColor: '#4f46e5',
+    gradient: 'linear-gradient(135deg, #4f46e5 0%, #312e81 100%)',
+    bgLight: '#eef2ff',
+    borderLight: '#c7d2fe',
+    defaultCover: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=800&q=75',
+    match: (evt) => {
+      const title = (evt?.title || '').toLowerCase();
+      const cat = (evt?.category || '').toLowerCase();
+      return (
+        title.includes('guest talk') ||
+        cat.includes('guest talk') ||
+        cat === 'talk' ||
+        (title.includes('talk') && !title.includes('midweek'))
+      );
+    },
+  },
+  {
+    id: 'shed',
+    name: 'The SHED',
+    displayName: 'The SHED',
+    slug: 'the-shed',
+    description: 'Exclusive forums exploring innovations in climate tech, sustainability & policy discussions.',
+    badgeText: 'THE SHED',
+    badgeClass: 'cat-badge-shed',
+    icon: 'fa-solid fa-leaf',
+    accentColor: '#7c3aed',
+    gradient: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)',
+    bgLight: '#f5f3ff',
+    borderLight: '#ddd6fe',
+    defaultCover: 'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&w=800&q=75',
+    match: (evt) => {
+      const title = (evt?.title || '').toLowerCase();
+      const cat = (evt?.category || '').toLowerCase();
+      return (
+        (title.includes('shed') || cat.includes('shed') || cat.includes('policy')) &&
+        !title.includes('midweek')
+      );
+    },
+  },
+  {
+    id: 'reboot-health',
+    name: 'REBOOT.health',
+    displayName: 'REBOOT.health',
+    slug: 'reboot-health',
+    description: 'Mind-body wellness, corporate mental resilience, health-tech innovation & mindful living.',
+    badgeText: 'REBOOT.HEALTH',
+    badgeClass: 'cat-badge-reboot',
+    icon: 'fa-solid fa-heart-pulse',
+    accentColor: '#059669',
+    gradient: 'linear-gradient(135deg, #059669 0%, #064e3b 100%)',
+    bgLight: '#ecfdf5',
+    borderLight: '#a7f3d0',
+    defaultCover: '/uploads/reboot-health-cover.jpg',
+    match: (evt) => {
+      const title = (evt?.title || '').toLowerCase();
+      const cat = (evt?.category || '').toLowerCase();
+      return (
+        title.includes('reboot') ||
+        cat.includes('reboot') ||
+        title.includes('health') ||
+        cat.includes('health')
+      );
+    },
+  },
+];
+
+export function getEventSeriesCategory(evt) {
+  if (!evt) return null;
+  for (const series of SERIES_CATEGORIES) {
+    if (series.match(evt)) return series;
+  }
+  return null;
+}
+
+/**
+ * Standard Space Types across TRACE Venues & Facilities
+ */
+export const AVAILABLE_SPACE_TYPES = [
+  'Meeting Rooms',
+  'Conference Hall',
+  'Co-Working Spaces',
+  'Maker Spaces',
+  'Workation',
+  'Event Spaces',
+];
+
+/**
+ * Normalizes a single space type string to one of the canonical AVAILABLE_SPACE_TYPES.
+ */
+export function normalizeSingleSpaceType(item) {
+  if (!item || typeof item !== 'string') return '';
+  const trimmed = item.trim();
+  if (!trimmed) return '';
+
+  const exact = AVAILABLE_SPACE_TYPES.find(
+    (opt) => opt.toLowerCase() === trimmed.toLowerCase()
+  );
+  if (exact) return exact;
+
+  const lower = trimmed.toLowerCase();
+  if (lower.includes('workation') || lower.includes('work-cation')) return 'Workation';
+  if (lower.includes('conference')) return 'Conference Hall';
+  if (lower.includes('maker') || lower.includes('creator') || lower.includes('lab') || lower.includes('fablab')) return 'Maker Spaces';
+  if (lower.includes('coworking') || lower.includes('co-working') || lower.includes('incubator') || lower.includes('shared desk')) return 'Co-Working Spaces';
+  if (lower.includes('event') || lower.includes('auditorium') || lower.includes('deck')) return 'Event Spaces';
+  if (lower.includes('meeting') || lower.includes('room') || lower.includes('suite') || lower.includes('office')) return 'Meeting Rooms';
+  if (lower.includes('hall')) return 'Conference Hall';
+
+  return trimmed;
+}
+
+/**
+ * Extracts and normalizes ALL space types for a venue object into an array.
+ * Supports comma-separated strings ("Event Spaces, Maker Spaces") or arrays.
+ * @param {Object} v - Venue object
+ * @returns {string[]} Array of unique space type names
+ */
+export function getSpaceTypes(v) {
+  if (!v) return ['Meeting Rooms'];
+
+  let rawList = [];
+  if (Array.isArray(v.types) && v.types.length > 0) {
+    rawList = v.types;
+  } else if (Array.isArray(v.type) && v.type.length > 0) {
+    rawList = v.type;
+  } else if (typeof v.type === 'string' && v.type.trim()) {
+    rawList = v.type.split(',').map((s) => s.trim()).filter(Boolean);
+  } else if (typeof v.types === 'string' && v.types.trim()) {
+    rawList = v.types.split(',').map((s) => s.trim()).filter(Boolean);
+  }
+
+  if (rawList.length > 0) {
+    const normalized = rawList.map(normalizeSingleSpaceType).filter(Boolean);
+    const unique = Array.from(new Set(normalized));
+    if (unique.length > 0) return unique;
+  }
+
+  // Fallback to name/desc only if venue had no type specified
+  const str = `${v.name || ''} ${v.description || ''} ${v.branch || ''}`.toLowerCase();
+  if (str.includes('workation') || str.includes('work-cation') || str.includes('by the sea')) {
+    return ['Workation'];
+  }
+  if (str.includes('conference')) {
+    return ['Conference Hall'];
+  }
+  if (str.includes('maker') || str.includes('creator') || str.includes('bread') || str.includes('lab') || str.includes('fablab')) {
+    return ['Maker Spaces'];
+  }
+  if (str.includes('coworking') || str.includes('co-working') || str.includes('incubator') || str.includes('shared desk') || str.includes('coding hub')) {
+    return ['Co-Working Spaces'];
+  }
+  if (str.includes('deck') || str.includes('terrace') || str.includes('expo') || str.includes('event') || str.includes('auditorium') || str.includes('amphitheater') || str.includes('pavilion') || str.includes('bay 07') || str.includes('bay 7') || str.includes('theatre')) {
+    return ['Event Spaces'];
+  }
+  if (str.includes('hall')) {
+    return ['Conference Hall'];
+  }
+
+  return ['Meeting Rooms'];
+}
+
+/**
+ * Returns a comma-joined string of all space types for a venue.
+ */
+export function getSpaceType(v) {
+  const types = getSpaceTypes(v);
+  return types.join(', ');
+}
+
+/**
+ * Returns a FontAwesome icon class for a given space type name.
+ */
+export function getSpaceTypeIcon(typeStr) {
+  const t = (typeStr || '').toLowerCase();
+  if (t.includes('workation')) return 'fa-umbrella-beach';
+  if (t.includes('conference') || t.includes('hall')) return 'fa-landmark';
+  if (t.includes('maker') || t.includes('creator') || t.includes('lab')) return 'fa-microchip';
+  if (t.includes('coworking') || t.includes('co-working')) return 'fa-laptop-code';
+  if (t.includes('event')) return 'fa-champagne-glasses';
+  if (t.includes('meeting') || t.includes('room')) return 'fa-handshake';
+  return 'fa-shapes';
+}
+
+
 

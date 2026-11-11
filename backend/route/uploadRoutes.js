@@ -73,6 +73,24 @@ const handleArrayUpload = (req, res, next) => {
     });
 };
 
+// Resolve uploaded file URL and public ID across Cloudinary v2/v4 and local disk storage
+const resolveUploadedFile = (file) => {
+    const remoteUrl = [file.secure_url, file.url, file.path].find(
+        (val) => typeof val === 'string' && val.startsWith('http')
+    );
+    let fileUrl;
+    if (remoteUrl) {
+        fileUrl = remoteUrl;
+    } else {
+        fileUrl = `/uploads/${file.filename}`;
+        copyToFrontend(file.filename);
+    }
+    return {
+        url: fileUrl,
+        publicId: file.public_id || file.filename,
+    };
+};
+
 // POST /api/upload - Single File (Image or Video)
 router.post('/', optionalAuth, handleSingleUpload, (req, res) => {
     try {
@@ -80,20 +98,14 @@ router.post('/', optionalAuth, handleSingleUpload, (req, res) => {
             return res.status(400).json({ success: false, message: 'No file provided' });
         }
 
-        let fileUrl;
-        if (req.file.path && req.file.path.startsWith('http')) {
-            fileUrl = req.file.path; // Cloudinary CDN URL
-        } else {
-            fileUrl = `/uploads/${req.file.filename}`;
-            copyToFrontend(req.file.filename);
-        }
+        const { url: fileUrl, publicId } = resolveUploadedFile(req.file);
 
         res.json({
             success: true,
             message: 'File uploaded successfully!',
             data: {
                 url: fileUrl,
-                publicId: req.file.filename,
+                publicId,
                 resourceType: req.file.mimetype ? (req.file.mimetype.startsWith('video/') ? 'video' : 'image') : 'image',
                 format: req.file.format || path.extname(req.file.originalname).slice(1),
             },
@@ -106,19 +118,7 @@ router.post('/', optionalAuth, handleSingleUpload, (req, res) => {
 // POST /api/upload/gallery - Multiple Files Upload
 router.post('/gallery', optionalAuth, handleArrayUpload, (req, res) => {
     try {
-        const uploadedFiles = (req.files || []).map((file) => {
-            let fileUrl;
-            if (file.path && file.path.startsWith('http')) {
-                fileUrl = file.path;
-            } else {
-                fileUrl = `/uploads/${file.filename}`;
-                copyToFrontend(file.filename);
-            }
-            return {
-                url: fileUrl,
-                publicId: file.filename,
-            };
-        });
+        const uploadedFiles = (req.files || []).map(resolveUploadedFile);
 
         res.json({
             success: true,

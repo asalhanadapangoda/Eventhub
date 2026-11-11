@@ -50,18 +50,31 @@ export default function LoginModal({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!email.trim() || !emailRegex.test(email.trim())) {
+      showToast('Please enter a valid email address (e.g. name@domain.com).', 'error');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
       });
 
       const result = await response.json();
 
       if (result.success && result.data) {
+        if (result.data.token) {
+          localStorage.setItem('eventhub_token', result.data.token);
+        }
+        if (result.data.user) {
+          localStorage.setItem('eventhub_user', JSON.stringify(result.data.user));
+        }
         const user = result.data.user;
         const isAdmin = Boolean(
           user.role === 'admin' ||
@@ -363,16 +376,24 @@ export default function LoginModal({
             }}
           >
             Don't have an account?{' '}
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
+            <button
+              type="button"
+              onClick={() => {
                 switchToSignup();
               }}
-              style={{ color: '#5d4df6', fontWeight: '800', textDecoration: 'none' }}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                color: '#5d4df6',
+                fontWeight: '800',
+                cursor: 'pointer',
+                fontSize: '0.86rem',
+                textDecoration: 'none',
+              }}
             >
               Sign Up for Free
-            </a>
+            </button>
           </div>
         </form>
       </div>

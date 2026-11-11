@@ -36,7 +36,7 @@ const siteSettingSchema = new mongoose.Schema(
     heroSubtitle: {
       type: String,
       default:
-        "From Shed sessions to Midweek Boost evenings, discover and register for the events shaping TRACE Expert City — then keep every one of them in view.",
+        "Be part of Sri Lanka's largest innovation ecosystem to make an impact.",
     },
   },
   { timestamps: true }

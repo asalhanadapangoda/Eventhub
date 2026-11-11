@@ -34,8 +34,8 @@ export default function Navbar({
 
   const closeMobile = () => setMobileMenuOpen(false);
 
-  // Transparent only on Home page when not scrolled down
-  const isTransparent = activeTab === 'home' && !isScrolled;
+  // Transparent only on Home page when not scrolled down AND mobile menu is closed
+  const isTransparent = activeTab === 'home' && !isScrolled && !mobileMenuOpen;
 
   return (
     <header className={`navbar ${isTransparent ? 'navbar-transparent' : 'navbar-solid'} ${isScrolled ? 'navbar-scrolled' : ''}`}>

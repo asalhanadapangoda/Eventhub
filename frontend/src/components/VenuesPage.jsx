@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import FormattedText from './FormattedText';
 import ImageCarouselSlider from './ImageCarouselSlider';
-import { optimizeImageUrl } from '../utils/eventUtils';
+import { optimizeImageUrl, getSpaceTypes, getSpaceType, getSpaceTypeIcon } from '../utils/eventUtils';
 
 // TRACE Branch metadata definition for rich display & badges
 const TRACE_BRANCHES_META = [
@@ -142,30 +142,23 @@ export default function VenuesPage({ showToast }) {
   const [statusFilter, setStatusFilter] = useState('All');
   const [spaceTypeFilter, setSpaceTypeFilter] = useState('All');
 
-  // Derive unique active locations that actually exist in current venues database
+  // Single unified list containing all locations and all existing/newly added spaces (no duplicates)
   const availableLocations = useMemo(() => {
     const locMap = new Map();
-    const knownLocations = [
-      'TRACE Expert City Colombo 10',
-      'TRACE Coworking Colombo 02',
-      'TRACE Coworking Jaffna City',
-      'TRACE BREAD Center, Makandura',
-      'TRACE Creators Space, Rathnapura',
-      'Innovator Park - Kandy',
-      'ASAYA Workation By the Sea',
-      'UVA Co-Working Space',
-    ];
 
+    // 1. Add all branches/locations
     venues.forEach((v) => {
       const b = (v.branch || '').trim();
-      if (!b) return;
-      const matched = knownLocations.find(
-        (k) => k.toLowerCase() === b.toLowerCase() || b.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(b.toLowerCase())
-      );
-      if (matched) {
-        locMap.set(matched, matched);
-      } else {
-        locMap.set(b, b);
+      if (b && !locMap.has(b.toLowerCase())) {
+        locMap.set(b.toLowerCase(), b);
+      }
+    });
+
+    // 2. Add all individual space names (if not already in list)
+    venues.forEach((v) => {
+      const name = (v.name || '').trim();
+      if (name && !locMap.has(name.toLowerCase())) {
+        locMap.set(name.toLowerCase(), name);
       }
     });
 
@@ -187,29 +180,6 @@ export default function VenuesPage({ showToast }) {
     currentUser.email === 'admin@trace.lk' ||
     currentUser.isAdmin
   );
-
-  // Helper function to derive space type (Meeting Room, Co-working, Auditorium, Event Space)
-  const getSpaceType = (v) => {
-    if (!v) return 'Meeting Room';
-    const rawType = (v.type && typeof v.type === 'string') ? v.type.trim() : '';
-    if (rawType) {
-      if (rawType.toLowerCase().includes('lab') || rawType.toLowerCase().includes('maker')) return 'Co-Working Space';
-      if (rawType.toLowerCase().includes('office') || rawType.toLowerCase().includes('suite')) return 'Meeting Room';
-      return rawType;
-    }
-    const str = `${v.name || ''} ${v.description || ''} ${v.branch || ''} ${v.address || ''}`.toLowerCase();
-
-    if (str.includes('coworking') || str.includes('co-working') || str.includes('incubator') || str.includes('shared desk') || str.includes('coding hub') || str.includes('creators space') || str.includes('lab') || str.includes('maker')) {
-      return 'Co-Working Space';
-    }
-    if (str.includes('auditorium') || str.includes('amphitheater') || str.includes('pavilion') || str.includes('theatre') || str.includes('grand')) {
-      return 'Auditorium & Hall';
-    }
-    if (str.includes('deck') || str.includes('terrace') || str.includes('expo') || str.includes('event space')) {
-      return 'Event Space';
-    }
-    return 'Meeting Room';
-  };
 
   // Helper function to derive province for any space
   const getSpaceProvince = (v) => {
@@ -243,38 +213,72 @@ export default function VenuesPage({ showToast }) {
     return 'Western Province';
   };
 
-  // Helper to format venue pricing (including On Demand without tax labels)
+  // Helper to get structured pricing details (including tax information)
+  const getVenuePriceDetails = (v) => {
+    if (!v) return { fullText: 'On Demand', baseText: 'On Demand', taxText: '', hasTax: false, isDemand: true };
+
+    const rawRp = typeof v.rentalPrice === 'string' ? v.rentalPrice.trim() : '';
+    const hasTaxInString = rawRp.toLowerCase().includes('tax') || rawRp.toLowerCase().includes('vat') || rawRp.toLowerCase().includes('sscl');
+    const hasTax = Boolean(v.includeTax) || hasTaxInString;
+
+    // Detect tax label if present
+    let taxLabel = v.taxLabelType;
+    if (!taxLabel && hasTaxInString) {
+      const match = rawRp.match(/(\+\s*(?:Tax(?:es)?|VAT(?:\s*\(\d+%\))?|SSCL\s*&\s*VAT)|\(Subject to Tax\))/i);
+      if (match) taxLabel = match[0].trim();
+    }
+    if (!taxLabel && hasTax) {
+      taxLabel = '+ Tax';
+    }
+
+    const isDemand = Boolean(v.isOnDemand || rawRp.toLowerCase().includes('demand'));
+    if (isDemand) {
+      const cleanTaxLabel = (taxLabel || 'Tax').replace(/^\+?\s*/, '').replace(/^\(|\)$/g, '');
+      const fullText = hasTax ? `On Demand (${cleanTaxLabel})` : 'On Demand';
+      return {
+        fullText,
+        baseText: 'On Demand',
+        taxText: hasTax ? (taxLabel || '+ Tax') : '',
+        hasTax,
+        isDemand: true,
+      };
+    }
+
+    // Clean base price without tax suffix
+    let basePrice = rawRp
+      .replace(/\s*\+\s*tax(es)?/gi, '')
+      .replace(/\s*\+\s*vat(\s*\(\d+%\))?/gi, '')
+      .replace(/\s*\+\s*sscl\s*&\s*vat/gi, '')
+      .replace(/\s*\(subject to tax\)/gi, '')
+      .replace(/\s*\(tax(es)?\)/gi, '')
+      .trim();
+
+    if (!basePrice && v.pricePerHour !== undefined && v.pricePerHour !== null && Number(v.pricePerHour) > 0) {
+      basePrice = `Rs. ${Number(v.pricePerHour).toLocaleString()} / hr`;
+    }
+
+    if (!basePrice) {
+      basePrice = 'On Demand';
+    }
+
+    const fullText = hasTax ? `${basePrice} ${taxLabel}` : basePrice;
+
+    return {
+      fullText,
+      baseText: basePrice,
+      taxText: hasTax ? taxLabel : '',
+      hasTax,
+      isDemand: basePrice.toLowerCase().includes('demand'),
+    };
+  };
+
+  // Helper to format venue pricing (including tax labels)
   const getVenuePriceText = (v) => {
-    if (!v) return 'On Demand';
-    if (v.isOnDemand) return 'On Demand';
-    let rp = typeof v.rentalPrice === 'string' ? v.rentalPrice.trim() : '';
-    if (rp) {
-      if (rp.toLowerCase().includes('demand')) return 'On Demand';
-      // Strip any tax suffix: e.g. "+ Tax", "+ Taxes", "+ VAT...", "(Subject to Tax)", etc.
-      rp = rp
-        .replace(/\s*\+\s*tax(es)?/gi, '')
-        .replace(/\s*\+\s*vat(\s*\(\d+%\))?/gi, '')
-        .replace(/\s*\+\s*sscl\s*&\s*vat/gi, '')
-        .replace(/\s*\(subject to tax\)/gi, '')
-        .replace(/\s*\(tax(es)?\)/gi, '')
-        .trim();
-      return rp || 'On Demand';
-    }
-    if (v.pricePerHour !== undefined && v.pricePerHour !== null && Number(v.pricePerHour) > 0) {
-      return `Rs. ${Number(v.pricePerHour).toLocaleString()} / hr`;
-    }
-    return 'On Demand';
+    return getVenuePriceDetails(v).fullText;
   };
 
   const isVenuePriceOnDemand = (v) => {
-    return getVenuePriceText(v).toLowerCase().includes('demand');
-  };
-
-  // Tax badge specifically for BAY 07 / BOY 07
-  const hasTaxBadge = (v) => {
-    if (!v) return false;
-    const name = String(v.name || '').toLowerCase();
-    return name.includes('bay 07') || name.includes('bay 7') || name.includes('boy 07') || name.includes('boy 7');
+    return getVenuePriceDetails(v).isDemand;
   };
 
   // Modal State for Venue Details & Booking Inquiry
@@ -438,11 +442,16 @@ export default function VenuesPage({ showToast }) {
       if (p.toLowerCase() !== provinceFilter.toLowerCase()) return false;
     }
 
-    // 1. Branch Filter
+    // 1. Location & Space Filter
     if (selectedBranch !== 'All') {
-      const vBranch = (v.branch || '').toLowerCase();
-      const target = selectedBranch.toLowerCase();
-      if (!vBranch.includes(target) && !target.includes(vBranch)) return false;
+      const target = selectedBranch.toLowerCase().trim();
+      const vBranch = (v.branch || '').toLowerCase().trim();
+      const vName = (v.name || '').toLowerCase().trim();
+
+      const matchesBranch = vBranch === target || vBranch.includes(target) || target.includes(vBranch);
+      const matchesName = vName === target || vName.includes(target) || target.includes(vName);
+
+      if (!matchesBranch && !matchesName) return false;
     }
 
     // 2. Search Query
@@ -460,13 +469,20 @@ export default function VenuesPage({ showToast }) {
 
     // 3. Space Type Filter
     if (spaceTypeFilter !== 'All') {
-      const type = getSpaceType(v).toLowerCase();
+      const types = getSpaceTypes(v).map((t) => t.toLowerCase());
       const target = spaceTypeFilter.toLowerCase();
-      if (target === 'meeting room' && !(type.includes('meeting') || type.includes('conference') || type.includes('room'))) return false;
-      else if (target === 'co-working' && !(type.includes('co-working') || type.includes('coworking') || type.includes('incubator') || type.includes('desk'))) return false;
-      else if (target === 'auditorium' && !(type.includes('auditorium') || type.includes('hall') || type.includes('amphitheater') || type.includes('pavilion'))) return false;
-      else if (target === 'event space' && !(type.includes('event') || type.includes('deck') || type.includes('space'))) return false;
-      else if (!type.includes(target) && !target.includes(type)) return false;
+
+      const matches = types.some((t) => {
+        if (target.includes('meeting') && t.includes('meeting')) return true;
+        if (target.includes('conference') && (t.includes('conference') || t.includes('hall'))) return true;
+        if ((target.includes('co-working') || target.includes('coworking')) && (t.includes('co-working') || t.includes('coworking'))) return true;
+        if (target.includes('maker') && t.includes('maker')) return true;
+        if (target.includes('workation') && t.includes('workation')) return true;
+        if (target.includes('event') && t.includes('event')) return true;
+        return t === target || t.includes(target) || target.includes(t);
+      });
+
+      if (!matches) return false;
     }
 
     // 4. Status Filter
@@ -525,6 +541,20 @@ export default function VenuesPage({ showToast }) {
 
   const handleInquirySubmit = async (e) => {
     e.preventDefault();
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test((inquiryForm.email || '').trim())) {
+      if (showToast) showToast('Please enter a valid email address (e.g. name@example.com)', 'error');
+      return;
+    }
+
+    const cleanPhone = (inquiryForm.phone || '').trim().replace(/[\s\-()]/g, '');
+    const phoneRegex = /^\+?[0-9]{9,15}$/;
+    if (!phoneRegex.test(cleanPhone)) {
+      if (showToast) showToast('Please enter a valid phone number (at least 9 digits, e.g. 0771234567 or +94771234567)', 'error');
+      return;
+    }
+
     setIsSubmittingInquiry(true);
 
     try {
@@ -543,7 +573,7 @@ export default function VenuesPage({ showToast }) {
           durationHours: Number(inquiryForm.durationHours) || 4,
           guests: Number(inquiryForm.guests) || 50,
           notes: inquiryForm.notes,
-          price: getVenuePriceText(activeVenueModal) + (hasTaxBadge(activeVenueModal) ? ' + Tax' : ''),
+          price: getVenuePriceText(activeVenueModal),
         }),
       });
 
@@ -655,10 +685,12 @@ export default function VenuesPage({ showToast }) {
                 onChange={(e) => setSpaceTypeFilter(e.target.value)}
               >
                 <option value="All">All Types</option>
-                <option value="Meeting Room">Meeting Room</option>
-                <option value="Co-Working">Co-Working Space</option>
-                <option value="Auditorium">Auditorium & Conference Hall</option>
-                <option value="Event Space">Event Space</option>
+                <option value="Meeting Rooms">Meeting Rooms</option>
+                <option value="Conference Hall">Conference Hall</option>
+                <option value="Co-Working Spaces">Co-Working Spaces</option>
+                <option value="Maker Spaces">Maker Spaces</option>
+                <option value="Workation">Workation</option>
+                <option value="Event Spaces">Event Spaces</option>
               </select>
               <i className="fa-solid fa-chevron-down select-arrow"></i>
             </div>
@@ -799,20 +831,61 @@ export default function VenuesPage({ showToast }) {
                           <i className={`fa-solid ${branchMeta?.icon || 'fa-building'}`}></i>
                           <span>{branchMeta?.shortName || venueBranchName}</span>
                         </div>
-                        <span style={{ fontSize: '0.74rem', fontWeight: '700', color: '#0284c7', background: '#f0f9ff', border: '1px solid #bae6fd', padding: '2px 7px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          <i className="fa-solid fa-shapes"></i> {getSpaceType(v)}
-                        </span>
+                        {getSpaceTypes(v).map((st) => (
+                          <span
+                            key={st}
+                            style={{
+                              fontSize: '0.74rem',
+                              fontWeight: '700',
+                              color: '#0284c7',
+                              background: '#f0f9ff',
+                              border: '1px solid #bae6fd',
+                              padding: '2px 7px',
+                              borderRadius: '6px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                            }}
+                          >
+                            <i className={`fa-solid ${getSpaceTypeIcon(st)}`}></i> {st}
+                          </span>
+                        ))}
                         <span style={{ fontSize: '0.74rem', fontWeight: '700', color: '#5d4df6', background: '#eff6ff', border: '1px solid #dbeafe', padding: '2px 7px', borderRadius: '6px' }}>
                           📍 {getSpaceProvince(v)}
                         </span>
                       </div>
-                      <span
-                        className="venue-card-price-tag"
-                        style={isVenuePriceOnDemand(v) ? { color: '#059669', background: '#ecfdf5', borderColor: '#a7f3d0', fontWeight: '800' } : {}}
-                      >
-                        <i className="fa-solid fa-tag"></i> {getVenuePriceText(v)}
-                        {hasTaxBadge(v) && <span className="venue-tax-badge">+ Tax</span>}
-                      </span>
+                      {(() => {
+                        const priceInfo = getVenuePriceDetails(v);
+                        return (
+                          <span
+                            className="venue-card-price-tag"
+                            style={priceInfo.isDemand ? { color: '#059669', background: '#ecfdf5', borderColor: '#a7f3d0', fontWeight: '800' } : {}}
+                            title={priceInfo.fullText}
+                          >
+                            <i className="fa-solid fa-tag"></i> {priceInfo.baseText}
+                            {priceInfo.taxText && (
+                              <span
+                                className="venue-card-tax-pill"
+                                style={{
+                                  marginLeft: '4px',
+                                  fontSize: '0.72rem',
+                                  fontWeight: 800,
+                                  color: '#4f46e5',
+                                  background: '#eef2ff',
+                                  border: '1px solid #c7d2fe',
+                                  padding: '1px 6px',
+                                  borderRadius: '4px',
+                                  letterSpacing: '0.02em',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                }}
+                              >
+                                {priceInfo.taxText}
+                              </span>
+                            )}
+                          </span>
+                        );
+                      })()}
                     </div>
 
                     <h3 className="venue-card-title">{v.name}</h3>
@@ -898,11 +971,7 @@ export default function VenuesPage({ showToast }) {
           <div
             className="modal-card venue-split-modal-card"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              position: 'relative',
-              height: modalActiveTab === 'booking' ? 'auto' : '90vh',
-              maxHeight: '90vh',
-            }}
+            style={{ position: 'relative' }}
           >
             {/* Floating Close Button */}
             <button
@@ -996,62 +1065,92 @@ export default function VenuesPage({ showToast }) {
 
             {/* TAB CONTENT: EITHER BOOKING INQUIRY OR DETAILS OVERVIEW */}
             {modalActiveTab === 'booking' ? (
-              <div className="venue-booking-split-grid" style={{ maxHeight: 'calc(90vh - 65px)', overflowY: 'auto' }}>
-                {/* Left Side: Space Snapshot Column inside Frame */}
-                <div style={{ padding: '0.5rem', background: '#ffffff', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
-                  <div
-                    className="venue-booking-sidebar"
-                    style={{
-                      padding: '1rem',
-                      background: '#f8fafc',
-                      borderRadius: '16px',
-                      border: '1px solid #e2e8f0',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.9rem',
-                      height: 'fit-content',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-                    }}
-                  >
-                    {activeVenueModal.coverImage && isRealVenuePhoto(activeVenueModal.coverImage) ? (
-                      <div style={{ height: '180px', borderRadius: '12px', overflow: 'hidden', background: '#0f172a' }}>
-                        <img
-                          src={optimizeImageUrl(activeVenueModal.coverImage, 600)}
-                          alt={activeVenueModal.name}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                      </div>
-                    ) : null}
+              <div className="venue-booking-split-grid" style={{ minHeight: '560px', maxHeight: 'calc(90vh - 65px)', overflowY: 'auto' }}>
+                {/* Left Side: Space Snapshot */}
+                <div className="venue-booking-sidebar" style={{ padding: '1.75rem', background: '#f8fafc', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {activeVenueModal.coverImage && isRealVenuePhoto(activeVenueModal.coverImage) ? (
+                    <div style={{ height: '180px', borderRadius: '12px', overflow: 'hidden', background: '#0f172a' }}>
+                      <img
+                        src={optimizeImageUrl(activeVenueModal.coverImage, 600)}
+                        alt={activeVenueModal.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    </div>
+                  ) : null}
 
-                    <div>
-                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#5d4df6', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                        Selected Facility
-                      </span>
-                      <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: '4px 0 6px 0' }}>
-                        {activeVenueModal.name}
-                      </h3>
-                      <div style={{ fontSize: '0.82rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <i className="fa-solid fa-location-dot"></i> {activeVenueModal.branch || activeVenueModal.address}
+                  <div>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#5d4df6', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Selected Facility
+                    </span>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: '4px 0 6px 0' }}>
+                      {activeVenueModal.name}
+                    </h3>
+                    <div style={{ fontSize: '0.82rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <i className="fa-solid fa-location-dot"></i> {activeVenueModal.branch || activeVenueModal.address}
+                    </div>
+                  </div>
+
+                  <div style={{ background: '#ffffff', borderRadius: '10px', padding: '0.85rem 1rem', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem' }}>
+                      <span style={{ color: '#64748b', fontWeight: 600 }}>Rate / Pricing:</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <strong style={{ color: '#059669' }}>{getVenuePriceDetails(activeVenueModal).baseText}</strong>
+                        {getVenuePriceDetails(activeVenueModal).taxText && (
+                          <span
+                            style={{
+                              fontSize: '0.72rem',
+                              fontWeight: 800,
+                              color: '#4f46e5',
+                              background: '#eef2ff',
+                              border: '1px solid #c7d2fe',
+                              padding: '1px 5px',
+                              borderRadius: '4px',
+                            }}
+                          >
+                            {getVenuePriceDetails(activeVenueModal).taxText}
+                          </span>
+                        )}
                       </div>
                     </div>
-
-                    <div style={{ background: '#ffffff', borderRadius: '10px', padding: '0.85rem 1rem', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '8px', fontSize: '0.82rem' }}>
-                        <span style={{ color: '#64748b', fontWeight: 600 }}>Rate / Pricing:</span>
-                        <strong style={{ color: '#059669', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                          {getVenuePriceText(activeVenueModal)}
-                          {hasTaxBadge(activeVenueModal) && <span className="venue-tax-badge">+ Tax</span>}
-                        </strong>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '8px', fontSize: '0.82rem' }}>
-                        <span style={{ color: '#64748b', fontWeight: 600 }}>Capacity:</span>
-                        <strong style={{ color: '#0f172a' }}>
-                          {typeof activeVenueModal.capacity === 'number' && activeVenueModal.capacity > 0
-                            ? `${activeVenueModal.capacity} Guests`
-                            : (activeVenueModal.capacity || 'Custom Setup')}
-                        </strong>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+                      <span style={{ color: '#64748b', fontWeight: 600 }}>Capacity:</span>
+                      <strong style={{ color: '#0f172a' }}>
+                        {typeof activeVenueModal.capacity === 'number' && activeVenueModal.capacity > 0
+                          ? `${activeVenueModal.capacity} Guests`
+                          : (activeVenueModal.capacity || 'Custom Setup')}
+                      </strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', alignItems: 'center', marginTop: '0.35rem' }}>
+                      <span style={{ color: '#64748b', fontWeight: 600 }}>Space Type:</span>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', justifyContent: 'flex-end', maxWidth: '65%' }}>
+                        {getSpaceTypes(activeVenueModal).map((st) => (
+                          <span
+                            key={st}
+                            style={{
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                              color: '#0284c7',
+                              background: '#f0f9ff',
+                              border: '1px solid #bae6fd',
+                              padding: '1px 6px',
+                              borderRadius: '4px',
+                            }}
+                          >
+                            {st}
+                          </span>
+                        ))}
                       </div>
                     </div>
+                  </div>
+
+                  {/* Trust / Notification Box */}
+                  <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', padding: '0.85rem 1rem', marginTop: 'auto' }}>
+                    <div style={{ fontSize: '0.78rem', color: '#1e40af', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                      <i className="fa-solid fa-shield-halved"></i> Direct TRACE Inquiry
+                    </div>
+                    <p style={{ fontSize: '0.76rem', color: '#3b82f6', margin: 0, lineHeight: 1.45 }}>
+                      Inquiry requests are dispatched in real-time to <strong>connect@trace.lk</strong>. Our facilities coordinator will contact you promptly.
+                    </p>
                   </div>
                 </div>
 
@@ -1076,7 +1175,7 @@ export default function VenuesPage({ showToast }) {
                           type="text"
                           required
                           className="venue-inquiry-input"
-                          placeholder="e.g. Kasun Perera"
+                          placeholder="Your full name"
                           value={inquiryForm.name}
                           onChange={(e) => setInquiryForm({ ...inquiryForm, name: e.target.value })}
                         />
@@ -1089,7 +1188,7 @@ export default function VenuesPage({ showToast }) {
                           type="email"
                           required
                           className="venue-inquiry-input"
-                          placeholder="e.g. kasun@example.com"
+                          placeholder="yourname@domain.com"
                           value={inquiryForm.email}
                           onChange={(e) => setInquiryForm({ ...inquiryForm, email: e.target.value })}
                         />
@@ -1424,30 +1523,66 @@ export default function VenuesPage({ showToast }) {
                       <span style={{ fontSize: '0.76rem', fontWeight: '700', color: activeVenueModal.status === 'Available' ? '#059669' : '#d97706', background: activeVenueModal.status === 'Available' ? '#dcfce7' : '#fef3c7', padding: '0.25rem 0.65rem', borderRadius: '20px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                         ● {activeVenueModal.status || 'Available'}
                       </span>
-                      <span
-                        style={{
-                          fontSize: '0.82rem',
-                          fontWeight: '800',
-                          color: '#059669',
-                          background: '#ecfdf5',
-                          border: '1px solid #a7f3d0',
-                          padding: '0.25rem 0.65rem',
-                          borderRadius: '6px',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '5px',
-                        }}
-                      >
-                        <i className="fa-solid fa-tag"></i> {getVenuePriceText(activeVenueModal)}
-                        {hasTaxBadge(activeVenueModal) && <span className="venue-tax-badge">+ Tax</span>}
-                      </span>
+                      {(() => {
+                        const modalPrice = getVenuePriceDetails(activeVenueModal);
+                        return (
+                          <span
+                            style={{
+                              fontSize: '0.82rem',
+                              fontWeight: '800',
+                              color: '#059669',
+                              background: '#ecfdf5',
+                              border: '1px solid #a7f3d0',
+                              padding: '0.25rem 0.65rem',
+                              borderRadius: '6px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                            }}
+                          >
+                            <i className="fa-solid fa-tag"></i> {modalPrice.baseText}
+                            {modalPrice.taxText && (
+                              <span
+                                style={{
+                                  fontSize: '0.74rem',
+                                  fontWeight: 800,
+                                  color: '#4f46e5',
+                                  background: '#eef2ff',
+                                  border: '1px solid #c7d2fe',
+                                  padding: '1px 6px',
+                                  borderRadius: '4px',
+                                  marginLeft: '2px',
+                                }}
+                              >
+                                {modalPrice.taxText}
+                              </span>
+                            )}
+                          </span>
+                        );
+                      })()}
                     </div>
 
                     {/* Province, Type, Capacity & Location Address */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.2rem' }}>
-                      <span style={{ fontSize: '0.76rem', fontWeight: '700', color: '#0369a1', background: '#e0f2fe', border: '1px solid #bae6fd', padding: '0.25rem 0.65rem', borderRadius: '20px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                        <i className="fa-solid fa-shapes"></i> {getSpaceType(activeVenueModal)}
-                      </span>
+                      {getSpaceTypes(activeVenueModal).map((st) => (
+                        <span
+                          key={st}
+                          style={{
+                            fontSize: '0.76rem',
+                            fontWeight: '700',
+                            color: '#0369a1',
+                            background: '#e0f2fe',
+                            border: '1px solid #bae6fd',
+                            padding: '0.25rem 0.65rem',
+                            borderRadius: '20px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                        >
+                          <i className={`fa-solid ${getSpaceTypeIcon(st)}`}></i> {st}
+                        </span>
+                      ))}
                       <span style={{ fontSize: '0.76rem', fontWeight: '700', color: '#5d4df6', background: '#eff6ff', border: '1px solid #dbeafe', padding: '0.25rem 0.65rem', borderRadius: '20px' }}>
                         📍 {getSpaceProvince(activeVenueModal)}
                       </span>

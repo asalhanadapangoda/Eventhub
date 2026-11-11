@@ -14,10 +14,28 @@ const generateTicketId = () => {
 // POST /api/registrations
 const registerForEvent = async (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "You must create an account or log in to register for events.",
+      });
+    }
+
     const { eventId, name, email, contactNumber, notes } = req.body;
 
     if (!eventId || !name || !email || !contactNumber) {
       return res.status(400).json({ success: false, message: "Please fill in all required fields (name, email, contact number)." });
+    }
+
+    const emailClean = String(email).trim().toLowerCase();
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(emailClean)) {
+      return res.status(400).json({ success: false, message: "Please enter a valid email address." });
+    }
+
+    const cleanPhone = String(contactNumber).replace(/[\s\-()]/g, "");
+    if (!/^\+?[0-9]{9,15}$/.test(cleanPhone)) {
+      return res.status(400).json({ success: false, message: "Please enter a valid contact phone number." });
     }
 
     const event = await Event.findById(eventId);

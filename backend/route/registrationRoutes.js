@@ -10,7 +10,7 @@ const {
 
 const { protect, authorize } = require("../middleware/authMiddleware");
 
-router.post("/", registerForEvent);
+router.post("/", protect, registerForEvent);
 router.get("/", protect, authorize("admin", "super_admin", "branch_admin"), getAllRegistrations);
 router.get("/user/:email", protect, getUserRegistrations);
 router.get("/event/:eventId", protect, authorize("admin", "super_admin", "branch_admin"), getEventRegistrations);

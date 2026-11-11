@@ -68,7 +68,7 @@
   },
   {
     "_id": "6a86afe43a6d8402bea9340b",
-    "title": "Midweek Boost at third Place",
+    "title": "Midweek Boost at third Place 3.0",
     "description": "Mid Week Bootstrap is a casual evening gathering at TRACE Expert City, created for anyone who wants to step away from their busy routine, enjoy some music, play a few games, meet new people, and simply have a good time.\n\n📅 25 August 2026\n📍 TRACE Expert City\n🎮 Games | 🎶 Music | 🤝 New Connections | ✨ Good Vibes",
     "category": "Community Meetup",
     "date": "2026-08-25T00:00:00.000Z",
@@ -81,40 +81,9 @@
     "createdBy": "TRACE Admin",
     "highlights": [],
     "speaker": null,
-    "gallery": [
-      {
-        "_id": "6a9e4861a7b375e88ac83f58",
-        "url": "/uploads/event-gallery-6a86afe43a6d8402bea9340b-0-1792467145179-33936.jpg",
-        "caption": "Event Photo"
-      },
-      {
-        "_id": "6a9e4861a7b375e88ac83f59",
-        "url": "/uploads/event-gallery-6a86afe43a6d8402bea9340b-1-1792467145181-92478.jpg",
-        "caption": "Event Photo"
-      },
-      {
-        "_id": "6a9e4861a7b375e88ac83f5a",
-        "url": "/uploads/event-gallery-6a86afe43a6d8402bea9340b-2-1792467145184-63287.jpg",
-        "caption": "Event Photo"
-      },
-      {
-        "_id": "6a9e4861a7b375e88ac83f5b",
-        "url": "/uploads/event-gallery-6a86afe43a6d8402bea9340b-3-1792467145187-64212.jpg",
-        "caption": "Event Photo"
-      },
-      {
-        "_id": "6a9e4861a7b375e88ac83f5c",
-        "url": "/uploads/event-gallery-6a86afe43a6d8402bea9340b-4-1792467145190-75554.jpg",
-        "caption": "Event Photo"
-      },
-      {
-        "_id": "6a9e4861a7b375e88ac83f5d",
-        "url": "/uploads/event-gallery-6a86afe43a6d8402bea9340b-5-1792467145193-79229.jpg",
-        "caption": "Event Photo"
-      }
-    ],
+    "gallery": [],
     "createdAt": "2026-08-20T07:42:28.249Z",
-    "updatedAt": "2026-10-22T06:55:30.890Z",
+    "updatedAt": "2026-11-09T07:54:18.860Z",
     "__v": 0,
     "videoUrl": "",
     "socialLinks": {
@@ -267,7 +236,7 @@
   },
   {
     "_id": "6abe234e1fbc792c9f956d5c",
-    "title": "Midweek Boost at third Place",
+    "title": "Midweek Boost at third Place 4.0",
     "description": "<!--StartFragment-->Mid Week Bootstrap is a casual evening gathering at TRACE Expert City, created for anyone who wants to step away from their busy routine, enjoy some music, play a few games, meet new people, and simply have a good time.&nbsp;<div>📅 25 September 2026&nbsp;</div><div>📍 TRACE Expert City&nbsp;</div><div>🎮 Games | 🎶 Music | 🤝 New Connections | ✨ Good Vibes<!--EndFragment--></div>",
     "category": "Community Meetup",
     "date": "2026-09-30T00:00:00.000Z",
@@ -335,12 +304,12 @@
       }
     ],
     "createdAt": "2026-10-01T09:09:34.111Z",
-    "updatedAt": "2026-10-22T06:55:31.187Z",
+    "updatedAt": "2026-11-09T07:19:09.495Z",
     "__v": 0
   },
   {
     "_id": "6ad98818bb5d08c009e87f01",
-    "title": "TRACE Midweek Boost – Live Music & Games",
+    "title": "Midweek Boost at Third Place 5.0",
     "description": "<!--StartFragment--><p>Need a Midweek Pick-Me-Up? 🎸✨</p><p><br></p><p>Join us for TRACE Midweek Boost at The Third Place, TRACE Expert City! Unwind, recharge, and enjoy a fun-filled evening with music, games, and great food.</p><p><br></p><p>🎵 Live Music by Chris &amp; Avishka<br>♟️ Fun Board Games<br>☕ 20% OFF on all beverages<br>🍛 Special Dinner Menu featuring Kottu</p><p><br></p><p>📅 <strong>Date:</strong> Wednesday, October 28, 2026<br>⏰ <strong>Time:</strong> 5:30 PM – 8:30 PM<br>📍 <strong>Location:</strong> The Third Place, TRACE Expert City</p><p><br></p><p>Bring your friends, enjoy great music, and make your midweek memorable! 🎶✨</p><p><br></p><!--EndFragment-->",
     "category": "Community Meetup",
     "date": "2026-10-28T00:00:00.000Z",
@@ -348,8 +317,61 @@
     "location": "The Third Place, TRACE Expert City, The Third Place, TRACE Expert City",
     "capacity": 100,
     "registeredCount": 1,
-    "status": "upcoming",
+    "status": "past",
     "coverImage": "/uploads/event-cover-6ad98818bb5d08c009e87f01-1792641492124-62975.jpg",
+    "videoUrl": "",
+    "createdBy": "TRACE Admin",
+    "gallery": [
+      {
+        "_id": "g_1794207917628_0_459",
+        "url": "/uploads/event-gallery-6ad98818bb5d08c009e87f01-1794207992601-0-1794207992601-52957.jpg",
+        "caption": "Event Photo"
+      },
+      {
+        "_id": "g_1794207919171_1_462",
+        "url": "/uploads/event-gallery-6ad98818bb5d08c009e87f01-1794207992628-1-1794207992629-82971.jpg",
+        "caption": "Event Photo"
+      },
+      {
+        "_id": "g_1794207921106_2_516",
+        "url": "/uploads/event-gallery-6ad98818bb5d08c009e87f01-1794207992631-2-1794207992631-79956.jpg",
+        "caption": "Event Photo"
+      },
+      {
+        "_id": "g_1794207922759_3_730",
+        "url": "/uploads/event-gallery-6ad98818bb5d08c009e87f01-1794207992653-3-1794207992653-57350.jpg",
+        "caption": "Event Photo"
+      },
+      {
+        "_id": "g_1794207924364_4_534",
+        "url": "/uploads/event-gallery-6ad98818bb5d08c009e87f01-1794207992662-4-1794207992663-94790.jpg",
+        "caption": "Event Photo"
+      }
+    ],
+    "highlights": [],
+    "speaker": null,
+    "socialLinks": {
+      "facebook": "",
+      "instagram": "",
+      "twitter": "",
+      "linkedin": ""
+    },
+    "createdAt": "2026-10-22T03:50:48.017Z",
+    "updatedAt": "2026-11-09T07:19:20.911Z",
+    "__v": 0
+  },
+  {
+    "_id": "6af16f0cc6439128d65576db",
+    "title": "REBOOT.health 2.0",
+    "description": "<p dir=\"ltr\">Organised by The Third Place, REBOOT.health 2.0 brings you another opportunity to explore Ayurveda and traditional Sri Lankan wellness practices, this time with a more hands-on and experiential approach.</p><p dir=\"ltr\"><br></p><p dir=\"ltr\">Here's what makes this edition different:</p><p dir=\"ltr\"><br></p><p dir=\"ltr\">🧘 Discover practical approaches to managing migraines, recurring headaches, workplace stress, burnout and screen-related fatigue.</p><p dir=\"ltr\">🍵 Experience traditional Ayurveda herbal drinks and snacks.</p><p dir=\"ltr\">🌿 Explore traditional Ayurveda practices and how to incorporate them into everyday life.</p><p dir=\"ltr\">✨ Get introduced to simple self-care techniques and healthier daily habits you can take home and practise.</p><p dir=\"ltr\"><br></p><p dir=\"ltr\">Your Investment:</p><p dir=\"ltr\">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;- 🎟️ Individual: LKR 1,000 per person</p><p dir=\"ltr\">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; - 👥 Groups of 3 – 5: LKR 800 per person&nbsp;</p><p dir=\"ltr\"><br></p><p dir=\"ltr\"><br></p><p dir=\"ltr\">Your registration includes the interactive Ayurveda Session and an opportunity to experience traditional Ayurvedic herbal refreshments.</p><p dir=\"ltr\"><br></p><p dir=\"ltr\">(Enjoy 10% OFF all beverages at The Third Place Café when you join us.)</p><p dir=\"ltr\"><br></p><p dir=\"ltr\">Event Details :-</p><p dir=\"ltr\"><span style=\"font-size: 0.95rem;\">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 📅 12 November 2026 (Thursday)</span></p><p dir=\"ltr\">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;⏰ 5:00 PM – 6:30 PM</p><p dir=\"ltr\">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;📍 The Third Place Café, TRACE Expert City, Colombo 10</p><p dir=\"ltr\"><br></p><p dir=\"ltr\">Only 15 participants!</p><p dir=\"ltr\"><br></p><p dir=\"ltr\">We're keeping this session small to create a more engaging and interactive experience.</p><p dir=\"ltr\"><br></p><p dir=\"ltr\">(For more info: 078 942 6663 - Mahdy)&nbsp;</p><p dir=\"ltr\">See you at REBOOT.health 2.0!</p>",
+    "category": "REBOOT.health",
+    "date": "2026-11-12T00:00:00.000Z",
+    "time": "17:00 - 18:30",
+    "location": "Third Place, The Third Place, TRACE Expert City, Maradana Road, Colombo 01000, Sri Lanka",
+    "capacity": 15,
+    "registeredCount": 0,
+    "status": "upcoming",
+    "coverImage": "/uploads/event-cover-6af16f0cc6439128d65576db-1794297128330-37390.jpg",
     "videoUrl": "",
     "createdBy": "TRACE Admin",
     "gallery": [],
@@ -361,8 +383,35 @@
       "twitter": "",
       "linkedin": ""
     },
-    "createdAt": "2026-10-22T03:50:48.017Z",
-    "updatedAt": "2026-10-22T06:55:31.285Z",
+    "createdAt": "2026-11-09T06:58:20.827Z",
+    "updatedAt": "2026-11-10T07:52:08.334Z",
+    "__v": 0
+  },
+  {
+    "_id": "6af1786c03e773224de9990c",
+    "title": "Midweek Boost at third Place 6.0",
+    "description": "<!--StartFragment--><p style=\"color: rgb(51, 65, 85); font-size: 15.68px;\">Need a Midweek Pick-Me-Up? 🎸✨</p><p style=\"color: rgb(51, 65, 85); font-size: 15.68px;\"><br></p><p style=\"color: rgb(51, 65, 85); font-size: 15.68px;\">Join us for TRACE Midweek Boost at The Third Place, TRACE Expert City! Unwind, recharge, and enjoy a fun-filled evening with music, games, and great food.</p><p style=\"color: rgb(51, 65, 85); font-size: 15.68px;\"><br></p><p style=\"color: rgb(51, 65, 85); font-size: 15.68px;\">🎵 Live Music by Chris &amp; Avishka<br>♟️ Fun Board Games<br>☕ 20% OFF on all beverages<br>🍛 Special Dinner Menu featuring Kottu</p><p style=\"color: rgb(51, 65, 85); font-size: 15.68px;\"><br></p><p style=\"color: rgb(51, 65, 85); font-size: 15.68px;\">📅 <strong>Date:</strong> Wednesday, November 25, 2026<br>⏰ <strong>Time:</strong> 5:30 PM – 8:30 PM<br>📍 <strong>Location:</strong> The Third Place, TRACE Expert City</p><p style=\"color: rgb(51, 65, 85); font-size: 15.68px;\"><br></p><p style=\"color: rgb(51, 65, 85); font-size: 15.68px;\">Bring your friends, enjoy great music, and make your midweek memorable! 🎶✨</p><!--EndFragment-->",
+    "category": "Midweek Boost",
+    "date": "2026-11-25T00:00:00.000Z",
+    "time": "17:00 - 20:30",
+    "location": "Third Place, The Third Place, TRACE Expert City, Maradana Road, Colombo 01000, Sri Lanka",
+    "capacity": 50,
+    "registeredCount": 0,
+    "status": "upcoming",
+    "coverImage": "/uploads/event-cover-6af1786c03e773224de9990c-1794209869607-43242.jpg",
+    "videoUrl": "",
+    "createdBy": "TRACE Admin",
+    "gallery": [],
+    "highlights": [],
+    "speaker": null,
+    "socialLinks": {
+      "facebook": "",
+      "instagram": "",
+      "twitter": "",
+      "linkedin": ""
+    },
+    "createdAt": "2026-11-09T07:38:20.995Z",
+    "updatedAt": "2026-11-09T07:37:49.610Z",
     "__v": 0
   }
 ]

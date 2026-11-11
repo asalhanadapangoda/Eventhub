@@ -36,33 +36,50 @@ const SignupModal = React.lazy(() => import('./components/modals/SignupModal'));
 const ForgotPasswordModal = React.lazy(() => import('./components/modals/ForgotPasswordModal'));
 const LogoutConfirmModal = React.lazy(() => import('./components/modals/LogoutConfirmModal'));
 
-const TAB_TO_HASH_MAP = {
-  home: '#home',
-  upcoming: '#upcoming',
-  past: '#past',
-  'venues-page': '#spaces',
-  'my-events': '#my-events',
-  calendar: '#calendar',
-  profile: '#profile',
-  admin: '#admin',
-  'event-details': '#event-details',
-  'past-details': '#past-details',
+const TAB_TO_PATH_MAP = {
+  home: '/',
+  upcoming: '/upcoming',
+  past: '/past',
+  'venues-page': '/spaces',
+  'my-events': '/my-events',
+  calendar: '/calendar',
+  profile: '/profile',
+  admin: '/admin',
+  'event-details': '/event-details',
+  'past-details': '/past-details',
 };
 
-const HASH_TO_TAB_MAP = {
-  '': 'home',
-  '#': 'home',
-  '#home': 'home',
-  '#upcoming': 'upcoming',
-  '#past': 'past',
-  '#spaces': 'venues-page',
-  '#venues': 'venues-page',
-  '#my-events': 'my-events',
-  '#calendar': 'calendar',
-  '#profile': 'profile',
-  '#admin': 'admin',
-  '#event-details': 'event-details',
-  '#past-details': 'past-details',
+const PATH_TO_TAB_MAP = {
+  '/': 'home',
+  '/home': 'home',
+  '/upcoming': 'upcoming',
+  '/past': 'past',
+  '/spaces': 'venues-page',
+  '/venues': 'venues-page',
+  '/my-events': 'my-events',
+  '/calendar': 'calendar',
+  '/profile': 'profile',
+  '/admin': 'admin',
+  '/event-details': 'event-details',
+  '/past-details': 'past-details',
+};
+
+const getInitialTab = () => {
+  // If legacy hash was entered (e.g. #spaces or #upcoming), clean it away completely
+  const hash = window.location.hash || '';
+  if (hash) {
+    const cleanHash = hash.split('?')[0].replace(/^#\/?/, '/');
+    const matched = PATH_TO_TAB_MAP[cleanHash] || PATH_TO_TAB_MAP['/' + cleanHash.replace(/^\//, '')];
+    if (matched) {
+      const cleanPath = TAB_TO_PATH_MAP[matched] || '/';
+      const search = window.location.search || (hash.includes('?') ? '?' + hash.split('?')[1] : '');
+      window.history.replaceState({ tab: matched }, '', cleanPath + search);
+      return matched;
+    }
+  }
+
+  const pathname = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+  return PATH_TO_TAB_MAP[pathname] || 'home';
 };
 
 export default function App() {
@@ -76,11 +93,7 @@ export default function App() {
     } catch (e) { }
     return [];
   });
-  const [activeTab, setActiveTabState] = useState(() => {
-    const rawHash = window.location.hash || '#home';
-    const cleanHash = rawHash.split('?')[0];
-    return HASH_TO_TAB_MAP[cleanHash] || 'home';
-  });
+  const [activeTab, setActiveTabState] = useState(getInitialTab);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(() => {
     try {
@@ -96,9 +109,16 @@ export default function App() {
   const [selectedDetailsEvent, setSelectedDetailsEvent] = useState(null);
   const [selectedPastEvent, setSelectedPastEvent] = useState(null);
 
-  // Auth State
+  // Auth State (Pre-populated from localStorage for instantaneous 0ms session recovery)
   const [token, setToken] = useState(() => localStorage.getItem('eventhub_token') || null);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const u = localStorage.getItem('eventhub_user');
+      return u ? JSON.parse(u) : null;
+    } catch (e) {
+      return null;
+    }
+  });
 
   // Modals State
   const [regEvent, setRegEvent] = useState(null);
@@ -120,44 +140,45 @@ export default function App() {
   const [notifications, setNotifications] = useState(() => getStoredNotifications());
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  // Custom function to update activeTab AND synchronize URL Hash with optional entity id
+  // Custom function to update activeTab and URL Path without any '#'
   const setActiveTab = (newTab, entityId = null) => {
     setActiveTabState(newTab);
-    let targetHash = TAB_TO_HASH_MAP[newTab] || '#home';
+    const basePath = TAB_TO_PATH_MAP[newTab] || '/';
+    let targetUrl = basePath;
     if (entityId && (newTab === 'event-details' || newTab === 'past-details')) {
-      targetHash += `?id=${entityId}`;
+      targetUrl += `?id=${entityId}`;
     }
-    if (window.location.hash !== targetHash) {
-      window.history.pushState({ tab: newTab }, '', targetHash);
+    if (window.location.pathname !== basePath || window.location.search !== (entityId ? `?id=${entityId}` : '') || window.location.hash) {
+      window.history.pushState({ tab: newTab }, '', targetUrl);
     }
     if (['home', 'upcoming', 'past', 'past-details'].includes(newTab)) {
-      fetchEvents(true); // Silent background refresh, keeps UI fast and instant
+      fetchEvents(true); // Silent background refresh
     }
   };
 
-  // Synchronize browser URL hash & back/forward history navigation
+  // Synchronize browser URL navigation & popstate (completely without '#')
   useEffect(() => {
-    const handleHashChange = () => {
-      const rawHash = window.location.hash || '#home';
-      const cleanHash = rawHash.split('?')[0];
-      if (cleanHash === '#forgot-password' || cleanHash === '#reset-password') {
+    // Strip any '#' on load if present
+    if (window.location.hash) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+
+    const handleLocationChange = () => {
+      if (window.location.hash) {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+      const pathname = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+      const search = window.location.search || '';
+      if (search.includes('forgot-password') || search.includes('reset-password') || pathname.includes('reset-password')) {
         setShowForgotPassword(true);
       }
-      const targetTab = HASH_TO_TAB_MAP[cleanHash] || 'home';
+      const targetTab = PATH_TO_TAB_MAP[pathname] || 'home';
       setActiveTabState(targetTab);
     };
 
-    // Check initial hash on load
-    const initialRaw = window.location.hash || '';
-    if (initialRaw.startsWith('#forgot-password') || initialRaw.startsWith('#reset-password')) {
-      setShowForgotPassword(true);
-    }
-
-    window.addEventListener('popstate', handleHashChange);
-    window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handleLocationChange);
     return () => {
-      window.removeEventListener('popstate', handleHashChange);
-      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('popstate', handleLocationChange);
     };
   }, []);
 
@@ -165,20 +186,21 @@ export default function App() {
   useEffect(() => {
     const applyLiveEventUpdate = (updated) => {
       if (!updated) return;
-      if (updated.deleted && updated._id) {
+      const targetId = String(updated._id || updated.id || '');
+      if (updated.deleted && targetId) {
         setEvents((prev) => {
-          const filtered = prev.filter((evt) => String(evt._id || evt.id) !== String(updated._id));
+          const filtered = prev.filter((evt) => String(evt._id || evt.id) !== targetId);
           try {
             localStorage.setItem('eventhub_cached_events', JSON.stringify(filtered));
             sessionStorage.setItem('eventhub_cached_events', JSON.stringify(filtered));
           } catch (e) { }
           return filtered;
         });
-        setSelectedPastEvent((prev) => (String(prev?._id || prev?.id) === String(updated._id) ? null : prev));
-        setSelectedDetailsEvent((prev) => (String(prev?._id || prev?.id) === String(updated._id) ? null : prev));
-      } else if (updated._id) {
+        setSelectedPastEvent((prev) => (String(prev?._id || prev?.id) === targetId ? null : prev));
+        setSelectedDetailsEvent((prev) => (String(prev?._id || prev?.id) === targetId ? null : prev));
+      } else if (targetId) {
         setEvents((prev) => {
-          const exists = prev.some((evt) => String(evt._id || evt.id) === String(updated._id));
+          const exists = prev.some((evt) => String(evt._id || evt.id) === targetId);
           if (!exists) {
             showToast(
               `🔔 New Event Announced: "${updated.title}"! Check it out!`,
@@ -190,12 +212,12 @@ export default function App() {
               type: 'event',
               title: 'New Event Announced!',
               message: `"${updated.title}" has just been published for ${updated.location || 'TRACE'}. Register now!`,
-              meta: { eventId: updated._id },
+              meta: { eventId: updated._id || targetId },
             });
             setNotifications(updatedNotifs);
           }
           const updatedList = exists
-            ? prev.map((evt) => (String(evt._id || evt.id) === String(updated._id) ? { ...evt, ...updated } : evt))
+            ? prev.map((evt) => (String(evt._id || evt.id) === targetId ? { ...evt, ...updated } : evt))
             : [updated, ...prev];
           try {
             localStorage.setItem('eventhub_cached_events', JSON.stringify(updatedList));
@@ -204,10 +226,10 @@ export default function App() {
           return updatedList;
         });
         setSelectedPastEvent((prev) =>
-          String(prev?._id || prev?.id) === String(updated._id) ? { ...prev, ...updated } : prev
+          String(prev?._id || prev?.id) === targetId ? { ...prev, ...updated } : prev
         );
         setSelectedDetailsEvent((prev) =>
-          String(prev?._id || prev?.id) === String(updated._id) ? { ...prev, ...updated } : prev
+          String(prev?._id || prev?.id) === targetId ? { ...prev, ...updated } : prev
         );
       }
       fetchEvents(true);
@@ -365,7 +387,13 @@ export default function App() {
       setLoading(true);
     }
     try {
-      const response = await fetch('/api/events');
+      const response = await fetch(`/api/events?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          Pragma: 'no-cache',
+        },
+      });
       const result = await response.json();
       if (result.success && Array.isArray(result.data)) {
         setEvents(result.data);
@@ -428,7 +456,10 @@ export default function App() {
     try {
       const headers = { Authorization: `Bearer ${authToken}` };
       Promise.allSettled([
-        fetch('/api/events', { headers }).then(r => r.json()).then(d => {
+        fetch(`/api/events?_t=${Date.now()}`, {
+          headers: { ...headers, 'Cache-Control': 'no-cache, no-store' },
+          cache: 'no-store',
+        }).then(r => r.json()).then(d => {
           if (d.success && Array.isArray(d.data)) {
             sessionStorage.setItem('eventhub_admin_cached_events', JSON.stringify(d.data));
             sessionStorage.setItem('eventhub_cached_events', JSON.stringify(d.data));
@@ -468,6 +499,9 @@ export default function App() {
     setToken(data.token);
     setCurrentUser(data.user);
     localStorage.setItem('eventhub_token', data.token);
+    try {
+      localStorage.setItem('eventhub_user', JSON.stringify(data.user));
+    } catch (e) { }
 
     const user = data.user;
     const isAdmin = Boolean(
@@ -480,12 +514,18 @@ export default function App() {
     );
 
     if (isAdmin) {
+      try {
+        sessionStorage.removeItem('eventhub_admin_cached_bookings');
+      } catch (e) { }
       prefetchAdminData(data.token);
       setActiveTab('admin');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-      setActiveTab('home');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // If user was on an admin view, redirect home; otherwise stay on the active page (e.g. event details)
+      if (activeTab === 'admin') {
+        setActiveTab('home');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
   };
 
@@ -498,6 +538,13 @@ export default function App() {
     setToken(null);
     setCurrentUser(null);
     localStorage.removeItem('eventhub_token');
+    localStorage.removeItem('eventhub_user');
+    try {
+      sessionStorage.removeItem('eventhub_admin_cached_bookings');
+      sessionStorage.removeItem('eventhub_admin_cached_events');
+      sessionStorage.removeItem('eventhub_admin_cached_registrations');
+      sessionStorage.removeItem('eventhub_admin_cached_users');
+    } catch (e) { }
     setActiveTab('home');
     window.scrollTo({ top: 0, behavior: 'smooth' });
     showToast('Logged out successfully.', 'info');
@@ -779,6 +826,8 @@ export default function App() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               showToast={showToast}
+              openLoginModal={() => setShowLogin(true)}
+              openSignupModal={() => setShowSignup(true)}
             />
           )}
 
@@ -829,30 +878,54 @@ export default function App() {
               openCreateEventModal={() => setShowAdmin(true)}
               showToast={showToast}
               onEventUpdated={(updatedEvent) => {
-                if (updatedEvent?._id) {
-                  setEvents((prev) =>
-                    prev.map((e) => (e._id === updatedEvent._id ? { ...e, ...updatedEvent } : e))
-                  );
+                const targetId = String(updatedEvent?._id || updatedEvent?.id || '');
+                if (targetId) {
+                  setEvents((prev) => {
+                    const next = prev.map((e) =>
+                      String(e._id || e.id) === targetId ? { ...e, ...updatedEvent } : e
+                    );
+                    try {
+                      localStorage.setItem('eventhub_cached_events', JSON.stringify(next));
+                      sessionStorage.setItem('eventhub_cached_events', JSON.stringify(next));
+                    } catch (e) { }
+                    return next;
+                  });
                   setSelectedPastEvent((prev) =>
-                    prev?._id === updatedEvent._id ? { ...prev, ...updatedEvent } : prev
+                    String(prev?._id || prev?.id) === targetId ? { ...prev, ...updatedEvent } : prev
                   );
                   setSelectedDetailsEvent((prev) =>
-                    prev?._id === updatedEvent._id ? { ...prev, ...updatedEvent } : prev
+                    String(prev?._id || prev?.id) === targetId ? { ...prev, ...updatedEvent } : prev
                   );
                 }
-                fetchEvents();
+                fetchEvents(true);
               }}
               onEventCreated={(newEvent) => {
-                if (newEvent?._id) {
-                  setEvents((prev) => [newEvent, ...prev.filter((e) => e._id !== newEvent._id)]);
+                const targetId = String(newEvent?._id || newEvent?.id || '');
+                if (targetId) {
+                  setEvents((prev) => {
+                    const next = [newEvent, ...prev.filter((e) => String(e._id || e.id) !== targetId)];
+                    try {
+                      localStorage.setItem('eventhub_cached_events', JSON.stringify(next));
+                      sessionStorage.setItem('eventhub_cached_events', JSON.stringify(next));
+                    } catch (e) { }
+                    return next;
+                  });
                 }
-                fetchEvents();
+                fetchEvents(true);
               }}
               onEventDeleted={(deletedId) => {
-                if (deletedId) {
-                  setEvents((prev) => prev.filter((e) => e._id !== deletedId));
+                const targetId = String(deletedId || '');
+                if (targetId) {
+                  setEvents((prev) => {
+                    const next = prev.filter((e) => String(e._id || e.id) !== targetId);
+                    try {
+                      localStorage.setItem('eventhub_cached_events', JSON.stringify(next));
+                      sessionStorage.setItem('eventhub_cached_events', JSON.stringify(next));
+                    } catch (e) { }
+                    return next;
+                  });
                 }
-                fetchEvents();
+                fetchEvents(true);
               }}
             />
           )}
@@ -874,6 +947,14 @@ export default function App() {
               fetchEvents(); // refresh counts
             }}
             showToast={showToast}
+            openLoginModal={() => {
+              setRegEvent(null);
+              setShowLogin(true);
+            }}
+            openSignupModal={() => {
+              setRegEvent(null);
+              setShowSignup(true);
+            }}
           />
         )}
 

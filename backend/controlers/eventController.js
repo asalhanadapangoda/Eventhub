@@ -215,7 +215,9 @@ const seedInitialEvents = async () => {
 
 // GET /api/events?status=upcoming|past
 const getEvents = async (req, res) => {
-  res.setHeader("Cache-Control", "public, max-age=10, stale-while-revalidate=60");
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
   const { status, category } = req.query;
 
   // Format list: lightweight response with clean static URLs
@@ -249,9 +251,18 @@ const getEvents = async (req, res) => {
           const nowTime = Date.now();
           eventsCache.forEach(cached => {
             const id = String(cached._id || cached.id);
-            const isRecent = cached.createdAt && (nowTime - new Date(cached.createdAt).getTime() < 30000);
+            const isRecent = cached.createdAt && (nowTime - new Date(cached.createdAt).getTime() < 60000);
             if (isRecent && !freshMap.has(id)) {
               fresh.unshift(cached);
+            } else if (freshMap.has(id)) {
+              const freshItem = freshMap.get(id);
+              const cachedUpdated = new Date(cached.updatedAt || 0).getTime();
+              const freshUpdated = new Date(freshItem.updatedAt || 0).getTime();
+              if (cachedUpdated >= freshUpdated || (cached.coverImage && cached.coverImage !== freshItem.coverImage)) {
+                // Keep the fresher in-memory update & image
+                const idx = fresh.findIndex(f => String(f._id) === id);
+                if (idx !== -1) fresh[idx] = { ...freshItem, ...cached };
+              }
             }
           });
           eventsCache = fresh.map(sanitizeEvent);
@@ -281,7 +292,9 @@ const getEvents = async (req, res) => {
 
 // GET /api/events/:id
 const getEventById = async (req, res) => {
-  res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=120");
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
   const eventId = String(req.params.id);
 
   // 1. First check in-memory cache: if found, return immediately for 0ms loading
@@ -345,7 +358,6 @@ const updateEvent = async (req, res) => {
   try {
     const eventId = String(req.params.id);
     let eventData = { ...req.body };
-    eventData._id = eventId;
 
     if (eventData.status !== "draft" && eventData.date) {
       const endDateTime = getEventEndDateTime(eventData.date, eventData.time);
@@ -360,29 +372,54 @@ const updateEvent = async (req, res) => {
     }
     eventData = sanitizeEvent(eventData);
 
+    // Prepare clean MongoDB update document WITHOUT immutable _id / id / __v
+    const mongoUpdate = { ...eventData };
+    delete mongoUpdate._id;
+    delete mongoUpdate.id;
+    delete mongoUpdate.__v;
+    delete mongoUpdate.createdAt;
+
+    // Persist to MongoDB
+    let persistedDoc = null;
+    try {
+      if (mongoose.connection.readyState === 1) {
+        if (mongoose.Types.ObjectId.isValid(eventId)) {
+          persistedDoc = await Event.findByIdAndUpdate(
+            eventId,
+            { $set: mongoUpdate },
+            { new: true, runValidators: true }
+          ).lean();
+        }
+        if (!persistedDoc) {
+          await Event.updateOne({ _id: eventId }, { $set: mongoUpdate }, { runValidators: true });
+          persistedDoc = await Event.findOne({ _id: eventId }).lean();
+        }
+      }
+    } catch (updateErr) {
+      console.warn("MongoDB update event notice:", updateErr.message);
+    }
+
+    const mergedEvent = {
+      ...(persistedDoc || {}),
+      ...eventData,
+      _id: eventId,
+    };
+
     // Update in-memory cache instantly
     const exists = eventsCache.some(e => String(e._id || e.id) === eventId);
     if (exists) {
       eventsCache = eventsCache.map(e => {
         if (String(e._id || e.id) === eventId) {
-          return { ...e, ...eventData, _id: eventId };
+          return { ...e, ...mergedEvent };
         }
         return e;
       });
     } else {
-      eventsCache = [{ ...eventData, _id: eventId }, ...eventsCache];
+      eventsCache = [mergedEvent, ...eventsCache];
     }
     saveBackupAsync();
 
-    // Persist to MongoDB
-    try {
-      await Event.findByIdAndUpdate(eventId, eventData, { returnDocument: 'after', runValidators: true });
-    } catch (updateErr) {
-      console.warn("MongoDB update event notice:", updateErr.message);
-    }
-
-    const fullUpdated = eventsCache.find(e => String(e._id || e.id) === eventId) || eventData;
-    return res.json({ success: true, message: "Event updated successfully", data: fullUpdated });
+    return res.json({ success: true, message: "Event updated successfully", data: mergedEvent });
   } catch (error) {
     console.error("Error in updateEvent:", error);
     res.status(500).json({ success: false, message: "Event updated error", data: req.body });

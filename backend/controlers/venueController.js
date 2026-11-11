@@ -67,7 +67,7 @@ const getVenues = async (req, res) => {
 // POST /api/venues (Create new venue)
 const createVenue = async (req, res) => {
   try {
-    const { name, branch, city, province, address, capacity, rentalPrice, pricePerHour, isOnDemand, status, type, coverImage, images, amenities, description } = req.body;
+    const { name, branch, city, province, address, capacity, rentalPrice, pricePerHour, isOnDemand, includeTax, taxLabelType, status, type, coverImage, images, amenities, description } = req.body;
 
     if (!name || !address || capacity === undefined || capacity === null || String(capacity).trim() === '') {
       return res.status(400).json({ success: false, message: "Please provide Venue Name, Address, and Capacity." });
@@ -84,6 +84,9 @@ const createVenue = async (req, res) => {
 
     const numericPrice = isDemand ? 0 : (pricePerHour ? Number(pricePerHour) : 25000);
     const formattedPrice = rentalPrice || (isDemand ? 'On Demand' : `Rs. ${numericPrice.toLocaleString()} / hr`);
+
+    const isTaxIncluded = includeTax !== undefined ? Boolean(includeTax) : (typeof formattedPrice === 'string' && (formattedPrice.toLowerCase().includes('tax') || formattedPrice.toLowerCase().includes('vat')));
+    const finalTaxLabel = taxLabelType || '+ Tax';
 
     const isCleanPhoto = (img) => {
       if (!img || typeof img !== 'string') return false;
@@ -115,6 +118,8 @@ const createVenue = async (req, res) => {
       rentalPrice: formattedPrice,
       pricePerHour: numericPrice,
       isOnDemand: isDemand,
+      includeTax: isTaxIncluded,
+      taxLabelType: finalTaxLabel,
       status: status || "Available",
       type: type || "Meeting Room",
       coverImage: validCoverImage,
@@ -146,7 +151,7 @@ const createVenue = async (req, res) => {
 // PUT /api/venues/:id (Update existing venue)
 const updateVenue = async (req, res) => {
   try {
-    const { name, branch, city, province, address, capacity, rentalPrice, pricePerHour, isOnDemand, status, type, coverImage, images, amenities, description } = req.body;
+    const { name, branch, city, province, address, capacity, rentalPrice, pricePerHour, isOnDemand, includeTax, taxLabelType, status, type, coverImage, images, amenities, description } = req.body;
 
     const isDemand = isOnDemand === true ||
                      rentalPrice === 'On Demand' ||
@@ -188,6 +193,8 @@ const updateVenue = async (req, res) => {
     if (numericPrice !== undefined) updateFields.pricePerHour = numericPrice;
     if (formattedPrice !== undefined) updateFields.rentalPrice = formattedPrice;
     if (isOnDemand !== undefined || isDemand) updateFields.isOnDemand = isDemand;
+    if (includeTax !== undefined) updateFields.includeTax = Boolean(includeTax);
+    if (taxLabelType !== undefined) updateFields.taxLabelType = taxLabelType;
     if (status !== undefined) updateFields.status = status;
     if (type !== undefined) updateFields.type = type;
     if (coverImage !== undefined) {

@@ -5,10 +5,11 @@ export default function ChatbotAgent({ currentUser, setActiveTab, events = [] })
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // User display name (Logged-in Name or Guest)
+  // Generate a user handle for display (e.g. User_8s27gk or Logged-in Name)
   const [userHandle] = useState(() => {
     if (currentUser && currentUser.name) return currentUser.name;
-    return 'Guest';
+    const randomHash = Math.random().toString(36).substring(2, 8);
+    return `User_${randomHash}`;
   });
 
   // Initial welcome message
@@ -372,12 +373,10 @@ export default function ChatbotAgent({ currentUser, setActiveTab, events = [] })
                 key={msg.id}
                 className={`welcome-agent-msg-group ${msg.sender === 'user' ? 'user-group' : 'bot-group'}`}
               >
-                {/* Sender Name (only for bot) */}
-                {msg.sender !== 'user' && (
-                  <div className="welcome-agent-sender-name">
-                    {msg.senderName || 'Welcome Agent'}
-                  </div>
-                )}
+                {/* Sender Name */}
+                <div className="welcome-agent-sender-name">
+                  {msg.sender === 'user' ? userHandle : (msg.senderName || 'Welcome Agent')}
+                </div>
 
                 {/* Bubble */}
                 <div className={`welcome-agent-bubble ${msg.sender === 'user' ? 'user-bubble' : 'bot-bubble'}`}>

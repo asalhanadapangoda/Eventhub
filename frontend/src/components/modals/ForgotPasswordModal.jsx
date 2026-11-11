@@ -387,17 +387,24 @@ export default function ForgotPasswordModal({
             {/* Back to Login Link */}
             <div style={{ marginTop: '1.25rem', textAlign: 'center', fontSize: '0.85rem', color: '#64748b' }}>
               Remember your password?{' '}
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
+              <button
+                type="button"
+                onClick={() => {
                   onClose();
                   if (switchToLogin) switchToLogin(email);
                 }}
-                style={{ color: '#5d4df6', fontWeight: '800', textDecoration: 'none' }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  color: '#5d4df6',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem',
+                }}
               >
                 Back to Log In
-              </a>
+              </button>
             </div>
           </form>
         )}
@@ -538,16 +545,23 @@ export default function ForgotPasswordModal({
             {/* Change email or back */}
             <div style={{ marginTop: '1.25rem', textAlign: 'center', fontSize: '0.85rem', color: '#64748b' }}>
               Entered wrong email?{' '}
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
+              <button
+                type="button"
+                onClick={() => {
                   setStep('request');
                 }}
-                style={{ color: '#5d4df6', fontWeight: '800', textDecoration: 'none' }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  color: '#5d4df6',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem',
+                }}
               >
                 Go Back
-              </a>
+              </button>
             </div>
           </form>
         )}

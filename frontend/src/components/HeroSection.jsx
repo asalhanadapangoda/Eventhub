@@ -9,7 +9,7 @@ const DEFAULT_SETTINGS = {
   heroBadge: 'TRACE COMMUNITY HUB, SRI LANKA',
   heroTitle: 'Where innovation meets community and culture.',
   heroSubtitle:
-    'From Shed sessions to Midweek Boost evenings, discover and register for the events shaping TRACE Expert City — then keep every one of them in view.',
+    "Be part of Sri Lanka's largest innovation ecosystem to make an impact.",
 };
 
 export default function HeroSection({ scrollToEvents, onNavigateSpaces }) {
@@ -223,7 +223,7 @@ export default function HeroSection({ scrollToEvents, onNavigateSpaces }) {
           {/* Subtitle */}
           <p className="hero-custom-subtitle">
             {settings.heroSubtitle ||
-              'From Shed sessions to Midweek Boost evenings, discover and register for the events shaping TRACE Expert City — then keep every one of them in view.'}
+              "Be part of Sri Lanka's largest innovation ecosystem to make an impact."}
           </p>
 
           {/* Action Buttons */}

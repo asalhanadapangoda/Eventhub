@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import FormattedText from './FormattedText';
+import { getEventSeriesCategory } from '../utils/eventUtils';
 
 export const getPhotoUrl = (item) => {
   if (!item) return '';
@@ -18,9 +19,11 @@ export default function PastEventDetailsPage({
   const [activeEvent, setActiveEvent] = useState(() => {
     if (initialEvent) return initialEvent;
     try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const urlId = searchParams.get('id');
       const hash = window.location.hash || '';
       const match = hash.match(/[?&]id=([^&]+)/);
-      const eventId = match ? match[1] : sessionStorage.getItem('eventhub_past_event_id');
+      const eventId = urlId || (match ? match[1] : sessionStorage.getItem('eventhub_past_event_id'));
       if (eventId) {
         const cached = localStorage.getItem('eventhub_cached_events') || sessionStorage.getItem('eventhub_cached_events');
         if (cached) {
@@ -38,9 +41,11 @@ export default function PastEventDetailsPage({
   // Keep activeEvent in sync and fetch full event data if gallery URLs are missing
   React.useEffect(() => {
     const eventId = initialEvent?._id || initialEvent?.id || (() => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const urlId = searchParams.get('id');
       const hash = window.location.hash || '';
       const match = hash.match(/[?&]id=([^&]+)/);
-      return match ? match[1] : sessionStorage.getItem('eventhub_past_event_id');
+      return urlId || (match ? match[1] : sessionStorage.getItem('eventhub_past_event_id'));
     })();
 
     if (initialEvent) {
@@ -63,7 +68,10 @@ export default function PastEventDetailsPage({
       } catch (e) {}
 
       // Silent background fetch to guarantee latest updates
-      fetch(`/api/events/${eventId}`)
+      fetch(`/api/events/${eventId}?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store' },
+      })
         .then((res) => res.json())
         .then((data) => {
           if (data.success && data.data) {
@@ -284,7 +292,12 @@ export default function PastEventDetailsPage({
           </div>
 
           <div className="past-hero-content">
-            <div className="past-category-pill">{pastEvent.category || 'Archive Event'}</div>
+            <div className="past-category-pill">
+              {(() => {
+                const series = getEventSeriesCategory(pastEvent);
+                return series ? (series.displayName || series.name) : (pastEvent.category || 'Archive Event');
+              })()}
+            </div>
             <h1 className="past-hero-title">{pastEvent.title}</h1>
 
             <div className="past-meta-pills-row">

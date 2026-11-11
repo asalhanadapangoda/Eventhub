@@ -3,7 +3,7 @@ import EditEventModal from './modals/EditEventModal';
 import AddVenueModal, { PRESET_BRANCHES } from './modals/AddVenueModal';
 import CreateEventPage from './CreateEventPage';
 import CloudinaryUploader from './CloudinaryUploader';
-import { notifyEventUpdated, notifyVenueUpdated } from '../utils/eventUtils';
+import { notifyEventUpdated, notifyVenueUpdated, optimizeImageUrl, DEFAULT_EVENT_BANNER, getSpaceTypes, getSpaceTypeIcon } from '../utils/eventUtils';
 
 export default function AdminDashboardPage({
   currentUser,
@@ -64,7 +64,7 @@ export default function AdminDashboardPage({
     heroBadge: 'TRACE COMMUNITY HUB, SRI LANKA',
     heroTitle: 'Where innovation meets community and culture.',
     heroSubtitle:
-      'From Shed sessions to Midweek Boost evenings, discover and register for the events shaping TRACE Expert City — then keep every one of them in view.',
+      "Be part of Sri Lanka's largest innovation ecosystem to make an impact.",
   };
 
   const [heroSettings, setHeroSettings] = useState(() => {
@@ -285,7 +285,10 @@ export default function AdminDashboardPage({
       // Execute all 6 dashboard fetches in parallel for instant 0ms/fast load
       const [eventsResult, regsResult, venuesResult, bookingsResult, usersResult, heroResult] =
         await Promise.allSettled([
-          fetch('/api/events', { headers }).then((r) => r.json()),
+          fetch(`/api/events?_t=${Date.now()}`, {
+            headers: { ...headers, 'Cache-Control': 'no-cache, no-store' },
+            cache: 'no-store',
+          }).then((r) => r.json()),
           fetch('/api/registrations', { headers }).then((r) => r.json()),
           fetch('/api/venues', { headers }).then((r) => r.json()),
           fetch('/api/venue-bookings', { headers }).then((r) => r.json()),
@@ -1113,9 +1116,17 @@ export default function AdminDashboardPage({
       });
       const data = await res.json();
       if (data.success) {
-        setVenueBookings((prev) =>
-          prev.map((b) => (String(b._id || b.id) === String(bookingId) ? { ...b, status: newStatus } : b))
-        );
+        setVenueBookings((prev) => {
+          const updated = prev.map((b) =>
+            (String(b._id || b.id) === String(bookingId) || b.bookingRef === bookingId)
+              ? { ...b, status: newStatus }
+              : b
+          );
+          try {
+            sessionStorage.setItem('eventhub_admin_cached_bookings', JSON.stringify(updated));
+          } catch (e) { }
+          return updated;
+        });
         if (showToast) showToast(`Inquiry status updated to "${newStatus}"`, 'success');
       } else {
         if (showToast) showToast(data.message || 'Failed to update status', 'error');
@@ -1129,13 +1140,22 @@ export default function AdminDashboardPage({
     if (!window.confirm(`Are you sure you want to delete inquiry "${bookingRef || ''}"?`)) return;
     try {
       const authToken = localStorage.getItem('eventhub_token') || token;
-      const res = await fetch(`/api/venue-bookings/${bookingId}`, {
+      const idToSend = bookingId || bookingRef;
+      const res = await fetch(`/api/venue-bookings/${idToSend}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${authToken}` },
       });
       const data = await res.json();
       if (data.success) {
-        setVenueBookings((prev) => prev.filter((b) => String(b._id || b.id) !== String(bookingId)));
+        setVenueBookings((prev) => {
+          const updated = prev.filter(
+            (b) => String(b._id || b.id) !== String(bookingId) && b.bookingRef !== bookingRef
+          );
+          try {
+            sessionStorage.setItem('eventhub_admin_cached_bookings', JSON.stringify(updated));
+          } catch (e) { }
+          return updated;
+        });
         if (showToast) showToast('Inquiry deleted successfully', 'success');
       } else {
         if (showToast) showToast(data.message || 'Failed to delete inquiry', 'error');
@@ -1231,10 +1251,24 @@ export default function AdminDashboardPage({
 
     // 4. Space Type Filter
     if (venueTypeFilter !== 'all') {
-      const vType = (v.type || '').toLowerCase();
+      const types = getSpaceTypes(v).map((t) => t.toLowerCase());
       const target = venueTypeFilter.toLowerCase();
       const vName = (v.name || '').toLowerCase();
-      if (!vType.includes(target) && !target.includes(vType) && !vName.includes(target)) return false;
+      const vDesc = (v.description || '').toLowerCase();
+      const vBranch = (v.branch || '').toLowerCase();
+      const str = `${vName} ${vDesc} ${vBranch}`;
+
+      const matches = types.some((t) => {
+        if (target.includes('meeting') && (t.includes('meeting') || t.includes('room') || str.includes('meeting') || str.includes('room'))) return true;
+        if (target.includes('conference') && (t.includes('conference') || t.includes('hall') || str.includes('conference') || str.includes('hall'))) return true;
+        if ((target.includes('co-working') || target.includes('coworking')) && (t.includes('co-working') || t.includes('coworking') || str.includes('coworking') || str.includes('co-working'))) return true;
+        if (target.includes('maker') && (t.includes('maker') || t.includes('creator') || str.includes('maker') || str.includes('creator'))) return true;
+        if (target.includes('workation') && (t.includes('workation') || str.includes('workation'))) return true;
+        if (target.includes('event') && (t.includes('event') || str.includes('event') || str.includes('deck') || str.includes('bay 07'))) return true;
+        return t === target || t.includes(target) || target.includes(t);
+      });
+
+      if (!matches) return false;
     }
 
     // 5. Capacity Filter
@@ -1471,7 +1505,7 @@ export default function AdminDashboardPage({
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
                   <a
-                    href="#home"
+                    href="/"
                     target="_blank"
                     rel="noreferrer"
                     className="btn-export-excel"
@@ -1994,7 +2028,7 @@ export default function AdminDashboardPage({
                             heroBadge: 'TRACE COMMUNITY HUB, SRI LANKA',
                             heroTitle: 'Where innovation meets community and culture.',
                             heroSubtitle:
-                              'From Shed sessions to Midweek Boost evenings, discover and register for the events shaping TRACE Expert City — then keep every one of them in view.',
+                              "Be part of Sri Lanka's largest innovation ecosystem to make an impact.",
                           }))
                         }
                         style={{
@@ -2228,7 +2262,7 @@ export default function AdminDashboardPage({
                         </h2>
                         <p className="hero-live-preview-sub">
                           {heroSettings.heroSubtitle ||
-                            'From Shed sessions to Midweek Boost evenings, discover and register for the events shaping TRACE Expert City — then keep every one of them in view.'}
+                            "Be part of Sri Lanka's largest innovation ecosystem to make an impact."}
                         </p>
                         <div className="hero-live-preview-actions">
                           <button
@@ -2320,7 +2354,7 @@ export default function AdminDashboardPage({
                             heroBadge: 'TRACE COMMUNITY HUB, SRI LANKA',
                             heroTitle: 'Where innovation meets community and culture.',
                             heroSubtitle:
-                              'From Shed sessions to Midweek Boost evenings, discover and register for the events shaping TRACE Expert City — then keep every one of them in view.',
+                              "Be part of Sri Lanka's largest innovation ecosystem to make an impact.",
                           };
                           setHeroSettings(defaults);
                           handleSaveHeroSettings(defaults);
@@ -2985,10 +3019,12 @@ export default function AdminDashboardPage({
                       style={{ width: '100%', minWidth: 0, boxSizing: 'border-box', height: '42px', padding: '0.6rem 0.85rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.88rem', background: '#ffffff', color: '#0f172a', outline: 'none', cursor: 'pointer' }}
                     >
                       <option value="all">All Space Types</option>
-                      <option value="Meeting Room">Meeting Room</option>
-                      <option value="Co-Working">Co-Working Space</option>
-                      <option value="Auditorium">Auditorium & Hall</option>
-                      <option value="Event Space">Event Space</option>
+                      <option value="Meeting Rooms">Meeting Rooms</option>
+                      <option value="Conference Hall">Conference Hall</option>
+                      <option value="Co-Working Spaces">Co-Working Spaces</option>
+                      <option value="Maker Spaces">Maker Spaces</option>
+                      <option value="Workation">Workation</option>
+                      <option value="Event Spaces">Event Spaces</option>
                     </select>
                   </div>
 
@@ -3037,7 +3073,10 @@ export default function AdminDashboardPage({
                     const venueId = v._id || v.id;
                     const formattedAddress = (v.address || '').replace(/,/g, ', ');
                     const isDemand = v.isOnDemand || (v.rentalPrice && v.rentalPrice.toLowerCase().includes('demand')) || (!v.rentalPrice && (!v.pricePerHour || Number(v.pricePerHour) <= 0));
-                    const priceDisplay = v.rentalPrice || (isDemand ? 'On Demand' : (v.pricePerHour ? `Rs. ${Number(v.pricePerHour).toLocaleString()} / hr` : 'On Demand'));
+                    const rawPrice = v.rentalPrice || (isDemand ? 'On Demand' : (v.pricePerHour ? `Rs. ${Number(v.pricePerHour).toLocaleString()} / hr` : 'On Demand'));
+                    const priceDisplay = (v.includeTax && !rawPrice.toLowerCase().includes('tax') && !rawPrice.toLowerCase().includes('vat'))
+                      ? `${rawPrice} ${v.taxLabelType || '+ Tax'}`
+                      : rawPrice;
 
                     return (
                       <div key={venueId || Math.random()} className="admin-venue-card">
@@ -3065,7 +3104,7 @@ export default function AdminDashboardPage({
                           </div>
                         </div>
                         <div className="admin-venue-card-body">
-                          <div className="admin-venue-badges-row">
+                          <div className="admin-venue-badges-row" style={{ flexWrap: 'wrap', gap: '5px' }}>
                             <span className={`admin-venue-status-pill ${v.status === 'Available' ? 'available' : 'reserved'}`}>
                               <span className="admin-venue-status-dot"></span>
                               {v.status || 'Available'}
@@ -3076,6 +3115,25 @@ export default function AdminDashboardPage({
                                 {v.branch}
                               </span>
                             )}
+                            {getSpaceTypes(v).map((st) => (
+                              <span
+                                key={st}
+                                style={{
+                                  fontSize: '0.72rem',
+                                  fontWeight: '700',
+                                  color: '#0284c7',
+                                  background: '#f0f9ff',
+                                  border: '1px solid #bae6fd',
+                                  padding: '2px 7px',
+                                  borderRadius: '6px',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                }}
+                              >
+                                <i className={`fa-solid ${getSpaceTypeIcon(st)}`}></i> {st}
+                              </span>
+                            ))}
                           </div>
 
                           <h3 className="admin-venue-card-title">{v.name}</h3>
@@ -3734,11 +3792,16 @@ export default function AdminDashboardPage({
                               <div className="event-table-cell">
                                 <img
                                   src={
-                                    evt.coverImage ||
-                                    'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=300&q=80'
+                                    optimizeImageUrl(evt.coverImage, 300) ||
+                                    DEFAULT_EVENT_BANNER
                                   }
                                   alt={evt.title}
                                   className="event-thumb"
+                                  loading="lazy"
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = DEFAULT_EVENT_BANNER;
+                                  }}
                                 />
                                 <div>
                                   <div className="event-cell-title">{evt.title}</div>
@@ -3969,11 +4032,16 @@ export default function AdminDashboardPage({
                               <div className="event-table-cell">
                                 <img
                                   src={
-                                    evt.coverImage ||
-                                    'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=300&q=80'
+                                    optimizeImageUrl(evt.coverImage, 300) ||
+                                    DEFAULT_EVENT_BANNER
                                   }
                                   alt={evt.title}
                                   className="event-thumb"
+                                  loading="lazy"
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = DEFAULT_EVENT_BANNER;
+                                  }}
                                 />
                                 <div>
                                   <div className="event-cell-title">{evt.title}</div>
@@ -4355,13 +4423,22 @@ export default function AdminDashboardPage({
         token={token || localStorage.getItem('eventhub_token')}
         currentUser={currentUser}
         onEventUpdated={(updatedEvent) => {
-          if (updatedEvent && updatedEvent._id) {
-            setEvents((prev) =>
-              prev.map((e) => (e._id === updatedEvent._id ? { ...e, ...updatedEvent } : e))
-            );
+          const targetId = String(updatedEvent?._id || updatedEvent?.id || '');
+          if (targetId) {
+            setEvents((prev) => {
+              const next = prev.map((e) =>
+                String(e._id || e.id) === targetId ? { ...e, ...updatedEvent } : e
+              );
+              try {
+                sessionStorage.setItem('eventhub_admin_cached_events', JSON.stringify(next));
+                sessionStorage.setItem('eventhub_cached_events', JSON.stringify(next));
+                localStorage.setItem('eventhub_cached_events', JSON.stringify(next));
+              } catch (e) { }
+              return next;
+            });
           }
           if (onEventUpdated) onEventUpdated(updatedEvent);
-          fetchDashboardData();
+          fetchDashboardData(true);
         }}
         showToast={showToast}
       />

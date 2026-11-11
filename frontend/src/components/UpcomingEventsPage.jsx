@@ -52,7 +52,10 @@ export default function UpcomingEventsPage({
   const categories = useMemo(() => {
     const cats = new Set([
       'All Categories',
+      'Midweek Boost',
       'Guest Talk Series',
+      'The SHED',
+      'REBOOT.health',
       'Community Meetup',
       'Policy Discussion',
     ]);
@@ -92,9 +95,18 @@ export default function UpcomingEventsPage({
         const evtCat = (event.category || '').toLowerCase();
         const evtTitle = (event.title || '').toLowerCase();
 
-        if (selCat === 'guest talk series') {
+        if (selCat === 'guest talk series' || selCat === 'guest talk') {
           const isGuestTalk = evtCat.includes('guest talk') || evtCat === 'talk' || evtTitle.includes('guest talk');
           if (!isGuestTalk) return false;
+        } else if (selCat === 'midweek boost') {
+          const isMidweek = evtCat.includes('midweek') || evtTitle.includes('midweek');
+          if (!isMidweek) return false;
+        } else if (selCat === 'the shed' || selCat === 'shed') {
+          const isShed = (evtCat.includes('shed') || evtCat.includes('policy') || evtTitle.includes('shed')) && !evtTitle.includes('midweek');
+          if (!isShed) return false;
+        } else if (selCat === 'reboot.health' || selCat === 'reboot') {
+          const isReboot = evtCat.includes('reboot') || evtTitle.includes('reboot') || evtCat.includes('health') || evtTitle.includes('health');
+          if (!isReboot) return false;
         } else if (selCat === 'community meetup') {
           const isCommunityMeetup = evtCat.includes('community') || evtCat === 'meetup' || evtTitle.includes('midweek');
           if (evtTitle.includes('shed') && !evtTitle.includes('midweek')) {
@@ -145,8 +157,10 @@ export default function UpcomingEventsPage({
   const getCategoryClass = (category) => {
     const lower = (category || '').toLowerCase();
     if (lower.includes('talk') || lower.includes('guest')) return 'cat-badge-talk';
-    if (lower.includes('meetup') || lower.includes('community')) return 'cat-badge-meetup';
-    if (lower.includes('policy') || lower.includes('shed') || lower.includes('discus')) return 'cat-badge-policy';
+    if (lower.includes('midweek')) return 'cat-badge-midweek';
+    if (lower.includes('shed') || lower.includes('policy')) return 'cat-badge-shed';
+    if (lower.includes('reboot') || lower.includes('health')) return 'cat-badge-reboot';
+    if (lower.includes('meetup') || lower.includes('community')) return 'cat-badge-midweek';
     if (lower.includes('workshop')) return 'cat-badge-workshop';
     return 'cat-badge-default';
   };
