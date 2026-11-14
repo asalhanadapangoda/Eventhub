@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import FormattedText from './FormattedText';
 import ImageCarouselSlider from './ImageCarouselSlider';
-import { optimizeImageUrl, getSpaceTypes, getSpaceType, getSpaceTypeIcon } from '../utils/eventUtils';
+import { optimizeImageUrl, getSpaceTypes, getSpaceType, getSpaceTypeIcon, AVAILABLE_SPACE_TYPES, getSpaceProvince, isWesternSpace } from '../utils/eventUtils';
 
 // TRACE Branch metadata definition for rich display & badges
 const TRACE_BRANCHES_META = [
@@ -180,38 +180,6 @@ export default function VenuesPage({ showToast }) {
     currentUser.email === 'admin@trace.lk' ||
     currentUser.isAdmin
   );
-
-  // Helper function to derive province for any space
-  const getSpaceProvince = (v) => {
-    if (v.province) return v.province;
-    const str = `${v.branch || ''} ${v.city || ''} ${v.address || ''} ${v.name || ''}`.toLowerCase();
-
-    if (str.includes('colombo') || str.includes('maradana') || str.includes('western') || str.includes('expert city') || str.includes('hometree') || str.includes('uok') || str.includes('kelaniya')) {
-      return 'Western Province';
-    }
-    if (str.includes('kandy') || str.includes('peradeniya') || str.includes('central') || str.includes('jrdc')) {
-      return 'Central Province';
-    }
-    if (str.includes('jaffna') || str.includes('palaly') || str.includes('northern')) {
-      return 'Northern Province';
-    }
-    if (str.includes('galle') || str.includes('fort') || str.includes('southern') || str.includes('matara') || str.includes('ruhuna') || str.includes('mirissa') || str.includes('kamburugamuwa') || str.includes('asaya')) {
-      return 'Southern Province';
-    }
-    if (str.includes('kurunegala') || str.includes('wayamba') || str.includes('north western') || str.includes('makandura') || str.includes('bread')) {
-      return 'North Western Province';
-    }
-    if (str.includes('rathnapura') || str.includes('creators') || str.includes('sabaragamuwa')) {
-      return 'Sabaragamuwa Province';
-    }
-    if (str.includes('batticaloa') || str.includes('eastern')) {
-      return 'Eastern Province';
-    }
-    if (str.includes('uwu') || str.includes('badulla') || str.includes('uva')) {
-      return 'Uva Province';
-    }
-    return 'Western Province';
-  };
 
   // Helper to get structured pricing details (including tax information)
   const getVenuePriceDetails = (v) => {
@@ -434,64 +402,76 @@ export default function VenuesPage({ showToast }) {
     };
   }, []);
 
-  // Filter logic
-  const filteredVenues = venues.filter((v) => {
-    // 0. Province Filter
-    if (provinceFilter !== 'All') {
-      const p = getSpaceProvince(v);
-      if (p.toLowerCase() !== provinceFilter.toLowerCase()) return false;
-    }
+  // Filter and sort logic (Western Province spaces display first)
+  const filteredVenues = useMemo(() => {
+    return venues
+      .filter((v) => {
+        // 0. Province Filter
+        if (provinceFilter !== 'All') {
+          const p = getSpaceProvince(v);
+          if (p.toLowerCase() !== provinceFilter.toLowerCase()) return false;
+        }
 
-    // 1. Location & Space Filter
-    if (selectedBranch !== 'All') {
-      const target = selectedBranch.toLowerCase().trim();
-      const vBranch = (v.branch || '').toLowerCase().trim();
-      const vName = (v.name || '').toLowerCase().trim();
+        // 1. Location & Space Filter
+        if (selectedBranch !== 'All') {
+          const target = selectedBranch.toLowerCase().trim();
+          const vBranch = (v.branch || '').toLowerCase().trim();
+          const vName = (v.name || '').toLowerCase().trim();
 
-      const matchesBranch = vBranch === target || vBranch.includes(target) || target.includes(vBranch);
-      const matchesName = vName === target || vName.includes(target) || target.includes(vName);
+          const matchesBranch = vBranch === target || vBranch.includes(target) || target.includes(vBranch);
+          const matchesName = vName === target || vName.includes(target) || target.includes(vName);
 
-      if (!matchesBranch && !matchesName) return false;
-    }
+          if (!matchesBranch && !matchesName) return false;
+        }
 
-    // 2. Search Query
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      const name = (v.name || '').toLowerCase();
-      const address = (v.address || '').toLowerCase();
-      const desc = (v.description || '').toLowerCase();
-      const branch = (v.branch || '').toLowerCase();
-      const province = getSpaceProvince(v).toLowerCase();
-      if (!name.includes(q) && !address.includes(q) && !desc.includes(q) && !branch.includes(q) && !province.includes(q)) {
-        return false;
-      }
-    }
+        // 2. Search Query
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase().trim();
+          const name = (v.name || '').toLowerCase();
+          const address = (v.address || '').toLowerCase();
+          const desc = (v.description || '').toLowerCase();
+          const branch = (v.branch || '').toLowerCase();
+          const province = getSpaceProvince(v).toLowerCase();
+          if (!name.includes(q) && !address.includes(q) && !desc.includes(q) && !branch.includes(q) && !province.includes(q)) {
+            return false;
+          }
+        }
 
-    // 3. Space Type Filter
-    if (spaceTypeFilter !== 'All') {
-      const types = getSpaceTypes(v).map((t) => t.toLowerCase());
-      const target = spaceTypeFilter.toLowerCase();
+        // 3. Space Type Filter
+        if (spaceTypeFilter !== 'All') {
+          const types = getSpaceTypes(v).map((t) => t.toLowerCase());
+          const target = spaceTypeFilter.toLowerCase();
 
-      const matches = types.some((t) => {
-        if (target.includes('meeting') && t.includes('meeting')) return true;
-        if (target.includes('conference') && (t.includes('conference') || t.includes('hall'))) return true;
-        if ((target.includes('co-working') || target.includes('coworking')) && (t.includes('co-working') || t.includes('coworking'))) return true;
-        if (target.includes('maker') && t.includes('maker')) return true;
-        if (target.includes('workation') && t.includes('workation')) return true;
-        if (target.includes('event') && t.includes('event')) return true;
-        return t === target || t.includes(target) || target.includes(t);
+          const matches = types.some((t) => {
+            if (target.includes('meeting') && t.includes('meeting')) return true;
+            if (target.includes('conference') && (t.includes('conference') || t.includes('hall'))) return true;
+            if ((target.includes('co-working') || target.includes('coworking')) && (t.includes('co-working') || t.includes('coworking'))) return true;
+            if (target.includes('maker') && t.includes('maker')) return true;
+            if (target.includes('workshop') && t.includes('workshop')) return true;
+            if (target.includes('workation') && t.includes('workation')) return true;
+            if (target.includes('event') && t.includes('event')) return true;
+            if ((target.includes('coffee') || target.includes('coffe') || target.includes('cafe')) && (t.includes('coffee') || t.includes('coffe') || t.includes('cafe'))) return true;
+            return t === target || t.includes(target) || target.includes(t);
+          });
+
+          if (!matches) return false;
+        }
+
+        // 4. Status Filter
+        if (statusFilter !== 'All') {
+          if ((v.status || 'Available').toLowerCase() !== statusFilter.toLowerCase()) return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        const isAWest = isWesternSpace(a);
+        const isBWest = isWesternSpace(b);
+        if (isAWest && !isBWest) return -1;
+        if (!isAWest && isBWest) return 1;
+        return 0;
       });
-
-      if (!matches) return false;
-    }
-
-    // 4. Status Filter
-    if (statusFilter !== 'All') {
-      if ((v.status || 'Available').toLowerCase() !== statusFilter.toLowerCase()) return false;
-    }
-
-    return true;
-  });
+  }, [venues, provinceFilter, selectedBranch, searchQuery, spaceTypeFilter, statusFilter]);
 
   // Calculate statistics across all venues
   const totalVenuesCount = venues.length;
@@ -685,12 +665,11 @@ export default function VenuesPage({ showToast }) {
                 onChange={(e) => setSpaceTypeFilter(e.target.value)}
               >
                 <option value="All">All Types</option>
-                <option value="Meeting Rooms">Meeting Rooms</option>
-                <option value="Conference Hall">Conference Hall</option>
-                <option value="Co-Working Spaces">Co-Working Spaces</option>
-                <option value="Maker Spaces">Maker Spaces</option>
-                <option value="Workation">Workation</option>
-                <option value="Event Spaces">Event Spaces</option>
+                {AVAILABLE_SPACE_TYPES.map((typeOpt) => (
+                  <option key={typeOpt} value={typeOpt}>
+                    {typeOpt}
+                  </option>
+                ))}
               </select>
               <i className="fa-solid fa-chevron-down select-arrow"></i>
             </div>

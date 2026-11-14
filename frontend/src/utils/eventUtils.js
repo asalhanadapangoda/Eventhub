@@ -304,8 +304,10 @@ export const AVAILABLE_SPACE_TYPES = [
   'Conference Hall',
   'Co-Working Spaces',
   'Maker Spaces',
+  'Workshop Spaces',
   'Workation',
   'Event Spaces',
+  'Coffee Shop',
 ];
 
 /**
@@ -322,6 +324,8 @@ export function normalizeSingleSpaceType(item) {
   if (exact) return exact;
 
   const lower = trimmed.toLowerCase();
+  if (lower.includes('coffee') || lower.includes('coffe') || lower.includes('cafe')) return 'Coffee Shop';
+  if (lower.includes('workshop')) return 'Workshop Spaces';
   if (lower.includes('workation') || lower.includes('work-cation')) return 'Workation';
   if (lower.includes('conference')) return 'Conference Hall';
   if (lower.includes('maker') || lower.includes('creator') || lower.includes('lab') || lower.includes('fablab')) return 'Maker Spaces';
@@ -361,6 +365,12 @@ export function getSpaceTypes(v) {
 
   // Fallback to name/desc only if venue had no type specified
   const str = `${v.name || ''} ${v.description || ''} ${v.branch || ''}`.toLowerCase();
+  if (str.includes('coffee') || str.includes('coffe') || str.includes('cafe')) {
+    return ['Coffee Shop'];
+  }
+  if (str.includes('workshop')) {
+    return ['Workshop Spaces'];
+  }
   if (str.includes('workation') || str.includes('work-cation') || str.includes('by the sea')) {
     return ['Workation'];
   }
@@ -392,10 +402,58 @@ export function getSpaceType(v) {
 }
 
 /**
+ * Helper to derive province for any space
+ */
+export function getSpaceProvince(v) {
+  if (!v) return 'Western Province';
+  if (v.province && typeof v.province === 'string' && v.province.trim()) {
+    return v.province.trim();
+  }
+  const str = `${v.branch || ''} ${v.address || ''} ${v.name || ''}`.toLowerCase();
+
+  if (str.includes('colombo') || str.includes('maradana') || str.includes('western') || str.includes('expert city') || str.includes('hometree') || str.includes('uok') || str.includes('kelaniya')) {
+    return 'Western Province';
+  }
+  if (str.includes('kandy') || str.includes('peradeniya') || str.includes('central') || str.includes('jrdc')) {
+    return 'Central Province';
+  }
+  if (str.includes('jaffna') || str.includes('palaly') || str.includes('northern')) {
+    return 'Northern Province';
+  }
+  if (str.includes('galle') || str.includes('fort') || str.includes('southern') || str.includes('matara') || str.includes('ruhuna') || str.includes('mirissa') || str.includes('kamburugamuwa') || str.includes('asaya') || str.includes('ahangama') || str.includes('tangalle')) {
+    return 'Southern Province';
+  }
+  if (str.includes('kurunegala') || str.includes('wayamba') || str.includes('north western') || str.includes('makandura') || str.includes('bread') || str.includes('isb')) {
+    return 'North Western Province';
+  }
+  if (str.includes('rathnapura') || str.includes('ratnapura') || str.includes('creators') || str.includes('sabaragamuwa')) {
+    return 'Sabaragamuwa Province';
+  }
+  if (str.includes('batticaloa') || str.includes('eastern') || str.includes('dreamspace')) {
+    return 'Eastern Province';
+  }
+  if (str.includes('uwu') || str.includes('badulla') || str.includes('uva')) {
+    return 'Uva Province';
+  }
+  return 'Western Province';
+}
+
+/**
+ * Checks whether a space belongs to Western Province (guaranteeing North Western is not mismatched)
+ */
+export function isWesternSpace(v) {
+  if (!v) return false;
+  const prov = getSpaceProvince(v).toLowerCase().trim();
+  return prov.includes('western') && !prov.includes('north');
+}
+
+/**
  * Returns a FontAwesome icon class for a given space type name.
  */
 export function getSpaceTypeIcon(typeStr) {
   const t = (typeStr || '').toLowerCase();
+  if (t.includes('coffee') || t.includes('coffe') || t.includes('cafe')) return 'fa-mug-hot';
+  if (t.includes('workshop')) return 'fa-screwdriver-wrench';
   if (t.includes('workation')) return 'fa-umbrella-beach';
   if (t.includes('conference') || t.includes('hall')) return 'fa-landmark';
   if (t.includes('maker') || t.includes('creator') || t.includes('lab')) return 'fa-microchip';

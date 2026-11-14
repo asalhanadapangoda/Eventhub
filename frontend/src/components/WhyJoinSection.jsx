@@ -63,7 +63,7 @@ export default function WhyJoinSection({ onNavigateSpaces }) {
               <div className="feature-card-text">
                 <h3 className="feature-heading">Connect with Community</h3>
                 <p className="feature-desc">
-                  Connect with founders, industry mentors, creators, and tech innovators. Build meaningful relationships, exchange ideas, and grow through collaboration.
+                  Connect with founders, creators, and innovators. Build meaningful relationships, exchange ideas, and grow through collaboration.
                 </p>
               </div>
             </div>
@@ -74,9 +74,9 @@ export default function WhyJoinSection({ onNavigateSpaces }) {
                 <i className="fa-solid fa-building-circle-check"></i>
               </div>
               <div className="feature-card-text">
-                <h3 className="feature-heading">Access & Career Startups</h3>
+                <h3 className="feature-heading">Access to Versatile Spaces</h3>
                 <p className="feature-desc">
-                  Dynamic event spaces, creative event spaces, co-working spaces, meeting rooms, and flexible workspaces designed for high performance.
+                  Dynamic and creative event spaces, co-working spaces, meeting rooms, and flexible workspaces designed for high performance.
                 </p>
               </div>
             </div>
@@ -87,7 +87,7 @@ export default function WhyJoinSection({ onNavigateSpaces }) {
                 <i className="fa-solid fa-rocket"></i>
               </div>
               <div className="feature-card-text">
-                <h3 className="feature-heading">Accelerate Career & Startups</h3>
+                <h3 className="feature-heading">Accelerate Startups & Growth Startups</h3>
                 <p className="feature-desc">
                   Exposure to a fast-growing skill pool, access to national and international opportunities, pitch to investors, and scale innovative startups nationwide.
                 </p>
