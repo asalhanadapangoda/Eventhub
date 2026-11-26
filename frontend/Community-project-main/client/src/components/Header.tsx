@@ -1,0 +1,68 @@
+import React from 'react';
+
+export const Header: React.FC = () => {
+  return (
+    <header className="sticky top-0 z-50 bg-[#102D48] text-white shadow-md border-b border-[#163B5C]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="h-16 flex items-center justify-between gap-4">
+          {/* Left Side: Brand Logo & Title */}
+          <div className="flex items-center gap-3.5">
+            <a
+              href="#"
+              className="flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-lg p-1"
+            >
+              <div className="w-11 h-11 rounded-xl bg-white p-1 flex items-center justify-center shadow-md border border-white/20 group-hover:scale-105 transition-transform duration-200">
+                <img
+                  src={`${import.meta.env.BASE_URL}trace-logo.png`}
+                  alt="TRACE Logo"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <span className="font-heading font-extrabold text-lg sm:text-xl tracking-tight text-white leading-none">
+                    TRACE <span className="text-[#0070F3] font-bold">COMMUNITY</span>
+                  </span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-200 border border-blue-400/30">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse mr-1.5"></span>
+                    DIRECTORY
+                  </span>
+                </div>
+              </div>
+            </a>
+          </div>
+
+          {/* Right Side: Cross-Site TRACE Ecosystem Navigation */}
+          <nav className="hidden md:flex items-center gap-1.5 text-sm font-semibold">
+            <a
+              href="/events"
+              className="px-3 py-1.5 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 transition-colors"
+            >
+              Events
+            </a>
+            <a
+              href="/spaces"
+              className="px-3 py-1.5 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 transition-colors"
+            >
+              Spaces
+            </a>
+            <a
+              href="/community"
+              className="px-3 py-1.5 rounded-lg bg-[#0070F3] text-white shadow-sm"
+            >
+              Community
+            </a>
+            <a
+              href="/innovation-academy"
+              className="px-3 py-1.5 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 transition-colors"
+            >
+              Innovation Academy
+            </a>
+          </nav>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header;

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="100%" height="100%">
+    <rect width="240" height="80" rx="8" fill="#FFFFFF"/>
+    <g transform="translate(15, 17)">
+      <circle cx="23" cy="23" r="23" fill="#EA580C"/>
+      <polygon points="23,9 29,21 39,23 31,31 34,40 23,34 12,40 15,31 7,23 17,21" fill="#FDE047"/>
+    </g>
+    <text x="68" y="37" font-family="system-ui, sans-serif" font-weight="900" font-size="19" fill="#1E293B">IgniterSpace</text>
+    <text x="69" y="52" font-family="system-ui, sans-serif" font-weight="700" font-size="10" fill="#EA580C" letter-spacing="1">MAKER ACADEMY</text>
+  </svg>

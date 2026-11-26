@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="100%" height="100%">
+    <rect width="240" height="80" rx="8" fill="#FFFFFF"/>
+    <g transform="translate(15, 14)">
+      <polygon points="26,0 52,15 52,38 26,52 0,38 0,15" fill="#800020"/>
+      <polygon points="26,6 46,18 46,36 26,46 6,36 6,18" fill="#D4AF37"/>
+      <text x="26" y="32" font-family="Georgia, serif" font-weight="bold" font-size="16" fill="#800020" text-anchor="middle">UWU</text>
+    </g>
+    <text x="76" y="38" font-family="Georgia, serif" font-weight="bold" font-size="17" fill="#800020">Uva Wellassa</text>
+    <text x="76" y="53" font-family="system-ui, sans-serif" font-weight="600" font-size="11" fill="#555555" letter-spacing="0.5">University of Sri Lanka</text>
+  </svg>

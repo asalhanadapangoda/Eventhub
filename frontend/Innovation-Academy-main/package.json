@@ -1,0 +1,27 @@
+{
+  "name": "trace-sri-lanka-portal",
+  "version": "1.0.0",
+  "description": "TRACE Sri Lanka - Innovation Academy Full Stack Web Portal (MERN Stack)",
+  "private": true,
+  "scripts": {
+    "start": "node server/index.js",
+    "server": "cd server && node index.js",
+    "client": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "seed": "cd server && node utils/seeder.js",
+    "test:workflows": "cd server && node test-workflows.js"
+  },
+  "keywords": [
+    "trace",
+    "sri-lanka",
+    "innovation-academy",
+    "mern-stack",
+    "mongodb",
+    "react",
+    "express",
+    "expert-city"
+  ],
+  "author": "TRACE Sri Lanka & Google DeepMind Team",
+  "license": "ISC"
+}
+

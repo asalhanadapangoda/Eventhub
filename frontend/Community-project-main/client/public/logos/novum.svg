@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="100%" height="100%">
+    <rect width="240" height="80" rx="8" fill="#FFFFFF"/>
+    <g transform="translate(15, 17)">
+      <polygon points="23,3 43,14 43,36 23,47 3,36 3,14" fill="#0A192F"/>
+      <polygon points="23,9 37,17 37,33 23,41 9,33 9,17" fill="#D4AF37"/>
+    </g>
+    <text x="68" y="37" font-family="Georgia, serif" font-weight="bold" font-size="19" fill="#0A192F">NOVUM</text>
+    <text x="69" y="52" font-family="system-ui, sans-serif" font-weight="600" font-size="9" fill="#D4AF37" letter-spacing="1.5">CONSULTANCY LLC</text>
+  </svg>

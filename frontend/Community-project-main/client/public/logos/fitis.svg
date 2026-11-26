@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 100" width="100%" height="100%">
+    <rect width="240" height="100" rx="12" fill="#FFFFFF"/>
+    <g transform="translate(20, 16)">
+      <rect x="0" y="8" width="50" height="50" rx="10" fill="#0284C7" opacity="0.1"/>
+     <circle cx="25" cy="22" r="5" fill="#0284C7"/>
+     <line x1="25" y1="27" x2="25" y2="38" stroke="#0284C7" stroke-width="3"/>
+     <circle cx="15" cy="44" r="5" fill="#0284C7"/>
+     <circle cx="35" cy="44" r="5" fill="#0284C7"/>
+     <line x1="25" y1="38" x2="15" y2="44" stroke="#0284C7" stroke-width="2.5"/>
+     <line x1="25" y1="38" x2="35" y2="44" stroke="#0284C7" stroke-width="2.5"/>
+    </g>
+    <g transform="translate(86, 42)">
+      <text font-family="'Outfit', 'Inter', sans-serif" font-weight="800" font-size="19" fill="#0284C7" letter-spacing="-0.3">FITIS</text>
+      <text y="20" font-family="'Inter', sans-serif" font-weight="600" font-size="10.5" fill="#102D48" letter-spacing="0.5">TECH FEDERATION</text>
+    </g>
+  </svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="100%" height="100%">
+    <rect width="240" height="80" rx="8" fill="#FFFFFF"/>
+    <g transform="translate(15, 17)">
+      <rect x="0" y="0" width="44" height="44" rx="10" fill="#EF4444"/>
+      <path d="M12,14 C16,12 22,14 22,18 L22,34 C22,30 16,28 12,30 Z" fill="#FFFFFF"/>
+      <path d="M32,14 C28,12 22,14 22,18 L22,34 C22,30 28,28 32,30 Z" fill="#FEE2E2"/>
+    </g>
+    <text x="68" y="37" font-family="system-ui, sans-serif" font-weight="900" font-size="19" fill="#1E293B">Pick a Book</text>
+    <text x="69" y="52" font-family="system-ui, sans-serif" font-weight="600" font-size="10" fill="#EF4444" letter-spacing="1">COMMUNITY</text>
+  </svg>

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 100" width="100%" height="100%">
+    <rect width="240" height="100" rx="12" fill="#FFFFFF"/>
+    <g transform="translate(20, 16)">
+      <rect x="0" y="8" width="50" height="50" rx="10" fill="#1D4ED8" opacity="0.1"/>
+     <path d="M14 26 L25 18 L36 26 L36 44 L14 44 Z" fill="none" stroke="#1D4ED8" stroke-width="3"/>
+     <circle cx="25" cy="33" r="4" fill="#B91C1C"/>
+    </g>
+    <g transform="translate(86, 42)">
+      <text font-family="'Outfit', 'Inter', sans-serif" font-weight="800" font-size="19" fill="#1D4ED8" letter-spacing="-0.3">USAID</text>
+      <text y="20" font-family="'Inter', sans-serif" font-weight="600" font-size="10.5" fill="#B91C1C" letter-spacing="0.5">FROM THE AM. PEOPLE</text>
+    </g>
+  </svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="100%" height="100%">
+    <rect width="240" height="80" rx="8" fill="#FFFFFF"/>
+    <g transform="translate(15, 18)">
+      <rect x="0" y="0" width="44" height="44" rx="8" fill="#E11D48"/>
+      <text x="22" y="29" font-family="system-ui, sans-serif" font-weight="900" font-size="14" fill="#FFFFFF" text-anchor="middle">IIBA</text>
+    </g>
+    <text x="68" y="38" font-family="system-ui, sans-serif" font-weight="900" font-size="18" fill="#881337">IIBA Colombo</text>
+    <text x="69" y="52" font-family="system-ui, sans-serif" font-weight="600" font-size="10" fill="#E11D48" letter-spacing="0.5">BUSINESS ANALYSIS CHAPTER</text>
+  </svg>

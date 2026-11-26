@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="100%" height="100%">
+    <rect width="240" height="80" rx="8" fill="#FFFFFF"/>
+    <g transform="translate(15, 17)">
+      <circle cx="23" cy="23" r="23" fill="#059669"/>
+      <polygon points="23,10 28,20 38,23 30,30 33,39 23,33 13,39 16,30 8,23 18,20" fill="#FFFFFF"/>
+    </g>
+    <text x="68" y="37" font-family="system-ui, sans-serif" font-weight="800" font-size="18" fill="#064E3B">Innovator Park</text>
+    <text x="69" y="52" font-family="system-ui, sans-serif" font-weight="600" font-size="10" fill="#059669" letter-spacing="1">KANDY HUB</text>
+  </svg>

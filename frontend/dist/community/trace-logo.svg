@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 80" width="100%" height="100%">
+  <defs>
+    <linearGradient id="traceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#102D48"/>
+      <stop offset="100%" stop-color="#0070F3"/>
+    </linearGradient>
+  </defs>
+  <!-- TRACE Hexagonal Innovation Symbol -->
+  <g transform="translate(15, 10)">
+    <polygon points="30,0 55,15 55,45 30,60 5,45 5,15" fill="none" stroke="url(#traceGrad)" stroke-width="4.5"/>
+    <circle cx="30" cy="30" r="9" fill="#102D48"/>
+    <circle cx="30" cy="5" r="4.5" fill="#0070F3"/>
+    <circle cx="53" cy="18" r="4.5" fill="#0070F3"/>
+    <circle cx="53" cy="42" r="4.5" fill="#102D48"/>
+    <circle cx="30" cy="55" r="4.5" fill="#0070F3"/>
+    <circle cx="7" cy="42" r="4.5" fill="#102D48"/>
+    <circle cx="7" cy="18" r="4.5" fill="#0070F3"/>
+    <line x1="30" y1="30" x2="30" y2="5" stroke="#0070F3" stroke-width="2.5" stroke-dasharray="2,2"/>
+    <line x1="30" y1="30" x2="53" y2="42" stroke="#102D48" stroke-width="2.5"/>
+    <line x1="30" y1="30" x2="7" y2="42" stroke="#102D48" stroke-width="2.5"/>
+  </g>
+  <!-- TRACE Typography -->
+  <text x="85" y="44" font-family="'Outfit', 'Inter', sans-serif" font-weight="900" font-size="34" letter-spacing="3" fill="#102D48">TRACE</text>
+  <text x="210" y="32" font-family="'Inter', sans-serif" font-weight="700" font-size="11" letter-spacing="1" fill="#0070F3">SRI LANKA</text>
+  <text x="86" y="60" font-family="'Inter', sans-serif" font-weight="600" font-size="9" letter-spacing="2" fill="#64748B">TECHNOPARK &amp; ECOSYSTEM</text>
+</svg>

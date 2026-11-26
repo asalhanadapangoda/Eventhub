@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="100%" height="100%">
+    <rect width="240" height="80" rx="8" fill="#FFFFFF"/>
+    <g transform="translate(15, 18)">
+      <rect x="0" y="0" width="44" height="44" rx="10" fill="#9333EA"/>
+      <path d="M14,14 L30,22 L14,30 Z" fill="#FFFFFF"/>
+    </g>
+    <text x="68" y="37" font-family="system-ui, sans-serif" font-weight="800" font-size="18" fill="#581C87">araCreate</text>
+    <text x="69" y="52" font-family="system-ui, sans-serif" font-weight="600" font-size="10" fill="#9333EA" letter-spacing="1">MEDIA SERVICES</text>
+  </svg>

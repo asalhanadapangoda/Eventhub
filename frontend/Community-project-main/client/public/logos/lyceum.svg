@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="100%" height="100%">
+    <rect width="240" height="80" rx="8" fill="#FFFFFF"/>
+    <g transform="translate(15, 16)">
+      <circle cx="24" cy="24" r="23" fill="#002D62"/>
+      <circle cx="24" cy="24" r="19" fill="#FFFFFF"/>
+      <text x="24" y="29" font-family="Georgia, serif" font-weight="bold" font-size="18" fill="#C59B27" text-anchor="middle">L</text>
+    </g>
+    <text x="70" y="38" font-family="Georgia, serif" font-weight="bold" font-size="19" fill="#002D62" letter-spacing="0.5">LYCEUM</text>
+    <text x="71" y="53" font-family="system-ui, sans-serif" font-weight="700" font-size="11" fill="#C59B27" letter-spacing="2">CAMPUS</text>
+  </svg>

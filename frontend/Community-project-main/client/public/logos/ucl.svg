@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="100%" height="100%">
+    <rect width="240" height="80" rx="8" fill="#FFFFFF"/>
+    <g transform="translate(15, 15)">
+      <path d="M0,5 C0,25 24,48 24,48 C24,48 48,25 48,5 Z" fill="#0A2540"/>
+      <path d="M5,9 C5,25 24,42 24,42 C24,42 43,25 43,9 Z" fill="#D4AF37"/>
+      <text x="24" y="28" font-family="system-ui, sans-serif" font-weight="900" font-size="14" fill="#0A2540" text-anchor="middle">UCL</text>
+    </g>
+    <text x="72" y="37" font-family="Georgia, serif" font-weight="bold" font-size="16" fill="#0A2540">Universal College</text>
+    <text x="73" y="53" font-family="system-ui, sans-serif" font-weight="700" font-size="11" fill="#D4AF37" letter-spacing="1">LANKA</text>
+  </svg>

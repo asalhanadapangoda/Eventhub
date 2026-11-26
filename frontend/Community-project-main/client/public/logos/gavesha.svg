@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="100%" height="100%">
+    <rect width="240" height="80" rx="8" fill="#FFFFFF"/>
+    <g transform="translate(15, 18)">
+      <rect x="0" y="0" width="44" height="44" rx="10" fill="#7C3AED"/>
+      <circle cx="22" cy="22" r="10" fill="#A78BFA"/>
+      <ellipse cx="22" cy="22" rx="18" ry="6" fill="none" stroke="#FDE047" stroke-width="2" transform="rotate(-25 22 22)"/>
+    </g>
+    <text x="68" y="38" font-family="system-ui, sans-serif" font-weight="900" font-size="18" fill="#4C1D95">Gavesha Labs</text>
+    <text x="69" y="52" font-family="system-ui, sans-serif" font-weight="700" font-size="10" fill="#7C3AED" letter-spacing="1">STEM &amp; SPACE</text>
+  </svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="100%" height="100%">
+    <rect width="240" height="80" rx="8" fill="#FFFFFF"/>
+    <g transform="translate(15, 17)">
+      <circle cx="23" cy="23" r="23" fill="#8B5CF6"/>
+      <text x="23" y="30" font-family="system-ui, sans-serif" font-weight="900" font-size="18" fill="#FFFFFF" text-anchor="middle">g+</text>
+    </g>
+    <text x="70" y="38" font-family="system-ui, sans-serif" font-weight="900" font-size="22" fill="#7C3AED" letter-spacing="0.5">gudppl</text>
+    <text x="71" y="52" font-family="system-ui, sans-serif" font-weight="600" font-size="10" fill="#64748B" letter-spacing="1">DO GOOD NETWORK</text>
+  </svg>

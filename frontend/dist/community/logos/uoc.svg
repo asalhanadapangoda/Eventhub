@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="100%" height="100%">
+    <rect width="240" height="80" rx="8" fill="#FFFFFF"/>
+    <g transform="translate(15, 14)">
+      <circle cx="26" cy="26" r="25" fill="#7A0019"/>
+      <circle cx="26" cy="26" r="21" fill="#FFFFFF" stroke="#D4AF37" stroke-width="2"/>
+      <text x="26" y="32" font-family="Georgia, serif" font-weight="bold" font-size="14" fill="#7A0019" text-anchor="middle">UOC</text>
+    </g>
+    <text x="75" y="38" font-family="Georgia, serif" font-weight="bold" font-size="17" fill="#7A0019">University of</text>
+    <text x="75" y="54" font-family="Georgia, serif" font-weight="bold" font-size="16" fill="#D4AF37">Colombo</text>
+  </svg>

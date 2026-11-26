@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="100%" height="100%">
+    <rect width="240" height="80" rx="8" fill="#FFFFFF"/>
+    <g transform="translate(15, 16)">
+      <circle cx="24" cy="24" r="23" fill="#15803D"/>
+      <path d="M24,10 L34,26 L26,26 L32,36 L16,36 L22,26 L14,26 Z" fill="#FFFFFF"/>
+    </g>
+    <text x="70" y="38" font-family="system-ui, sans-serif" font-weight="800" font-size="19" fill="#14532D">HomeTree</text>
+    <text x="71" y="52" font-family="system-ui, sans-serif" font-weight="600" font-size="10" fill="#16A34A" letter-spacing="1">COWORKING &amp; LABS</text>
+  </svg>
