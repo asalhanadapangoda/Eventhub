@@ -39,32 +39,30 @@ export const OrganizationCard: React.FC<OrganizationCardProps> = ({
   const hasWebsite = rawWebsite.length > 0;
   const targetUrl = hasWebsite
     ? (rawWebsite.startsWith('http://') || rawWebsite.startsWith('https://')
-        ? rawWebsite
-        : `https://${rawWebsite}`)
+      ? rawWebsite
+      : `https://${rawWebsite}`)
     : undefined;
 
-  const cardClassName = `group relative bg-white border rounded-xl p-4 flex flex-col justify-between cursor-pointer transition-all duration-200 select-none no-underline text-inherit ${
-    isHighlighted
-      ? 'border-[#0070F3] ring-4 ring-blue-500/25 shadow-xl scale-[1.02] bg-blue-50/20'
-      : 'border-[#E5E7EB] hover:border-blue-400 hover:shadow-card-hover hover:-translate-y-0.5 shadow-card'
-  }`;
+  const cardClassName = `group relative bg-white border rounded-xl p-4 flex flex-col justify-between cursor-pointer transition-all duration-200 select-none no-underline text-inherit ${isHighlighted
+    ? 'border-[#0070F3] ring-4 ring-blue-500/25 shadow-xl scale-[1.02] bg-blue-50/20'
+    : 'border-[#E5E7EB] hover:border-blue-400 hover:shadow-card-hover hover:-translate-y-0.5 shadow-card'
+    }`;
 
   const cardContent = (
     <>
       <div>
         {/* Logo Container: Standard dimensions, object-fit contain, never cropped */}
         <div
-          className={`w-full h-24 rounded-lg ${
-            organization.slug === 'slasscom' ? 'bg-[#102D48]' : 'bg-[#F8FAFC]'
-          } border border-slate-100 flex items-center justify-center p-2.5 mb-3 group-hover:bg-blue-50/40 transition`}
+          className={`w-full h-24 rounded-lg ${organization.slug === 'slasscom' ? 'bg-[#102D48]' : 'bg-[#F8FAFC]'
+            } border border-slate-100 flex items-center justify-center p-2.5 mb-3 group-hover:bg-blue-50/40 transition`}
           title={hasWebsite ? `Visit official website for ${organization.name}` : organization.name}
         >
           {!imageError && organization.logo ? (
             <img
               src={
                 organization.logo.startsWith('http://') ||
-                organization.logo.startsWith('https://') ||
-                organization.logo.startsWith('data:')
+                  organization.logo.startsWith('https://') ||
+                  organization.logo.startsWith('data:')
                   ? organization.logo
                   : `${import.meta.env.BASE_URL}${organization.logo.replace(/^\/+/, '')}`
               }

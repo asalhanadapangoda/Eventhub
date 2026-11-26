@@ -556,4 +556,7 @@ export default function LoginPage() {
         </div>
       </main>
 
-      <Foot
+      <Footer />
+    </div>
+  );
+}
