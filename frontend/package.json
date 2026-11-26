@@ -1,17 +1,33 @@
 {
-  "name": "trace-frontends",
+  "name": "trace-projects-frontend",
   "private": true,
+  "version": "1.0.0",
+  "type": "module",
   "scripts": {
-    "install:all": "npm --prefix Event-and-Space install && npm --prefix Community-project-main/client install && npm --prefix Innovation-Academy-main/client install",
-    "dev": "node scripts/dev-all.mjs",
-    "dev:events": "npm --prefix Event-and-Space run dev",
-    "dev:community": "npm --prefix Community-project-main/client run dev",
-    "dev:academy": "npm --prefix Innovation-Academy-main/client run dev",
-    "build": "node scripts/build-all.mjs",
-    "build:events": "npm --prefix Event-and-Space run build",
-    "build:community": "npm --prefix Community-project-main/client run build",
-    "build:academy": "npm --prefix Innovation-Academy-main/client run build",
-    "lint": "npm --prefix Event-and-Space run lint",
-    "preview": "npm --prefix Event-and-Space run preview"
+    "dev": "vite --host",
+    "build": "vite build",
+    "lint": "oxlint",
+    "preview": "vite preview --host --port 4000"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "clsx": "^2.1.1",
+    "dompurify": "^3.4.15",
+    "lucide-react": "^0.474.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-hot-toast": "^2.5.1",
+    "react-router-dom": "^6.28.0",
+    "tailwind-merge": "^2.5.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.4",
+    "autoprefixer": "^10.4.20",
+    "oxlint": "^1.75.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "vite": "^8.2.0"
   }
 }

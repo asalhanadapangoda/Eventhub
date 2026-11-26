@@ -1,6 +1,4 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
   "redirects": [
     {
       "source": "/",
@@ -10,52 +8,12 @@
   ],
   "rewrites": [
     {
-      "source": "/api/academy/(.*)",
-      "destination": "https://innovation-academy-eight.vercel.app/api/$1"
-    },
-    {
-      "source": "/uploads/academy/(.*)",
-      "destination": "https://innovation-academy-eight.vercel.app/uploads/$1"
-    },
-    {
       "source": "/api/(.*)",
       "destination": "https://eventhub-kyn9.onrender.com/api/$1"
     },
     {
       "source": "/uploads/(.*)",
       "destination": "https://eventhub-kyn9.onrender.com/uploads/$1"
-    },
-    {
-      "source": "/community",
-      "destination": "/community/index.html"
-    },
-    {
-      "source": "/community/(.*)",
-      "destination": "/community/index.html"
-    },
-    {
-      "source": "/innovation-academy",
-      "destination": "/innovation-academy/index.html"
-    },
-    {
-      "source": "/innovation-academy/(.*)",
-      "destination": "/innovation-academy/index.html"
-    },
-    {
-      "source": "/events",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/events/(.*)",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/spaces",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/spaces/(.*)",
-      "destination": "/index.html"
     },
     {
       "source": "/(.*)",
