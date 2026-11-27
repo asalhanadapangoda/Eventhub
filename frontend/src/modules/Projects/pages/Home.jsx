@@ -12,6 +12,7 @@ export function Home() {
 
   const filteredProjects = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
+    if (!normalizedQuery) return projects;
 
     return projects.filter((project) => {
       if (!normalizedQuery) return true;

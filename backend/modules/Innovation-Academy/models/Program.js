@@ -73,9 +73,9 @@ const programSchema = new mongoose.Schema(
       default: [],
     },
     coordinator: {
-      name: { type: String, default: 'Dilshan Perera' },
+      name: { type: String, default: 'Ms. Neranjana Rashmi' },
       email: { type: String, default: 'projects@trace.lk' },
-      title: { type: String, default: 'Head of Programs & Incubation' },
+      title: { type: String, default: 'Executive - Project Management' },
       phone: { type: String, default: '+94 70 151 0444' },
     },
     status: {

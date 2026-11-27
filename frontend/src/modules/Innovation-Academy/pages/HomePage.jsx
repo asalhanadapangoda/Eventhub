@@ -3,10 +3,8 @@ import { useLocation } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import HeroSection from '../components/home/HeroSection';
-import AboutSection from '../components/home/AboutSection';
 import ProgramsSection from '../components/home/ProgramsSection';
 import WorkshopsSection from '../components/home/WorkshopsSection';
-import ContactSection from '../components/home/ContactSection';
 import { programService, workshopService } from '../services/api';
 
 export default function HomePage() {
@@ -49,10 +47,12 @@ export default function HomePage() {
         ]);
         if (progRes.data) {
           const pList = Array.isArray(progRes.data) ? progRes.data : progRes.data.data || [];
-          setPrograms(pList);
-          try {
-            localStorage.setItem('trace_cached_programs', JSON.stringify(pList));
-          } catch {}
+          if (pList.length > 0) {
+            setPrograms(pList);
+            try {
+              localStorage.setItem('trace_cached_programs', JSON.stringify(pList));
+            } catch {}
+          }
         }
         if (workRes.data) {
           const wList = Array.isArray(workRes.data) ? workRes.data : workRes.data.data || [];
@@ -100,17 +100,11 @@ export default function HomePage() {
         {/* 2. Hero Section */}
         <HeroSection />
 
-        {/* 3. About Us */}
-        <AboutSection />
-
-        {/* 4. Our Programs (Exactly TWO program cards) */}
+        {/* 3. Our Programs (Exactly TWO program cards) */}
         <ProgramsSection programs={programs} />
 
         {/* 5. Workshops & Activities (Selected upcoming workshops from both programs) */}
         <WorkshopsSection workshops={workshops} />
-
-        {/* 6. Contact Us (Contact form saved to database) */}
-        <ContactSection />
       </main>
 
       {/* 7. Footer */}

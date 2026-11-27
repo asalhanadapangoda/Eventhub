@@ -183,16 +183,6 @@ export default function Navbar() {
             >
               Home
             </button>
-            <button
-              onClick={() => handleNavClick('#about')}
-              className={`text-[14px] font-semibold transition-colors cursor-pointer ${
-                location.hash === '#about'
-                  ? 'text-[#006398]'
-                  : 'text-[#44474c] hover:text-[#006398]'
-              }`}
-            >
-              About TRACE
-            </button>
 
             {/* Programs Nav Item (Direct clickable link + Dropdown for sub-links) */}
             <div
@@ -337,9 +327,9 @@ export default function Navbar() {
             </div>
 
             <button
-              onClick={() => handleNavClick('#contact')}
+              onClick={() => handleNavClick('/contact')}
               className={`text-[14px] font-semibold transition-colors cursor-pointer ${
-                location.hash === '#contact'
+                location.pathname === '/contact'
                   ? 'text-[#006398]'
                   : 'text-[#44474c] hover:text-[#006398]'
               }`}
@@ -666,16 +656,6 @@ export default function Navbar() {
           >
             Home
           </button>
-          <button
-            onClick={() => handleNavClick('#about')}
-            className={`block w-full text-left px-3 py-2 rounded-md text-base font-semibold transition-colors ${
-              location.hash === '#about'
-                ? 'bg-[#eaedff] text-[#006398]'
-                : 'text-[#44474c] hover:bg-[#eaedff]'
-            }`}
-          >
-            About TRACE
-          </button>
 
           {/* Mobile Programs Section */}
           <div>
@@ -748,9 +728,9 @@ export default function Navbar() {
           </div>
 
           <button
-            onClick={() => handleNavClick('#contact')}
+            onClick={() => handleNavClick('/contact')}
             className={`block w-full text-left px-3 py-2 rounded-md text-base font-semibold transition-colors ${
-              location.hash === '#contact'
+              location.pathname === '/contact'
                 ? 'bg-[#eaedff] text-[#006398]'
                 : 'text-[#44474c] hover:bg-[#eaedff]'
             }`}

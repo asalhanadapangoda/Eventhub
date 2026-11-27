@@ -3,23 +3,18 @@ import { Link } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import { programService } from '../services/api';
+import { DEFAULT_PROGRAMS } from '../data/defaultPrograms';
+import { formatImageUrl } from '../utils/imageUrl';
 import { Brain, Rocket, ArrowRight, CheckCircle2, Calendar, Award, Clock } from 'lucide-react';
 
 export default function ProgramsPage() {
   const [programs, setPrograms] = useState(() => {
     try {
       const cached = localStorage.getItem('trace_cached_programs');
-      return cached ? JSON.parse(cached) : [];
+      const parsed = cached ? JSON.parse(cached) : [];
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_PROGRAMS;
     } catch {
-      return [];
-    }
-  });
-
-  const [loading, setLoading] = useState(() => {
-    try {
-      return !localStorage.getItem('trace_cached_programs');
-    } catch {
-      return true;
+      return DEFAULT_PROGRAMS;
     }
   });
 
@@ -27,7 +22,7 @@ export default function ProgramsPage() {
     const fetchPrograms = async () => {
       try {
         const res = await programService.getPrograms();
-        if (res.success && res.data) {
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
           setPrograms(res.data);
           try {
             localStorage.setItem('trace_cached_programs', JSON.stringify(res.data));
@@ -35,12 +30,12 @@ export default function ProgramsPage() {
         }
       } catch (err) {
         console.warn('Failed to fetch programs:', err.message);
-      } finally {
-        setLoading(false);
       }
     };
     fetchPrograms();
   }, []);
+
+  const displayPrograms = programs && programs.length > 0 ? programs : DEFAULT_PROGRAMS;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#faf8ff]">
@@ -58,21 +53,22 @@ export default function ProgramsPage() {
             </h1>
             <p className="text-base text-[#44474c] mt-3">
               Explore our structured learning tracks engineered in partnership with top industry leaders,
-              fostering design thinking and deep-tech startup creation.
+              fostering design thinking and startup creation.
             </p>
           </div>
 
           {/* Programs Grid */}
           <div
-            className={`grid grid-cols-1 ${programs.length === 1
+            className={`grid grid-cols-1 ${displayPrograms.length === 1
               ? 'max-w-xl mx-auto'
-              : programs.length === 2
+              : displayPrograms.length === 2
                 ? 'lg:grid-cols-2 max-w-6xl mx-auto'
                 : 'md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto'
               } gap-10`}
           >
-            {programs.map((prog, idx) => {
-              const isProg1 = prog.slug === 'program-01' || idx === 0;
+            {displayPrograms.map((prog, idx) => {
+              const progSlug = prog.slug || (idx === 0 ? 'program-01' : 'program-02');
+              const isProg1 = progSlug === 'program-01' || idx === 0;
               const programDuration = isProg1 ? '1 Month' : '3 Months';
               const defaultHighlights = isProg1
                 ? [
@@ -103,7 +99,7 @@ export default function ProgramsPage() {
                     style={
                       prog.coverImage
                         ? {
-                          backgroundImage: `linear-gradient(to right, rgba(0, 30, 60, 0.75), rgba(0, 15, 40, 0.88)), url(${prog.coverImage})`,
+                          backgroundImage: `linear-gradient(to right, rgba(0, 30, 60, 0.75), rgba(0, 15, 40, 0.88)), url(${formatImageUrl(prog.coverImage)})`,
                         }
                         : isProg1
                           ? { background: 'linear-gradient(to right, #006398, #00476e)' }
@@ -203,13 +199,13 @@ export default function ProgramsPage() {
 
                       <div className="grid grid-cols-2 gap-3 pt-2">
                         <Link
-                          to={`/programs/${prog.slug}`}
+                          to={`/programs/${progSlug}`}
                           className="py-3 px-4 rounded-lg border border-[#cbd5e1] hover:border-[#006398] hover:bg-[#f2f3ff] text-[#0B192C] font-bold text-xs uppercase tracking-wide text-center transition-colors"
                         >
                           View Curriculum
                         </Link>
                         <Link
-                          to={`/programs/${prog.slug}#register`}
+                          to={`/programs/${progSlug}#register`}
                           className="py-3 px-4 rounded-lg bg-[#006398] hover:bg-[#0284c7] text-white font-bold text-xs uppercase tracking-wide text-center transition-colors flex items-center justify-center gap-1.5 shadow-sm"
                         >
                           <span>Enroll Now</span>

@@ -1792,18 +1792,18 @@ label {
   margin-bottom: 0.4rem;
 }
 
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="tel"],
-input[type="url"],
-input[type="date"],
-input[type="time"],
-input[type="number"],
-input[type="search"],
-.form-group input,
-select,
-textarea {
+input[type="text"]:not(.tw-module *),
+input[type="email"]:not(.tw-module *),
+input[type="password"]:not(.tw-module *),
+input[type="tel"]:not(.tw-module *),
+input[type="url"]:not(.tw-module *),
+input[type="date"]:not(.tw-module *),
+input[type="time"]:not(.tw-module *),
+input[type="number"]:not(.tw-module *),
+input[type="search"]:not(.tw-module *),
+.form-group input:not(.tw-module *),
+select:not(.tw-module *),
+textarea:not(.tw-module *) {
   width: 100%;
   padding: 0.65rem 0.9rem;
   background: var(--bg-surface);
@@ -1816,20 +1816,20 @@ textarea {
   transition: var(--transition);
 }
 
-input::placeholder,
-textarea::placeholder {
+input:not(.tw-module *)::placeholder,
+textarea:not(.tw-module *)::placeholder {
   color: #94a3b8;
   font-weight: 400;
 }
 
-select option {
+select:not(.tw-module *) option {
   color: #475569;
   font-weight: 500;
 }
 
-input:focus,
-select:focus,
-textarea:focus {
+input:not(.tw-module *):focus,
+select:not(.tw-module *):focus,
+textarea:not(.tw-module *):focus {
   border-color: var(--primary-blue);
   box-shadow: 0 0 0 3px rgba(93, 77, 246, 0.14);
   color: #1e293b;

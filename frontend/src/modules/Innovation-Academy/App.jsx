@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react';
+import React, { Component, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
@@ -14,6 +14,7 @@ const ProgramDetailPage = lazy(() => import('./pages/ProgramDetailPage'));
 const WorkshopsPage = lazy(() => import('./pages/WorkshopsPage'));
 const WorkshopDetailPage = lazy(() => import('./pages/WorkshopDetailPage'));
 const IndustryVisitsPage = lazy(() => import('./pages/IndustryVisitsPage'));
+const ContactPage = lazy(() => import('./pages/ContactPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 
@@ -40,13 +41,48 @@ const PageFallback = () => (
   </div>
 );
 
+class AcademyErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error) {
+    console.error('Innovation Academy render error:', error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-[#faf8ff] p-6 text-center">
+          <h2 className="text-xl font-bold text-[#0B192C] mb-2">Something went wrong</h2>
+          <p className="text-sm text-slate-600 mb-4">Please reload the page to continue.</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="px-5 py-2.5 rounded-lg bg-[#006398] text-white text-xs font-bold uppercase tracking-wider"
+          >
+            Reload Page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
         <Router basename="/innovation-academy">
           <AuthModal />
-          <Suspense fallback={<PageFallback />}>
+          <AcademyErrorBoundary>
+            <Suspense fallback={<PageFallback />}>
             <Routes>
               {/* Public Website Routes */}
               <Route path="/" element={<HomePage />} />
@@ -58,6 +94,7 @@ export default function App() {
                 element={<WorkshopDetailPage />}
               />
               <Route path="/industry-visits" element={<IndustryVisitsPage />} />
+              <Route path="/contact" element={<ContactPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
 
@@ -100,7 +137,8 @@ export default function App() {
               {/* Fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-          </Suspense>
+            </Suspense>
+          </AcademyErrorBoundary>
         </Router>
       </ToastProvider>
     </AuthProvider>

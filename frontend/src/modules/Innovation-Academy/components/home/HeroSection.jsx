@@ -36,9 +36,7 @@ export default function HeroSection() {
               Inspiring Innovation <br />
               <span className="text-[#38bdf8] drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">Across Sri Lanka</span>
             </h1>
-            <p className="text-sm sm:text-base font-extrabold text-[#7dd3fc] drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)] pt-0.5">
-              All Certified in Deep-Tech &amp; Startup Innovation
-            </p>
+
           </div>
 
           {/* Paragraph Description */}
@@ -72,11 +70,11 @@ export default function HeroSection() {
           ======================================================== */}
       <section className="hidden lg:flex relative min-h-[600px] xl:min-h-[640px] items-center bg-white">
         {/* Right Side: Clean High-Tech Lab Photo */}
-        <div className="absolute top-0 right-0 w-[62%] h-full overflow-hidden z-0">
+        <div className="absolute top-0 right-0 w-[68%] h-full overflow-hidden z-0">
           <img
             src="/innovation-academy/hero-innovation.jpg"
             alt="TRACE Sri Lanka Innovation Academy"
-            className="w-full h-full object-cover object-center select-none"
+            className="w-full h-full object-cover object-right select-none"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none"></div>
         </div>
@@ -91,7 +89,7 @@ export default function HeroSection() {
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
-              d="M 0 0 L 455 0 C 425 130 475 240 530 330 C 590 420 645 505 705 600 L 0 600 Z"
+              d="M 0 0 L 425 0 C 410 130 445 240 480 330 C 515 420 550 510 585 600 L 0 600 Z"
               fill="#ffffff"
             />
           </svg>
@@ -99,7 +97,7 @@ export default function HeroSection() {
 
         {/* Left Side Content */}
         <div className="max-w-7xl mx-auto px-6 lg:px-8 w-full relative z-20 py-20">
-          <div className="max-w-[510px] flex flex-col items-start gap-5">
+          <div className="max-w-[460px] xl:max-w-[500px] flex flex-col items-start gap-5">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#e8f1fd] border border-[#d0e2fc] text-[11px] font-extrabold uppercase tracking-wider text-[#006398] shadow-2xs">
               <Sparkles className="w-3.5 h-3.5 text-[#006398]" />
               <span>TRACE INNOVATION ACADEMY • POWERED BY T2T</span>
@@ -110,9 +108,7 @@ export default function HeroSection() {
                 Inspiring Innovation <br />
                 <span className="text-[#006398]">Across Sri Lanka</span>
               </h1>
-              <p className="text-lg font-bold text-[#006398] pt-1">
-                All Certified in Deep-Tech &amp; Startup Innovation
-              </p>
+
             </div>
 
             <p className="text-base text-slate-600 leading-relaxed">

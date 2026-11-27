@@ -39,9 +39,9 @@ const initialFormData = {
   targetAudience: '',
   benefits: '',
   coverImage: '',
-  coordinatorName: 'Dilshan Perera',
+  coordinatorName: 'Ms. Neranjana Rashmi',
   coordinatorEmail: 'projects@trace.lk',
-  coordinatorTitle: 'Head of Programs & Incubation',
+  coordinatorTitle: 'Executive - Project Management',
   coordinatorPhone: '+94 70 181 0494',
 };
 
@@ -101,7 +101,14 @@ export default function AdminPrograms() {
     setLoading(true);
     try {
       const res = await programService.getPrograms();
-      if (res.success) setPrograms(res.data);
+      if (res.success) {
+        setPrograms(res.data);
+        try {
+          if (Array.isArray(res.data) && res.data.length > 0) {
+            localStorage.setItem('trace_cached_programs', JSON.stringify(res.data));
+          }
+        } catch {}
+      }
     } catch (err) {
       console.warn('Failed to load programs:', err.message);
     } finally {
@@ -142,9 +149,9 @@ export default function AdminPrograms() {
         : prog.targetAudience || '',
       benefits: Array.isArray(prog.benefits) ? prog.benefits.join('\n') : prog.benefits || '',
       coverImage: prog.coverImage || '',
-      coordinatorName: prog.coordinator?.name || 'Dilshan Perera',
+      coordinatorName: prog.coordinator?.name || 'Ms. Neranjana Rashmi',
       coordinatorEmail: prog.coordinator?.email || 'projects@trace.lk',
-      coordinatorTitle: prog.coordinator?.title || 'Head of Programs & Incubation',
+      coordinatorTitle: prog.coordinator?.title || 'Executive - Project Management',
       coordinatorPhone: prog.coordinator?.phone || '+94 70 181 0494',
     });
     setSaveSuccess('');
@@ -693,7 +700,7 @@ export default function AdminPrograms() {
                   {formData.coverImage && (
                     <div className="relative w-full h-44 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 group shadow-inner">
                       <img
-                        src={formData.coverImage}
+                        src={formatImageUrl(formData.coverImage)}
                         alt="Program Cover Preview"
                         className="w-full h-full object-cover"
                         onError={handleImageError}
