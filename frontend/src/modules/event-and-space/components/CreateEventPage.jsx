@@ -214,22 +214,26 @@ export default function CreateEventPage({ onCancel, onEventCreated, showToast, c
 
     try {
       let authToken = localStorage.getItem('eventhub_token');
+      const refreshToken = localStorage.getItem('eventhub_refresh_token');
 
-      // Auto-heal admin session token if missing in localStorage
-      if (!authToken) {
+      // Refresh access token if missing and refresh token is available
+      if (!authToken && refreshToken) {
         try {
-          const authRes = await fetch('/api/auth/login', {
+          const authRes = await fetch('/api/auth/refresh', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: 'admin@trace.lk', password: 'admin123' }),
+            body: JSON.stringify({ refreshToken }),
           });
           const authData = await authRes.json();
           if (authData.success && authData.data?.token) {
             authToken = authData.data.token;
             localStorage.setItem('eventhub_token', authToken);
+            if (authData.data.refreshToken) {
+              localStorage.setItem('eventhub_refresh_token', authData.data.refreshToken);
+            }
           }
         } catch (authErr) {
-          console.warn('Auto auth refresh fallback error:', authErr);
+          console.warn('Token refresh error:', authErr);
         }
       }
 
@@ -246,18 +250,21 @@ export default function CreateEventPage({ onCancel, onEventCreated, showToast, c
         body: JSON.stringify(payload),
       });
 
-      // If token expired or forbidden, refresh admin session and retry once
-      if (response.status === 401 || response.status === 403) {
+      // If access token expired, refresh session via refreshToken and retry once
+      if ((response.status === 401 || response.status === 403) && refreshToken) {
         try {
-          const authRes = await fetch('/api/auth/login', {
+          const authRes = await fetch('/api/auth/refresh', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: 'admin@trace.lk', password: 'admin123' }),
+            body: JSON.stringify({ refreshToken }),
           });
           const authData = await authRes.json();
           if (authData.success && authData.data?.token) {
             authToken = authData.data.token;
             localStorage.setItem('eventhub_token', authToken);
+            if (authData.data.refreshToken) {
+              localStorage.setItem('eventhub_refresh_token', authData.data.refreshToken);
+            }
             headers['Authorization'] = `Bearer ${authToken}`;
             response = await fetch('/api/events', {
               method: 'POST',

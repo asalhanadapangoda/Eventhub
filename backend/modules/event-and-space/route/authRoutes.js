@@ -4,6 +4,8 @@ const rateLimit = require("express-rate-limit");
 const {
   signupUser,
   loginUser,
+  refreshTokenUser,
+  logoutUser,
   getMe,
   updateUserProfile,
   getAllUsers,
@@ -32,6 +34,12 @@ router.post("/signup", authLimiter, signupUser);
 
 // POST /api/auth/login
 router.post("/login", authLimiter, loginUser);
+
+// POST /api/auth/refresh (Exchange refresh token for new access token)
+router.post("/refresh", authLimiter, refreshTokenUser);
+
+// POST /api/auth/logout (Revoke active tokens)
+router.post("/logout", protect, logoutUser);
 
 // POST /api/auth/forgot-password (Request reset code)
 router.post("/forgot-password", authLimiter, forgotPassword);

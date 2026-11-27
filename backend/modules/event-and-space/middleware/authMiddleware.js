@@ -1,14 +1,25 @@
 const jwt = require("jsonwebtoken");
 const User = require("../model/User");
 
-const JWT_SECRET = process.env.JWT_SECRET || "eventhub_super_secret_jwt_key_2026";
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error("FATAL: JWT_SECRET environment variable is required.");
+}
 
-// Sign JWT Token using jsonwebtoken
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
+const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || "14d";
+
+// Sign short-lived access JWT Token
 const signToken = (payload) => {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "30d" });
+  return jwt.sign({ ...payload, tokenType: "access" }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 };
 
-// Verify JWT Token using jsonwebtoken
+// Sign refresh JWT Token
+const signRefreshToken = (payload) => {
+  return jwt.sign({ ...payload, tokenType: "refresh" }, JWT_SECRET, { expiresIn: JWT_REFRESH_EXPIRES_IN });
+};
+
+// Verify JWT Token
 const verifyToken = (token) => {
   try {
     return jwt.verify(token, JWT_SECRET);
@@ -28,9 +39,9 @@ const protect = async (req, res, next) => {
     }
   }
 
-  let decoded = token ? verifyToken(token) : null;
+  const decoded = token ? verifyToken(token) : null;
 
-  if (decoded && decoded.id) {
+  if (decoded && decoded.id && decoded.tokenType !== "refresh") {
     req.user = {
       _id: decoded.id,
       id: decoded.id,
@@ -41,6 +52,12 @@ const protect = async (req, res, next) => {
     try {
       const user = await User.findById(decoded.id).select("-password").maxTimeMS(2500);
       if (user) {
+        if (
+          typeof decoded.tokenVersion === "number" &&
+          (user.tokenVersion || 0) !== decoded.tokenVersion
+        ) {
+          return res.status(401).json({ success: false, message: "Session expired or revoked, please log in again" });
+        }
         req.user = user;
       }
     } catch (error) {}
@@ -55,11 +72,10 @@ const protect = async (req, res, next) => {
 const authorize = (...roles) => {
   return (req, res, next) => {
     const userRole = req.user?.role;
-    const isSpecialAdmin = req.user?.email === "admin@trace.lk";
-    if (!req.user || (roles.length > 0 && !roles.includes(userRole) && !isSpecialAdmin)) {
+    if (!req.user || (roles.length > 0 && !roles.includes(userRole))) {
       return res.status(403).json({
         success: false,
-        message: `Forbidden: Access denied for role '${userRole || 'unauthenticated'}'. Required role: [${roles.join(', ')}]`,
+        message: `Forbidden: Access denied for role '${userRole || "unauthenticated"}'. Required role: [${roles.join(", ")}]`,
       });
     }
     next();
@@ -68,6 +84,7 @@ const authorize = (...roles) => {
 
 module.exports = {
   signToken,
+  signRefreshToken,
   verifyToken,
   protect,
   authorize,

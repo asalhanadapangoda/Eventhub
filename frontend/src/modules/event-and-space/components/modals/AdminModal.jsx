@@ -41,14 +41,14 @@ export default function AdminModal({ isOpen, onClose, onEventCreated, showToast 
 
     try {
       let authToken = localStorage.getItem('eventhub_token');
+      const refreshToken = localStorage.getItem('eventhub_refresh_token');
 
-      // Auto-heal admin session token if missing in localStorage
-      if (!authToken) {
+      if (!authToken && refreshToken) {
         try {
-          const authRes = await fetch('/api/auth/login', {
+          const authRes = await fetch('/api/auth/refresh', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: 'admin@trace.lk', password: 'admin123' }),
+            body: JSON.stringify({ refreshToken }),
           });
           const authData = await authRes.json();
           if (authData.success && authData.data?.token) {
@@ -56,7 +56,7 @@ export default function AdminModal({ isOpen, onClose, onEventCreated, showToast 
             localStorage.setItem('eventhub_token', authToken);
           }
         } catch (authErr) {
-          console.warn('Auto auth refresh fallback error:', authErr);
+          console.warn('Token refresh error:', authErr);
         }
       }
 
@@ -86,13 +86,12 @@ export default function AdminModal({ isOpen, onClose, onEventCreated, showToast 
         body: JSON.stringify(payload),
       });
 
-      // If token expired or forbidden, refresh admin session and retry once
-      if (response.status === 401 || response.status === 403) {
+      if ((response.status === 401 || response.status === 403) && refreshToken) {
         try {
-          const authRes = await fetch('/api/auth/login', {
+          const authRes = await fetch('/api/auth/refresh', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: 'admin@trace.lk', password: 'admin123' }),
+            body: JSON.stringify({ refreshToken }),
           });
           const authData = await authRes.json();
           if (authData.success && authData.data?.token) {

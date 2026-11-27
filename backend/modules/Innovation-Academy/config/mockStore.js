@@ -1,8 +1,12 @@
 import bcrypt from 'bcryptjs';
 
-// Pre-hashed passwords for quick in-memory testing
-const adminHashedPassword = bcrypt.hashSync('admin123', 10);
-const userHashedPassword = bcrypt.hashSync('user123', 10);
+// Read seed passwords from environment variables (no hardcoded credentials in source)
+const adminHashedPassword = process.env.ADMIN_SEED_PASSWORD
+  ? bcrypt.hashSync(process.env.ADMIN_SEED_PASSWORD, 10)
+  : '';
+const userHashedPassword = process.env.ADMIN_SEED_PASSWORD
+  ? bcrypt.hashSync(process.env.ADMIN_SEED_PASSWORD, 10)
+  : '';
 
 class MockStore {
   constructor() {

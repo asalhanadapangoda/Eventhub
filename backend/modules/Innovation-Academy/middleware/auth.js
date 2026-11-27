@@ -1,6 +1,13 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
+const getJwtSecret = () => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('FATAL: JWT_SECRET environment variable is required.');
+  }
+  return process.env.JWT_SECRET;
+};
+
 export const protect = async (req, res, next) => {
   let token;
 
@@ -19,10 +26,7 @@ export const protect = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || 'trace_expert_city_jwt_secret_2025_innovation_a'
-    );
+    const decoded = jwt.verify(token, getJwtSecret());
     
     // Attempt to find user in MongoDB
     try {
@@ -77,10 +81,7 @@ export const optionalAuth = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || 'trace_expert_city_jwt_secret_2025_innovation_a'
-    );
+    const decoded = jwt.verify(token, getJwtSecret());
     try {
       const user = await User.findById(decoded.id).select('-password');
       if (user) {

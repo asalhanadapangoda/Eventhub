@@ -37,6 +37,14 @@ const userSchema = new mongoose.Schema(
       default: "TRACE Main Branch (Colombo)",
     },
     permissions: [String],
+    mustChangePassword: {
+      type: Boolean,
+      default: false,
+    },
+    tokenVersion: {
+      type: Number,
+      default: 0,
+    },
     resetPasswordOtp: {
       type: String,
       default: null,

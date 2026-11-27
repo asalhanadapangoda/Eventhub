@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const User = require("../model/User");
-const { signToken } = require("../middleware/authMiddleware");
+const { signToken, signRefreshToken, verifyToken } = require("../middleware/authMiddleware");
 const crypto = require("crypto");
 const logger = require("../../../common/logger");
 const { parsePagination } = require("../../../common/pagination");
@@ -52,8 +52,8 @@ const signupUser = async (req, res) => {
       return res.status(400).json({ success: false, message: "Please enter a valid email address (e.g. name@domain.com)." });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ success: false, message: "Password must be at least 6 characters long." });
+    if (password.length < 8) {
+      return res.status(400).json({ success: false, message: "Password must be at least 8 characters long." });
     }
 
     if (confirmPassword && password !== confirmPassword) {
@@ -87,7 +87,9 @@ const signupUser = async (req, res) => {
     await user.save();
     await syncToAcademyUser(user);
 
-    const token = signToken({ id: user._id, email: user.email, role: user.role });
+    const tokenPayload = { id: user._id, email: user.email, role: user.role, tokenVersion: user.tokenVersion || 0 };
+    const token = signToken(tokenPayload);
+    const refreshToken = signRefreshToken(tokenPayload);
 
     res.status(201).json({
       success: true,
@@ -100,8 +102,10 @@ const signupUser = async (req, res) => {
           contactNumber: user.contactNumber,
           avatar: user.avatar || "",
           role: user.role,
+          mustChangePassword: Boolean(user.mustChangePassword),
         },
         token,
+        refreshToken,
       },
     });
   } catch (error) {
@@ -148,11 +152,15 @@ const loginUser = async (req, res) => {
 
     syncToAcademyUser(user).catch(() => {});
 
-    const token = signToken({ id: user._id, email: user.email, role: user.role });
+    const tokenPayload = { id: user._id, email: user.email, role: user.role, tokenVersion: user.tokenVersion || 0 };
+    const token = signToken(tokenPayload);
+    const refreshToken = signRefreshToken(tokenPayload);
 
     res.json({
       success: true,
-      message: "Logged in successfully!",
+      message: user.mustChangePassword
+        ? "Logged in. Please change your temporary password immediately."
+        : "Logged in successfully!",
       data: {
         user: {
           id: user._id,
@@ -161,8 +169,10 @@ const loginUser = async (req, res) => {
           contactNumber: user.contactNumber,
           avatar: user.avatar || "",
           role: user.role,
+          mustChangePassword: Boolean(user.mustChangePassword),
         },
         token,
+        refreshToken,
       },
     });
   } catch (error) {
@@ -239,8 +249,8 @@ const changePassword = async (req, res) => {
       return res.status(400).json({ success: false, message: "Please provide both Current Password and New Password." });
     }
 
-    if (newPassword.length < 6) {
-      return res.status(400).json({ success: false, message: "New password must be at least 6 characters long." });
+    if (newPassword.length < 8) {
+      return res.status(400).json({ success: false, message: "New password must be at least 8 characters long." });
     }
 
     const user = await User.findById(req.user._id);
@@ -255,13 +265,21 @@ const changePassword = async (req, res) => {
 
     // Set new password (the pre-save hook in User.js automatically hashes it with bcrypt)
     user.password = newPassword;
+    user.mustChangePassword = false;
+    user.tokenVersion = (user.tokenVersion || 0) + 1;
     await user.save();
+    await syncToAcademyUser(user, newPassword);
 
     logger.info({ email: user.email }, "[AUTH] Password changed successfully");
 
+    const tokenPayload = { id: user._id, email: user.email, role: user.role, tokenVersion: user.tokenVersion };
     res.json({
       success: true,
       message: "Password changed successfully!",
+      data: {
+        token: signToken(tokenPayload),
+        refreshToken: signRefreshToken(tokenPayload),
+      },
     });
   } catch (error) {
     logger.error({ err: error.message }, "Change password error");
@@ -269,21 +287,81 @@ const changePassword = async (req, res) => {
   }
 };
 
-// Seed default Admin User if none exists
+// POST /api/auth/refresh (Exchange valid refresh token for a new access token)
+const refreshTokenUser = async (req, res) => {
+  try {
+    const incomingToken =
+      req.body?.refreshToken ||
+      (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")
+        ? req.headers.authorization.split(" ")[1]
+        : null);
+
+    if (!incomingToken) {
+      return res.status(401).json({ success: false, message: "Refresh token is required" });
+    }
+
+    const decoded = verifyToken(incomingToken);
+    if (!decoded || !decoded.id) {
+      return res.status(401).json({ success: false, message: "Invalid or expired refresh token" });
+    }
+
+    const user = await User.findById(decoded.id).select("-password");
+    if (!user) {
+      return res.status(401).json({ success: false, message: "User account no longer exists" });
+    }
+
+    if (typeof decoded.tokenVersion === "number" && (user.tokenVersion || 0) !== decoded.tokenVersion) {
+      return res.status(401).json({ success: false, message: "Refresh token has been revoked" });
+    }
+
+    const tokenPayload = { id: user._id, email: user.email, role: user.role, tokenVersion: user.tokenVersion || 0 };
+    return res.json({
+      success: true,
+      data: {
+        token: signToken(tokenPayload),
+        refreshToken: signRefreshToken(tokenPayload),
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Failed to refresh token", error: error.message });
+  }
+};
+
+// POST /api/auth/logout (Revoke all active JWTs for the current user by incrementing tokenVersion)
+const logoutUser = async (req, res) => {
+  try {
+    if (req.user?._id) {
+      await User.findByIdAndUpdate(req.user._id, { $inc: { tokenVersion: 1 } });
+    }
+    return res.json({ success: true, message: "Logged out and active tokens revoked" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Logout failed", error: error.message });
+  }
+};
+
+// Seed default Admin User if none exists (reads password from ADMIN_SEED_PASSWORD env var and forces password change on first login)
 const seedAdminUser = async () => {
   try {
-    const adminExists = await User.findOne({ $or: [{ email: "admin@trace.lk" }, { role: "admin" }] });
+    const seedEmail = (process.env.ADMIN_SEED_EMAIL || "admin@trace.lk").toLowerCase().trim();
+    const adminExists = await User.findOne({ $or: [{ email: seedEmail }, { role: "admin" }] });
     if (!adminExists) {
+      const seedPassword = process.env.ADMIN_SEED_PASSWORD;
+      if (!seedPassword || seedPassword.length < 8) {
+        logger.info("No admin user found in DB. Set ADMIN_SEED_PASSWORD (min 8 chars) in .env to seed an initial admin.");
+        return;
+      }
       const admin = new User({
         name: "TRACE Admin",
-        email: "admin@trace.lk",
-        password: "admin123",
+        email: seedEmail,
+        password: seedPassword,
         contactNumber: "+94 11 234 5678",
         role: "admin",
+        mustChangePassword: true,
         avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
       });
       await admin.save();
-      logger.info("Default Admin user seeded successfully (admin@trace.lk)");
+      await syncToAcademyUser(admin, seedPassword);
+      logger.info({ email: seedEmail }, "Initial Admin user seeded with mustChangePassword=true");
     }
   } catch (err) {
     logger.error({ err: err.message }, "Error seeding admin user");
@@ -426,6 +504,10 @@ const createBranchAdmin = async (req, res) => {
 
     if (!name || !email || !password || !branch) {
       return res.status(400).json({ success: false, message: "Please provide Name, Email, Password, and Branch." });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ success: false, message: "Password must be at least 8 characters long." });
     }
 
     const emailClean = email.toLowerCase().trim();
@@ -708,8 +790,8 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ success: false, message: "Please provide email, verification code, and new password." });
     }
 
-    if (newPassword.length < 6) {
-      return res.status(400).json({ success: false, message: "Password must be at least 6 characters long." });
+    if (newPassword.length < 8) {
+      return res.status(400).json({ success: false, message: "Password must be at least 8 characters long." });
     }
 
     const emailClean = email.toLowerCase().trim();
@@ -733,9 +815,12 @@ const resetPassword = async (req, res) => {
 
     // Set new password (the pre-save hook will automatically hash with bcrypt)
     user.password = newPassword;
+    user.mustChangePassword = false;
+    user.tokenVersion = (user.tokenVersion || 0) + 1;
     user.resetPasswordOtp = undefined;
     user.resetPasswordOtpExpires = undefined;
     await user.save();
+    await syncToAcademyUser(user, newPassword);
 
     logger.info({ email: user.email }, "[AUTH] Password successfully reset for user");
 
@@ -752,6 +837,8 @@ const resetPassword = async (req, res) => {
 module.exports = {
   signupUser,
   loginUser,
+  refreshTokenUser,
+  logoutUser,
   getMe,
   updateUserProfile,
   seedAdminUser,

@@ -28,15 +28,22 @@ if (isCloudinaryConfigured) {
   });
 }
 
-const buildUploadParams = (file) => {
-  const isVideo = file.mimetype && file.mimetype.startsWith('video/');
+const ALLOWED_IMAGE_MIMES = new Set([
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+]);
+const ALLOWED_IMAGE_EXTS = /\.(jpe?g|png|webp|gif|avif)$/i;
+
+const buildUploadParams = () => {
   return {
     folder: 'eventhub_uploads',
-    resource_type: isVideo ? 'video' : 'image',
-    allowed_formats: isVideo
-      ? ['mp4', 'mov', 'avi', 'mkv', 'webm']
-      : ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-    transformation: isVideo ? [{ quality: 'auto' }] : [{ width: 1200, crop: 'limit', quality: 'auto', fetch_format: 'auto' }],
+    resource_type: 'image',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'],
+    transformation: [{ width: 1200, crop: 'limit', quality: 'auto', fetch_format: 'auto' }],
   };
 };
 
@@ -88,9 +95,19 @@ if (!storage) {
   });
 }
 
+const imageFileFilter = (req, file, cb) => {
+  const mimeOk = Boolean(file.mimetype && ALLOWED_IMAGE_MIMES.has(file.mimetype.toLowerCase()));
+  const extOk = Boolean(file.originalname && ALLOWED_IMAGE_EXTS.test(file.originalname));
+  if (mimeOk && extOk) {
+    return cb(null, true);
+  }
+  return cb(new Error('Invalid file type. Only image files (JPG, PNG, WebP, GIF, AVIF) up to 10MB are allowed.'));
+};
+
 const upload = multer({
   storage,
-  limits: { fileSize: 500 * 1024 * 1024 }, // 500MB max limit for high-def videos
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max limit for images
+  fileFilter: imageFileFilter,
 });
 
 module.exports = { cloudinary, upload, isCloudinaryConfigured };

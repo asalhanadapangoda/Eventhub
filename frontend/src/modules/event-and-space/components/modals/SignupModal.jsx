@@ -66,8 +66,8 @@ export default function SignupModal({
       return;
     }
 
-    if (password.length < 6) {
-      showToast('Password must be at least 6 characters long.', 'error');
+    if (password.length < 8) {
+      showToast('Password must be at least 8 characters long.', 'error');
       return;
     }
 
@@ -102,6 +102,9 @@ export default function SignupModal({
         // Direct automatic login immediately upon signup
         if (result.data.token) {
           localStorage.setItem('eventhub_token', result.data.token);
+        }
+        if (result.data.refreshToken) {
+          localStorage.setItem('eventhub_refresh_token', result.data.refreshToken);
         }
         if (result.data.user) {
           localStorage.setItem('eventhub_user', JSON.stringify(result.data.user));
@@ -331,7 +334,7 @@ export default function SignupModal({
           {/* Password with Show/Hide Toggle */}
           <div className="form-group" style={{ marginBottom: '0.9rem' }}>
             <label htmlFor="signup-password" style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#334155', marginBottom: '0.3rem' }}>
-              Create Password (Min 6 chars) *
+              Create Password (Min 8 chars) *
             </label>
             <div style={{ position: 'relative' }}>
               <i
@@ -351,8 +354,8 @@ export default function SignupModal({
                 name="password"
                 autoComplete="new-password"
                 required
-                minLength="6"
-                placeholder="Min 6 characters"
+                minLength="8"
+                placeholder="Min 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 style={{
@@ -387,9 +390,9 @@ export default function SignupModal({
                 <i className={`fa-regular ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
               </button>
             </div>
-            {password.length > 0 && password.length < 6 && (
+            {password.length > 0 && password.length < 8 && (
               <span style={{ fontSize: '0.74rem', color: '#d97706', marginTop: '3px', display: 'block' }}>
-                Must be at least 6 characters.
+                Must be at least 8 characters.
               </span>
             )}
           </div>
@@ -417,7 +420,7 @@ export default function SignupModal({
                 name="confirmPassword"
                 autoComplete="new-password"
                 required
-                minLength="6"
+                minLength="8"
                 placeholder="Re-enter your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}

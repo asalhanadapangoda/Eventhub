@@ -9,6 +9,9 @@ import { connectDB } from '../config/db.js';
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
 const generateToken = (user) => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('FATAL: JWT_SECRET environment variable is required.');
+  }
   return jwt.sign(
     {
       id: user._id || user.id,
@@ -16,8 +19,8 @@ const generateToken = (user) => {
       email: user.email,
       role: user.role,
     },
-    process.env.JWT_SECRET || 'trace_expert_city_jwt_secret_2025_innovation_a',
-    { expiresIn: '30d' }
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
   );
 };
 
@@ -30,6 +33,13 @@ export const register = async (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: 'Please provide name, email, and password',
+      });
+    }
+
+    if (String(password).length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 8 characters long.',
       });
     }
 
@@ -159,34 +169,6 @@ export const login = async (req, res, next) => {
 
     if (isDbConnected()) {
       let user = await User.findOne({ email: cleanEmail });
-
-      // Guarantee default admin credentials always succeed in Atlas
-      if (cleanEmail === 'admin@trace.lk' && password === 'admin123') {
-        if (!user) {
-          user = await User.create({
-            name: 'Dilshan Perera',
-            email: 'admin@trace.lk',
-            password: 'admin123',
-            role: 'admin',
-            phone: '+94 70 151 0444',
-            organization: 'TRACE Expert City Secretariat',
-            bio: 'Head of Programs & Incubation at TRACE Sri Lanka, Bay 05 Maradana.',
-          });
-        } else {
-          const matches = await user.matchPassword('admin123');
-          if (!matches || user.role !== 'admin') {
-            user.password = 'admin123';
-            user.role = 'admin';
-            await user.save();
-          }
-        }
-      }
-
-      // Ensure sachininisansala320@gmail.com has admin privileges if logging in
-      if (cleanEmail === 'sachininisansala320@gmail.com' && user && user.role !== 'admin') {
-        user.role = 'admin';
-        await user.save();
-      }
 
       // Unified auth bridge: if user registered on Event & Space first, auto-provision in Innovation Academy
       if (!user) {
@@ -365,6 +347,13 @@ export const changePassword = async (req, res, next) => {
       });
     }
 
+    if (String(newPassword).length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 8 characters long.',
+      });
+    }
+
     if (isDbConnected()) {
       const user = await User.findById(userId);
       if (!user) {
@@ -526,10 +515,10 @@ export const resetPassword = async (req, res, next) => {
       });
     }
 
-    if (newPassword.length < 6) {
+    if (newPassword.length < 8) {
       return res.status(400).json({
         success: false,
-        message: 'Password must be at least 6 characters long.',
+        message: 'Password must be at least 8 characters long.',
       });
     }
 

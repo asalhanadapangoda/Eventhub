@@ -24,41 +24,51 @@ export const seedData = async () => {
     await ContactMessage.deleteMany();
     await Notification.deleteMany();
 
-    // 1. Create Admin and Participant Users
-    const adminUser = await User.create({
-      name: 'Dilshan Perera',
-      email: 'admin@trace.lk',
-      password: 'admin123',
-      role: 'admin',
-      phone: '+94 70 151 0444',
-      organization: 'TRACE Expert City Secretariat',
-      bio: 'Head of Programs & Incubation at TRACE Sri Lanka, Bay 05 Maradana.',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-    });
+    // 1. Create Admin and Participant Users (only if ADMIN_SEED_PASSWORD is provided in env)
+    const seedPassword = process.env.ADMIN_SEED_PASSWORD;
+    let participantUser = null;
+    let participantUser2 = null;
+    if (seedPassword && seedPassword.length >= 8) {
+      await User.create({
+        name: 'Dilshan Perera',
+        email: process.env.ADMIN_SEED_EMAIL || 'admin@trace.lk',
+        password: seedPassword,
+        role: 'admin',
+        mustChangePassword: true,
+        phone: '+94 70 151 0444',
+        organization: 'TRACE Expert City Secretariat',
+        bio: 'Head of Programs & Incubation at TRACE Sri Lanka, Bay 05 Maradana.',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      });
 
-    const participantUser = await User.create({
-      name: 'Kavindu Senanayake',
-      email: 'kavindu@eng.mrt.ac.lk',
-      password: 'user123',
-      role: 'participant',
-      phone: '+94 77 123 4567',
-      organization: 'University of Moratuwa - Electronic & Telecom Eng',
-      bio: 'Computer vision and IoT robotics researcher aiming to build deep-tech hardware startups.',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
-    });
+      participantUser = await User.create({
+        name: 'Kavindu Senanayake',
+        email: 'kavindu@eng.mrt.ac.lk',
+        password: seedPassword,
+        role: 'participant',
+        mustChangePassword: true,
+        phone: '+94 77 123 4567',
+        organization: 'University of Moratuwa - Electronic & Telecom Eng',
+        bio: 'Computer vision and IoT robotics researcher aiming to build deep-tech hardware startups.',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+      });
 
-    const participantUser2 = await User.create({
-      name: 'Nimna Jayawardena',
-      email: 'nimna@heliostech.lk',
-      password: 'user123',
-      role: 'participant',
-      phone: '+94 71 987 6543',
-      organization: 'Helios AgriTech Solutions',
-      bio: 'AgriTech IoT founder with pre-seed prototype seeking institutional mentorship.',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80',
-    });
+      participantUser2 = await User.create({
+        name: 'Nimna Jayawardena',
+        email: 'nimna@heliostech.lk',
+        password: seedPassword,
+        role: 'participant',
+        mustChangePassword: true,
+        phone: '+94 71 987 6543',
+        organization: 'Helios AgriTech Solutions',
+        bio: 'AgriTech IoT founder with pre-seed prototype seeking institutional mentorship.',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80',
+      });
 
-    logger.info('[Seeder] Users created');
+      logger.info('[Seeder] Users created with ADMIN_SEED_PASSWORD and mustChangePassword=true');
+    } else {
+      logger.info('[Seeder] ADMIN_SEED_PASSWORD not set; skipping default user seeding.');
+    }
 
     // 2. Create the TWO Main Programs
     const program1 = await Program.create({
@@ -415,47 +425,49 @@ export const seedData = async () => {
     logger.info('[Seeder] Workshops created for both programs');
 
     // 4. Create Program Registrations (enrolling participant in Program 01)
-    await ProgramRegistration.create({
-      referenceNumber: 'REG-TRC-2025-0101',
-      userId: participantUser._id,
-      programId: program1._id,
-      programSlug: program1.slug,
-      programTitle: program1.title,
-      fullName: participantUser.name,
-      email: participantUser.email,
-      phoneNumber: participantUser.phone,
-      organization: participantUser.organization,
-      additionalInformation:
-        'Enrolled in Cohort 12 to commercialize robotics and computer vision research.',
-      status: 'Active',
-      reviewedBy: 'Dilshan Perera (Head of Admissions)',
-      reviewedAt: new Date(),
-    });
+    if (participantUser && participantUser2) {
+      await ProgramRegistration.create({
+        referenceNumber: 'REG-TRC-2025-0101',
+        userId: participantUser._id,
+        programId: program1._id,
+        programSlug: program1.slug,
+        programTitle: program1.title,
+        fullName: participantUser.name,
+        email: participantUser.email,
+        phoneNumber: participantUser.phone,
+        organization: participantUser.organization,
+        additionalInformation:
+          'Enrolled in Cohort 12 to commercialize robotics and computer vision research.',
+        status: 'Active',
+        reviewedBy: 'Dilshan Perera (Head of Admissions)',
+        reviewedAt: new Date(),
+      });
 
-    await ProgramRegistration.create({
-      referenceNumber: 'REG-TRC-2025-0201',
-      userId: participantUser2._id,
-      programId: program2._id,
-      programSlug: program2.slug,
-      programTitle: program2.title,
-      fullName: participantUser2.name,
-      email: participantUser2.email,
-      phoneNumber: participantUser2.phone,
-      organization: participantUser2.organization,
-      additionalInformation:
-        'Agritech seed prototype looking for Bay 05 incubation and sensor testing.',
-      status: 'Active',
-      reviewedBy: 'Dilshan Perera (Head of Admissions)',
-      reviewedAt: new Date(),
-    });
+      await ProgramRegistration.create({
+        referenceNumber: 'REG-TRC-2025-0201',
+        userId: participantUser2._id,
+        programId: program2._id,
+        programSlug: program2.slug,
+        programTitle: program2.title,
+        fullName: participantUser2.name,
+        email: participantUser2.email,
+        phoneNumber: participantUser2.phone,
+        organization: participantUser2.organization,
+        additionalInformation:
+          'Agritech seed prototype looking for Bay 05 incubation and sensor testing.',
+        status: 'Active',
+        reviewedBy: 'Dilshan Perera (Head of Admissions)',
+        reviewedAt: new Date(),
+      });
 
-    logger.info('[Seeder] Program Registrations seeded (automatically granting workshop access)');
+      logger.info('[Seeder] Program Registrations seeded (automatically granting workshop access)');
+    }
 
     // 5. Create Sample Industry Visit Requests
     await VisitRequest.create([
       {
         referenceNumber: 'VIS-TRC-801',
-        userId: participantUser._id,
+        userId: participantUser ? participantUser._id : undefined,
         organizationName: 'University of Moratuwa - IEEE Student Branch',
         organizationType: 'University / Faculty',
         contactPerson: 'Kavindu Senanayake',

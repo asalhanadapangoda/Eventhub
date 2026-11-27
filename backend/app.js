@@ -32,38 +32,81 @@ const { seedInitialVenueBookings } = require("./modules/event-and-space/controll
 const helmet = require("helmet");
 const cors = require("cors");
 const compression = require("compression");
+const rateLimit = require("express-rate-limit");
 
 const app = express();
 
 // High Performance Gzip / Brotli response compression
 app.use(compression());
 
-// Security Headers with Helmet
+// Explicit CORS origin allowlist check
+const EXTRA_ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true; // Same-origin, server-to-server, or health probes
+  if (
+    /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) ||
+    origin === "https://www.traceprojects.org.lk" ||
+    origin === "https://traceprojects.org.lk" ||
+    origin.endsWith(".traceprojects.org.lk") ||
+    origin.endsWith(".trace.lk") ||
+    origin.endsWith(".tracesrilanka.lk") ||
+    origin.endsWith(".vercel.app") ||
+    EXTRA_ALLOWED_ORIGINS.includes(origin)
+  ) {
+    return true;
+  }
+  return false;
+};
+
+// Security Headers with Helmet and explicit Content Security Policy allowlist
 app.use(
   helmet({
-    contentSecurityPolicy: false, // Allow external CDN icons, fonts, and Cloudinary media
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
+        fontSrc: ["'self'", "data:", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
+        imgSrc: [
+          "'self'",
+          "data:",
+          "blob:",
+          "https://res.cloudinary.com",
+          "https://images.unsplash.com",
+          "https://*.traceprojects.org.lk",
+          "https://*.trace.lk",
+          "https://*.onrender.com",
+        ],
+        mediaSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com"],
+        connectSrc: [
+          "'self'",
+          "https://*.traceprojects.org.lk",
+          "https://*.trace.lk",
+          "https://*.onrender.com",
+          "https://res.cloudinary.com",
+        ],
+        frameAncestors: ["'self'"],
+        objectSrc: ["'none'"],
+      },
+    },
     crossOriginEmbedderPolicy: false,
     crossOriginResourcePolicy: { policy: "cross-origin" },
   })
 );
 
-// Secure CORS configuration
+// Enforced CORS configuration
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, server-to-server) or localhost/trace domains
-      if (
-        !origin ||
-        /^http:\/\/localhost(:\d+)?$/.test(origin) ||
-        origin === "https://www.traceprojects.org.lk" ||
-        origin === "https://traceprojects.org.lk" ||
-        origin.endsWith(".traceprojects.org.lk") ||
-        origin.endsWith(".trace.lk") ||
-        origin.endsWith(".vercel.app")
-      ) {
+      if (isAllowedOrigin(origin)) {
         return callback(null, true);
       }
-      return callback(null, true); // Permissive in dev, safely headers configured
+      return callback(new Error("Not allowed"));
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -71,13 +114,36 @@ app.use(
   })
 );
 
-// Body Parser Middleware
-app.use(express.json({ limit: "25mb" }));
-app.use(express.urlencoded({ limit: "25mb", extended: true }));
+// Rate Limiters: global API limiter + stricter limiters for AI chat, contact, registrations, and bookings
+const globalApiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: "Too many requests from this IP, please try again later." },
+});
 
-// Direct replica set fallback URI for MongoDB Atlas (bypasses Windows DNS SRV lookup issues)
-const DIRECT_REPLICA_URI =
-  "mongodb://admin:3fg96tRd1iREyBza@ac-eyehwbw-shard-00-00.tkag7mg.mongodb.net:27017,ac-eyehwbw-shard-00-01.tkag7mg.mongodb.net:27017,ac-eyehwbw-shard-00-02.tkag7mg.mongodb.net:27017/eventhub?ssl=true&replicaSet=atlas-112dlm-shard-0&authSource=admin&retryWrites=true&w=majority";
+const chatRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // Protect Gemini API quota/cost
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: "Too many chat requests. Please wait a few minutes before sending more messages." },
+});
+
+const submissionRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: "Too many submissions from this IP, please try again after 15 minutes." },
+});
+
+app.use("/api", globalApiLimiter);
+
+// Body Parser Middleware
+app.use(express.json({ limit: "12mb" }));
+app.use(express.urlencoded({ limit: "12mb", extended: true }));
 
 const tryConnect = async (uri) => {
   return mongoose.connect(uri, {
@@ -89,7 +155,7 @@ const tryConnect = async (uri) => {
   });
 };
 
-// Serverless-friendly cached MongoDB connection helper with automatic fallback
+// Serverless-friendly cached MongoDB connection helper (uses MONGO_URI from environment only)
 let dbConnectionPromise = null;
 let isConnecting = false;
 let lastConnectAttempt = 0;
@@ -98,7 +164,12 @@ const connectDB = async () => {
   if (mongoose.connection.readyState === 1) return mongoose.connection;
   if (dbConnectionPromise) return dbConnectionPromise;
 
-  const primaryUri = process.env.MONGO_URI || DIRECT_REPLICA_URI;
+  const primaryUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+  const fallbackDirectUri = process.env.MONGO_DIRECT_URI;
+
+  if (!primaryUri) {
+    throw new Error("FATAL: MONGO_URI environment variable is required.");
+  }
 
   dbConnectionPromise = (async () => {
     isConnecting = true;
@@ -107,11 +178,11 @@ const connectDB = async () => {
       await tryConnect(primaryUri);
       logger.info("Connected to MongoDB successfully!");
     } catch (err) {
-      if (primaryUri !== DIRECT_REPLICA_URI) {
-        logger.warn({ err: err.message }, "Primary MongoDB URI failed. Retrying with direct replica set connection...");
+      if (fallbackDirectUri && primaryUri !== fallbackDirectUri) {
+        logger.warn({ err: err.message }, "Primary MongoDB URI failed. Retrying with MONGO_DIRECT_URI...");
         try {
-          await tryConnect(DIRECT_REPLICA_URI);
-          logger.info("Connected to MongoDB successfully via direct replica set fallback!");
+          await tryConnect(fallbackDirectUri);
+          logger.info("Connected to MongoDB successfully via MONGO_DIRECT_URI!");
         } catch (fallbackErr) {
           dbConnectionPromise = null;
           isConnecting = false;
@@ -179,6 +250,17 @@ const getAcademyRouter = () => {
   return academyRouterPromise;
 };
 
+// Apply stricter rate limits on high-cost / public submission endpoints
+app.use("/api/academy/contact", (req, res, next) =>
+  req.method === "POST" ? submissionRateLimiter(req, res, next) : next()
+);
+app.use("/api/registrations", (req, res, next) =>
+  req.method === "POST" ? submissionRateLimiter(req, res, next) : next()
+);
+app.use("/api/venue-bookings", (req, res, next) =>
+  req.method === "POST" ? submissionRateLimiter(req, res, next) : next()
+);
+
 // API Routes (Unified: Event & Space + Innovation Academy)
 app.use("/api/academy", async (req, res, next) => {
   try {
@@ -194,7 +276,7 @@ app.use("/api/registrations", registrationRoutes);
 app.use("/api/venues", venueRoutes);
 app.use("/api/venue-bookings", venueBookingRoutes);
 app.use("/api/upload", uploadRoutes);
-app.use("/api/chat", chatRoutes);
+app.use("/api/chat", chatRateLimiter, chatRoutes);
 app.use("/api/settings", siteSettingRoutes);
 
 // Return JSON 404 for unhandled /api requests (Prevents returning HTML to API callers)
@@ -205,14 +287,20 @@ app.use((req, res, next) => {
   next();
 });
 
+const setUploadCorsHeaders = (req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && isAllowedOrigin(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+  }
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  next();
+};
+
 // Academy uploads static handler (shares uploads folder)
 app.use(
   "/uploads/academy",
-  (req, res, next) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
-    next();
-  },
+  setUploadCorsHeaders,
   express.static(path.join(__dirname, "uploads"), {
     maxAge: "7d",
     etag: true,
@@ -222,11 +310,7 @@ app.use(
 // Dedicated static file handler for uploads with cross-origin headers and caching
 app.use(
   "/uploads",
-  (req, res, next) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
-    next();
-  },
+  setUploadCorsHeaders,
   express.static(path.join(__dirname, "public", "uploads"), {
     maxAge: "7d",
     etag: true,

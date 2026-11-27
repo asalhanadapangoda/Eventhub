@@ -72,6 +72,9 @@ export default function LoginModal({
         if (result.data.token) {
           localStorage.setItem('eventhub_token', result.data.token);
         }
+        if (result.data.refreshToken) {
+          localStorage.setItem('eventhub_refresh_token', result.data.refreshToken);
+        }
         if (result.data.user) {
           localStorage.setItem('eventhub_user', JSON.stringify(result.data.user));
         }
@@ -80,7 +83,6 @@ export default function LoginModal({
           user.role === 'admin' ||
           user.role === 'super_admin' ||
           user.role === 'branch_admin' ||
-          user.email === 'admin@trace.lk' ||
           user.isAdmin
         );
 
@@ -99,12 +101,19 @@ export default function LoginModal({
         setShowPassword(false);
         onLoginSuccess(result.data, isAdmin);
         onClose();
-        showToast(
-          isAdmin
-            ? `Welcome to Admin Portal, ${user.name}!`
-            : `Welcome back, ${user.name}!`,
-          'success'
-        );
+        if (user.mustChangePassword) {
+          showToast(
+            'Security notice: Please change your temporary password in Profile / Settings.',
+            'warning'
+          );
+        } else {
+          showToast(
+            isAdmin
+              ? `Welcome to Admin Portal, ${user.name}!`
+              : `Welcome back, ${user.name}!`,
+            'success'
+          );
+        }
       } else {
         showToast(result.message || 'Login failed', 'error');
       }

@@ -1,41 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const { upload } = require('../../../common/cloudinary');
-const { verifyToken } = require('../middleware/authMiddleware');
-const User = require('../model/User');
+const { protect } = require('../middleware/authMiddleware');
 const logger = require('../../../common/logger');
-
 const path = require('path');
 
-// Optional auth: if token is supplied and valid, attaches user; does NOT block upload if token is absent/expired
-const optionalAuth = async (req, res, next) => {
-    let token;
-    if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
-        const parts = req.headers.authorization.split(" ");
-        if (parts.length > 1 && parts[1] && parts[1] !== "null" && parts[1] !== "undefined") {
-            token = parts[1];
-        }
-    }
-    if (token) {
-        try {
-            const decoded = verifyToken(token);
-            if (decoded && decoded.id) {
-                const user = await User.findById(decoded.id).select("-password");
-                if (user) req.user = user;
-            }
-        } catch (e) {}
-    }
-    next();
-};
-
-// Safe wrapper for single file upload with error handling
+// Safe wrapper for single image upload with error handling
 const handleSingleUpload = (req, res, next) => {
     upload.single('file')(req, res, (err) => {
         if (err) {
             logger.error({ err: err.message }, 'Multer single upload error');
             let msg = err.message || 'File upload error';
             if (err.code === 'LIMIT_FILE_SIZE') {
-                msg = 'File too large. Maximum supported file/video size is 500MB.';
+                msg = 'File too large. Maximum supported image size is 10MB.';
             }
             return res.status(400).json({ success: false, message: msg });
         }
@@ -43,14 +20,14 @@ const handleSingleUpload = (req, res, next) => {
     });
 };
 
-// Safe wrapper for array upload with error handling
+// Safe wrapper for array image upload with error handling
 const handleArrayUpload = (req, res, next) => {
     upload.array('files', 10)(req, res, (err) => {
         if (err) {
             logger.error({ err: err.message }, 'Multer array upload error');
             let msg = err.message || 'Gallery upload error';
             if (err.code === 'LIMIT_FILE_SIZE') {
-                msg = 'One or more files are too large. Maximum supported file size is 500MB.';
+                msg = 'One or more files are too large. Maximum supported image size is 10MB.';
             }
             return res.status(400).json({ success: false, message: msg });
         }
@@ -75,22 +52,22 @@ const resolveUploadedFile = (file) => {
     };
 };
 
-// POST /api/upload - Single File (Image or Video)
-router.post('/', optionalAuth, handleSingleUpload, (req, res) => {
+// POST /api/upload - Single Image File (Authenticated users only)
+router.post('/', protect, handleSingleUpload, (req, res) => {
     try {
         if (!req.file) {
-            return res.status(400).json({ success: false, message: 'No file provided' });
+            return res.status(400).json({ success: false, message: 'No image file provided' });
         }
 
         const { url: fileUrl, publicId } = resolveUploadedFile(req.file);
 
         res.json({
             success: true,
-            message: 'File uploaded successfully!',
+            message: 'Image uploaded successfully!',
             data: {
                 url: fileUrl,
                 publicId,
-                resourceType: req.file.mimetype ? (req.file.mimetype.startsWith('video/') ? 'video' : 'image') : 'image',
+                resourceType: 'image',
                 format: req.file.format || path.extname(req.file.originalname).slice(1),
             },
         });
@@ -99,8 +76,8 @@ router.post('/', optionalAuth, handleSingleUpload, (req, res) => {
     }
 });
 
-// POST /api/upload/gallery - Multiple Files Upload
-router.post('/gallery', optionalAuth, handleArrayUpload, (req, res) => {
+// POST /api/upload/gallery - Multiple Image Files Upload (Authenticated users only)
+router.post('/gallery', protect, handleArrayUpload, (req, res) => {
     try {
         const uploadedFiles = (req.files || []).map(resolveUploadedFile);
 

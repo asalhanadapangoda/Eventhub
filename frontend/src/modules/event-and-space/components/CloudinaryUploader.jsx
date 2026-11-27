@@ -10,8 +10,8 @@ import React, { useState } from 'react';
  */
 export default function CloudinaryUploader({ 
   onUploadSuccess, 
-  accept = "image/*,video/*", 
-  label = "Upload Image or Video" 
+  accept = "image/*", 
+  label = "Upload Image" 
 }) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -28,10 +28,10 @@ export default function CloudinaryUploader({
     setUploadProgress(0);
     setFileName(file.name);
 
-    // 500MB Client-side limit check
-    const MAX_SIZE_BYTES = 500 * 1024 * 1024;
+    // 10MB Client-side limit check
+    const MAX_SIZE_BYTES = 10 * 1024 * 1024;
     if (file.size > MAX_SIZE_BYTES) {
-      setErrorMsg(`File is too large (${(file.size / (1024 * 1024)).toFixed(1)}MB). Maximum allowed video size is 500MB.`);
+      setErrorMsg(`File is too large (${(file.size / (1024 * 1024)).toFixed(1)}MB). Maximum allowed image size is 10MB.`);
       return;
     }
 

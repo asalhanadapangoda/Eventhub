@@ -274,14 +274,14 @@ export default function AddVenueModal({
 
     setIsUploadingFiles(true);
     let authToken = token || localStorage.getItem('eventhub_token');
+    const refreshToken = localStorage.getItem('eventhub_refresh_token');
 
-    // Auto-login fallback if token is missing
-    if (!authToken) {
+    if (!authToken && refreshToken) {
       try {
-        const authRes = await fetch('/api/auth/login', {
+        const authRes = await fetch('/api/auth/refresh', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: 'admin@trace.lk', password: 'admin123' }),
+          body: JSON.stringify({ refreshToken }),
         });
         const authData = await authRes.json();
         if (authData.success && authData.data?.token) {
@@ -433,12 +433,13 @@ export default function AddVenueModal({
 
     try {
       let authToken = token || localStorage.getItem('eventhub_token');
-      if (!authToken) {
+      const refreshToken = localStorage.getItem('eventhub_refresh_token');
+      if (!authToken && refreshToken) {
         try {
-          const authRes = await fetch('/api/auth/login', {
+          const authRes = await fetch('/api/auth/refresh', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: 'admin@trace.lk', password: 'admin123' }),
+            body: JSON.stringify({ refreshToken }),
           });
           const authData = await authRes.json();
           if (authData.success && authData.data?.token) {
@@ -446,7 +447,7 @@ export default function AddVenueModal({
             localStorage.setItem('eventhub_token', authToken);
           }
         } catch (authErr) {
-          console.warn('Auto auth refresh fallback error in venue modal:', authErr);
+          console.warn('Token refresh error in venue modal:', authErr);
         }
       }
 
@@ -470,13 +471,13 @@ export default function AddVenueModal({
         result = { success: false, message: 'Server returned an invalid response' };
       }
 
-      // If unauthorized/forbidden or token expired, auto-login with admin fallback credentials and retry once
-      if ((response.status === 401 || response.status === 403 || !result.success) && (result.message?.toLowerCase().includes('authorized') || result.message?.toLowerCase().includes('token') || result.message?.toLowerCase().includes('forbidden') || response.status === 401 || response.status === 403)) {
+      // If token expired, refresh via refreshToken and retry once
+      if ((response.status === 401 || response.status === 403) && refreshToken) {
         try {
-          const authRes = await fetch('/api/auth/login', {
+          const authRes = await fetch('/api/auth/refresh', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: 'admin@trace.lk', password: 'admin123' }),
+            body: JSON.stringify({ refreshToken }),
           });
           const authData = await authRes.json();
           if (authData.success && authData.data?.token) {
@@ -491,7 +492,7 @@ export default function AddVenueModal({
             result = await response.json();
           }
         } catch (retryErr) {
-          console.warn('Auto admin token retry error:', retryErr);
+          console.warn('Token refresh retry error:', retryErr);
         }
       }
 
