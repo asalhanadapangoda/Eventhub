@@ -14,12 +14,15 @@ export function Home() {
     const normalizedQuery = searchQuery.trim().toLowerCase();
     if (!normalizedQuery) return projects;
 
-    return projects.filter(
-      (project) =>
+    return projects.filter((project) => {
+      if (!normalizedQuery) return true;
+
+      return (
         project.name.toLowerCase().includes(normalizedQuery) ||
         project.shortDescription.toLowerCase().includes(normalizedQuery) ||
         project.category.toLowerCase().includes(normalizedQuery)
-    );
+      );
+    });
   }, [searchQuery]);
 
   const handleReset = () => {
@@ -46,7 +49,7 @@ export function Home() {
           ) : (
             <div className="empty-state">
               <h3>No matching projects found</h3>
-              <p>Try adjusting your search keyword or selecting another category.</p>
+              <p>Try adjusting your search keyword.</p>
               <button type="button" className="btn-primary" onClick={handleReset}>
                 Show All Projects
               </button>

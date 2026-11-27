@@ -797,9 +797,9 @@ export const projects = [
     },
   },
   {
-    id: 'unicorns',
-    slug: 'unicorns',
-    name: 'University Startup Incubation Program',
+    id: 'unicorn',
+    slug: 'unicorn',
+    name: 'Unicorn',
     shortDescription: 'University Incubator Network for Startups.',
     category: 'Incubator Network',
     statusLabel: 'National Network',
@@ -815,8 +815,8 @@ export const projects = [
     about: {
       title: 'Unlocking Campus-Born Innovation',
       paragraphs: [
-        'University Startup Incubation Program connects university incubators, innovation clubs, and student founders across Sri Lanka into one shared national acceleration backbone.',
-        'Instead of isolated campus initiatives reinventing playbooks, the University Startup Incubation Program provides shared venture curricula, cross-university founder matchmaking, seed demo days, and direct progression pathways into TRACE Expert City and Angel X.',
+        'Unicorn (University Incubator Network for Startups) connects university incubators, innovation clubs, and student founders across Sri Lanka into one shared national acceleration backbone.',
+        'Instead of isolated campus initiatives reinventing playbooks, Unicorn provides shared venture curricula, cross-university founder matchmaking, seed demo days, and direct progression pathways into TRACE Expert City and Angel X.',
       ],
     },
     whatWeDo: [
@@ -913,12 +913,12 @@ export const projects = [
       progressValue: 84,
     },
     cta: {
-      title: 'Connect your campus to the University Startup Incubation Program',
+      title: 'Connect your campus to the Unicorn Network',
       description:
         'Launch an incubator chapter, mentor student founders, or apply with your campus startup team.',
-      email: 'unicorns@tracesrilanka.org',
+      email: 'unicorn@tracesrilanka.org',
       learnMoreSummary:
-        'University Startup Incubation Program unites university innovation hubs under a shared national framework powered by TRACE Sri Lanka.',
+        'Unicorn unites university innovation hubs under a shared national framework powered by TRACE Sri Lanka.',
       highlights: [
         'Cross-campus hackathons and founder-matching summits',
         'Co-working access and prototyping support for student teams',
