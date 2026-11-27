@@ -105,9 +105,9 @@ class MockStore {
           'Idea Pitching and Presentation',
         ],
         coordinator: {
-          name: 'Dilshan Perera',
+          name: 'Ms. Neranjana Rashmi',
           email: 'projects@trace.lk',
-          title: 'Head of Programs & Incubation',
+          title: 'Executive - Project Management',
           phone: '+94 70 151 0444',
         },
         status: 'Active',
@@ -167,9 +167,9 @@ class MockStore {
           'Pre-Incubation Endorsement & TRACE Affiliation Ceremony',
         ],
         coordinator: {
-          name: 'Dilshan Perera',
+          name: 'Ms. Neranjana Rashmi',
           email: 'projects@trace.lk',
-          title: 'Head of Programs & Incubation',
+          title: 'Executive - Project Management',
           phone: '+94 70 151 0444',
         },
         status: 'Active',

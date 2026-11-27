@@ -36,10 +36,10 @@
   cursor: pointer;
 }
 
-:where(.tw-module) a,
-:where(.tw-module) a:visited,
-:where(.tw-module) a:hover,
-:where(.tw-module) a:active {
+:where(.tw-module a),
+:where(.tw-module a:visited),
+:where(.tw-module a:hover),
+:where(.tw-module a:active) {
   color: inherit;
   text-decoration: none;
 }

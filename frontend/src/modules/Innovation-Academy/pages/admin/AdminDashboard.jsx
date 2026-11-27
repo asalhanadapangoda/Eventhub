@@ -18,6 +18,10 @@ import {
   Mail,
   FileSpreadsheet,
   Check,
+  Users,
+  UserCheck,
+  FlaskConical,
+  BadgeCheck,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -145,7 +149,7 @@ export default function AdminDashboard() {
               Total Applicants
             </span>
             <div className="w-8 h-8 rounded-lg bg-[#f2f3ff] flex items-center justify-center text-[#006398]">
-              <span className="material-symbols-outlined text-[18px]">person_search</span>
+              <Users className="w-[18px] h-[18px]" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
@@ -172,7 +176,7 @@ export default function AdminDashboard() {
               Program 01 &amp; 02 Cohorts
             </span>
             <div className="w-8 h-8 rounded-lg bg-[#f2f3ff] flex items-center justify-center text-[#006398]">
-              <span className="material-symbols-outlined text-[18px]">how_to_reg</span>
+              <UserCheck className="w-[18px] h-[18px]" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
@@ -197,7 +201,7 @@ export default function AdminDashboard() {
               Workshops &amp; Maker Labs
             </span>
             <div className="w-8 h-8 rounded-lg bg-[#f2f3ff] flex items-center justify-center text-[#006398]">
-              <span className="material-symbols-outlined text-[18px]">biotech</span>
+              <FlaskConical className="w-[18px] h-[18px]" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
@@ -224,7 +228,7 @@ export default function AdminDashboard() {
               Inquiries &amp; Visit Requests
             </span>
             <div className="w-8 h-8 rounded-lg bg-[#f2f3ff] flex items-center justify-center text-[#006398]">
-              <span className="material-symbols-outlined text-[18px]">mark_email_unread</span>
+              <Mail className="w-[18px] h-[18px]" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
@@ -470,7 +474,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between border-b border-[#e2e8f0] pb-3">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-[#eaedff] text-[#006398] flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[18px]">badge</span>
+                  <BadgeCheck className="w-[18px] h-[18px]" />
                 </div>
                 <h3 className="text-base font-bold text-[#0B192C]">
                   Candidate Dossier Evaluation

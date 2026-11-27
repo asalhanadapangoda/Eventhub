@@ -5,45 +5,25 @@ import { projects } from '../data/projects';
 
 export function Home() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState('All Projects');
 
   useEffect(() => {
     document.title = 'Our Projects | TRACE Sri Lanka';
   }, []);
 
-  const categories = useMemo(() => {
-    const counts = projects.reduce((acc, item) => {
-      acc[item.category] = (acc[item.category] || 0) + 1;
-      return acc;
-    }, {});
-
-    return [
-      { label: 'All Projects', count: projects.length },
-      ...Object.entries(counts).map(([label, count]) => ({ label, count })),
-    ];
-  }, []);
-
   const filteredProjects = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
+    if (!normalizedQuery) return projects;
 
-    return projects.filter((project) => {
-      const matchesCategory =
-        activeCategory === 'All Projects' || project.category === activeCategory;
-
-      if (!matchesCategory) return false;
-      if (!normalizedQuery) return true;
-
-      return (
+    return projects.filter(
+      (project) =>
         project.name.toLowerCase().includes(normalizedQuery) ||
         project.shortDescription.toLowerCase().includes(normalizedQuery) ||
         project.category.toLowerCase().includes(normalizedQuery)
-      );
-    });
-  }, [searchQuery, activeCategory]);
+    );
+  }, [searchQuery]);
 
   const handleReset = () => {
     setSearchQuery('');
-    setActiveCategory('All Projects');
   };
 
   return (
@@ -51,9 +31,6 @@ export function Home() {
       <ProjectHeader
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        categories={categories}
-        activeCategory={activeCategory}
-        onCategoryChange={setActiveCategory}
         totalCount={projects.length}
         filteredCount={filteredProjects.length}
       />

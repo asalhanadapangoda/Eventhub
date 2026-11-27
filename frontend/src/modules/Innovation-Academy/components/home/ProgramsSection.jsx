@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Brain, Rocket, Check, ArrowRight, Award, ShieldCheck, Sparkles, Clock } from 'lucide-react';
+import { Brain, Rocket, Check, ArrowRight, Award, Clock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { registrationService } from '../../services/api';
+import { DEFAULT_PROGRAMS } from '../../data/defaultPrograms';
+import { formatImageUrl } from '../../utils/imageUrl';
 
 export default function ProgramsSection({ programs = [] }) {
   const { isAuthenticated } = useAuth();
@@ -19,43 +21,10 @@ export default function ProgramsSection({ programs = [] }) {
   const [regSuccess, setRegSuccess] = useState('');
   const [regError, setRegError] = useState('');
 
-  const defaultProg1 = {
-    slug: 'program-01',
-    badge: 'PROGRAM 01',
-    title: 'Innovation & Design Thinking Masterclass',
-    description:
-      'Design thinking for innovation, 12 steps from ideation to launching real world challenges.',
-    highlights: [
-      'Innovation Mindset & Vision Building',
-      'Design Thinking',
-      'Rapid Prototyping',
-      'Idea Pitching & Feedback',
-    ],
-    duration: '1 Month',
-    fee: 'LKR 15,000 per month',
-  };
-
-  const defaultProg2 = {
-    slug: 'program-02',
-    badge: 'PROGRAM 02',
-    title: 'Pre-Incubation Program on Startup Innovation',
-    description:
-      'Comprehensive venture formation, seed validation, unit economics, and investment readiness.',
-    highlights: [
-      'Ideation & Problem Discovery',
-      'Design Thinking & Business Model Canvas',
-      'Proof of Concept & Rapid Prototyping',
-      'Go-To-Market Strategy',
-      'Pitch Deck Development & Investment Readiness',
-    ],
-    duration: '3 Months',
-    fee: 'LKR 5,000 Registration Fee + LKR 15,000 per month',
-  };
-
   const displayPrograms =
     programs && programs.length > 0
       ? programs
-      : [defaultProg1, defaultProg2];
+      : DEFAULT_PROGRAMS;
 
   const handleEnrollClick = (prog) => {
     setSelectedProgram(prog);
@@ -98,31 +67,27 @@ export default function ProgramsSection({ programs = [] }) {
             STRUCTURED LEARNING PATHS
           </span>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-[#0B192C] tracking-tight">
-           Innovation Programs
+            Innovation Programs
           </h2>
           <p className="text-xs sm:text-base text-slate-600 mt-2">
-            Directly aligned with Sri Lanka's growing deep-tech and startup ecosystems.
+            Directly aligned with Sri Lanka's growing and startup ecosystems.
           </p>
         </div>
 
         {/* Dynamic Program Cards */}
         <div
           className={`grid grid-cols-1 ${displayPrograms.length === 1
-              ? 'max-w-xl mx-auto'
-              : displayPrograms.length === 2
-                ? 'lg:grid-cols-2 max-w-6xl mx-auto'
-                : 'md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto'
+            ? 'max-w-xl mx-auto'
+            : displayPrograms.length === 2
+              ? 'lg:grid-cols-2 max-w-6xl mx-auto'
+              : 'md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto'
             } gap-8 items-stretch`}
         >
           {displayPrograms.map((prog, idx) => {
-            const isSecond = idx === 1;
             const Icon = idx === 0 ? Brain : idx === 1 ? Rocket : Award;
-            const FooterIcon = isSecond ? ShieldCheck : Sparkles;
-            const footerText = isSecond
-              ? 'VC Investor Demo Day Included'
-              : 'TRACE Certificate Awarded';
+            const progSlug = prog.slug || (idx === 0 ? 'program-01' : 'program-02');
 
-            const isProg1 = prog.slug === 'program-01' || idx === 0;
+            const isProg1 = progSlug === 'program-01' || idx === 0;
             const programDuration = isProg1 ? '1 Month' : '3 Months';
 
             const defaultHighlights = isProg1
@@ -156,7 +121,7 @@ export default function ProgramsSection({ programs = [] }) {
                   style={
                     prog.coverImage
                       ? {
-                        backgroundImage: `linear-gradient(to bottom, rgba(0, 30, 60, 0.65), rgba(0, 20, 45, 0.88)), url(${prog.coverImage})`,
+                        backgroundImage: `linear-gradient(to bottom, rgba(0, 30, 60, 0.65), rgba(0, 20, 45, 0.88)), url(${formatImageUrl(prog.coverImage)})`,
                       }
                       : {
                         background: 'linear-gradient(to bottom right, #006398, #004e78, #003857)',
@@ -238,27 +203,14 @@ export default function ProgramsSection({ programs = [] }) {
                   </div>
 
                   {/* Bottom Footer Bar */}
-                  <div className="pt-5 border-t border-[#e2e8f0] flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-1.5 text-xs text-slate-600 font-semibold">
-                      <FooterIcon className="w-4 h-4 text-[#006398]" />
-                      <span>{footerText}</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <Link
-                        to={`/programs/${prog.slug}`}
-                        className="py-2.5 px-3.5 rounded-lg border border-slate-300 hover:border-[#006398] text-slate-700 hover:text-[#006398] text-xs font-bold uppercase tracking-wider text-center transition-colors"
-                      >
-                        Explore
-                      </Link>
-                      <Link
-                        to={`/programs/${prog.slug}#register`}
-                        className="flex-1 sm:flex-none py-2.5 px-6 rounded-lg bg-[#006398] hover:bg-[#0284c7] text-white font-bold text-xs uppercase tracking-wider transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-1.5"
-                      >
-                        <span>Enroll Now</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
-                    </div>
+                  <div className="pt-5 border-t border-[#e2e8f0] flex items-center justify-end">
+                    <Link
+                      to={`/programs/${progSlug}#register`}
+                      className="py-2.5 px-6 rounded-lg bg-[#006398] hover:bg-[#0284c7] text-white font-bold text-xs uppercase tracking-wider transition-all shadow-sm hover:shadow-md inline-flex items-center justify-center gap-1.5"
+                    >
+                      <span>Enroll Now</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
                   </div>
                 </div>
               </div>

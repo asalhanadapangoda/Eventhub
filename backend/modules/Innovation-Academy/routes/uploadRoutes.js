@@ -56,7 +56,7 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
   }
 
   // Fallback to local uploads storage
-  const fileUrl = `/uploads/${req.file.filename}`;
+  const fileUrl = `/uploads/academy/${req.file.filename}`;
   res.status(200).json({
     success: true,
     url: fileUrl,

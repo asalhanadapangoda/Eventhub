@@ -1,9 +1,15 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 
-// Ensure uploads folder exists (Safe for Vercel Serverless read-only filesystem)
-const uploadDir = process.env.VERCEL ? path.join('/tmp', 'uploads') : path.resolve('uploads');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Ensure uploads folder exists inside backend/uploads (matching app.js static mount)
+const uploadDir = process.env.VERCEL
+  ? path.join('/tmp', 'uploads')
+  : path.resolve(__dirname, '../../../uploads');
 try {
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });

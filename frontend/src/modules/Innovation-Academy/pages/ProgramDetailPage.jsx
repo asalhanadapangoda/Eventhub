@@ -5,6 +5,7 @@ import Footer from '../components/common/Footer';
 import { useAuth } from '../context/AuthContext';
 import { toast } from '../context/ToastContext';
 import { programService, registrationService } from '../services/api';
+import { getDefaultProgramBySlug } from '../data/defaultPrograms';
 import { formatImageUrl, handleImageError } from '../utils/imageUrl';
 import {
   Brain,
@@ -74,10 +75,20 @@ export default function ProgramDetailPage() {
         if (res.success && res.data) {
           setProgram(res.data);
         } else {
-          setError('Program not found');
+          const fallback = getDefaultProgramBySlug(slug);
+          if (fallback) {
+            setProgram(fallback);
+          } else {
+            setError('Program not found');
+          }
         }
       } catch (err) {
-        setError(err.response?.data?.message || 'Failed to load program details');
+        const fallback = getDefaultProgramBySlug(slug);
+        if (fallback) {
+          setProgram(fallback);
+        } else {
+          setError(err.response?.data?.message || 'Failed to load program details');
+        }
       } finally {
         setLoading(false);
       }
@@ -210,19 +221,18 @@ export default function ProgramDetailPage() {
           style={
             program.coverImage
               ? {
-                  backgroundImage: `linear-gradient(to right, rgba(11, 25, 44, 0.72), rgba(0, 23, 75, 0.85)), url(${program.coverImage})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                }
+                backgroundImage: `linear-gradient(to right, rgba(11, 25, 44, 0.72), rgba(0, 23, 75, 0.85)), url(${formatImageUrl(program.coverImage)})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }
               : {}
           }
-          className={`py-16 text-white ${
-            program.coverImage
+          className={`py-16 text-white ${program.coverImage
               ? 'bg-cover bg-center'
               : isProg1
-              ? 'bg-gradient-to-r from-[#006398] via-[#00476e] to-[#0B192C]'
-              : 'bg-gradient-to-r from-[#0B192C] via-[#0e1c2f] to-[#00174b]'
-          } relative overflow-hidden`}
+                ? 'bg-gradient-to-r from-[#006398] via-[#00476e] to-[#0B192C]'
+                : 'bg-gradient-to-r from-[#0B192C] via-[#0e1c2f] to-[#00174b]'
+            } relative overflow-hidden`}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="flex items-center gap-2 mb-4">
@@ -254,7 +264,7 @@ export default function ProgramDetailPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-[#5bb8fe]" />
-                  <span>Location: <strong className="text-white">TRACE Expert City, Bay 05</strong></span>
+                  <span>Location: <strong className="text-white">TRACE Expert City, Bay 07</strong></span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Award className="w-4 h-4 text-[#5bb8fe]" />
@@ -327,7 +337,7 @@ export default function ProgramDetailPage() {
                         </span>
                         <span className="text-sm font-bold text-[#0B192C]">{act}</span>
                       </div>
-                      <span className="text-xs text-[#75777d]">Bay 05 Studio</span>
+                      <span className="text-xs text-[#75777d]">Bay 07 Studio</span>
                     </div>
                   ))}
                 </div>

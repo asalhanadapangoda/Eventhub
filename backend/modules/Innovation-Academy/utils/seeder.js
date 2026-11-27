@@ -110,9 +110,9 @@ export const seedData = async () => {
         'Idea Pitching & Feedback',
       ],
       coordinator: {
-        name: 'Dilshan Perera',
+        name: 'Ms. Neranjana Rashmi',
         email: 'projects@trace.lk',
-        title: 'Head of Programs & Incubation',
+        title: 'Executive - Project Management',
         phone: '+94 70 151 0444',
       },
       status: 'Active',
@@ -171,9 +171,9 @@ export const seedData = async () => {
         'Pitch Deck Development & Investment Readiness',
       ],
       coordinator: {
-        name: 'Dilshan Perera',
+        name: 'Ms. Neranjana Rashmi',
         email: 'projects@trace.lk',
-        title: 'Head of Programs & Incubation',
+        title: 'Executive - Project Management',
         phone: '+94 70 151 0444',
       },
       status: 'Active',

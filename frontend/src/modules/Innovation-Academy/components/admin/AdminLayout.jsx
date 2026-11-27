@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   School,
   FlaskConical,
+  UserCheck,
   Users,
   Building2,
   Mail,
@@ -33,13 +34,13 @@ export default function AdminLayout() {
   };
 
   const navItems = [
-    { to: '/admin', label: 'Dashboard', icon: 'space_dashboard', end: true },
-    { to: '/admin/programs', label: 'Programs', icon: 'school' },
-    { to: '/admin/workshops', label: 'Workshops', icon: 'biotech' },
-    { to: '/admin/registrations', label: 'Program Registrations', icon: 'how_to_reg' },
-    { to: '/admin/participants', label: 'Participants', icon: 'group' },
-    { to: '/admin/contact-messages', label: 'Contact Messages', icon: 'contact_support' },
-    { to: '/admin/settings', label: 'Settings', icon: 'settings' },
+    { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
+    { to: '/admin/programs', label: 'Programs', icon: School },
+    { to: '/admin/workshops', label: 'Workshops', icon: FlaskConical },
+    { to: '/admin/registrations', label: 'Program Registrations', icon: UserCheck },
+    { to: '/admin/participants', label: 'Participants', icon: Users },
+    { to: '/admin/contact-messages', label: 'Contact Messages', icon: Mail },
+    { to: '/admin/settings', label: 'Settings', icon: Settings },
   ];
 
   return (
@@ -92,7 +93,7 @@ export default function AdminLayout() {
 
           {/* Navigation Links */}
           <nav className="flex flex-col gap-1 px-3 mt-1">
-            {navItems.map((item) => (
+            {navItems.map(({ icon: NavIcon, ...item }) => (
               <NavLink
                 key={item.to}
                 to={item.to}
@@ -106,7 +107,7 @@ export default function AdminLayout() {
                   }`
                 }
               >
-                <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+                <NavIcon className="w-[18px] h-[18px] shrink-0" />
                 <span>{item.label}</span>
               </NavLink>
             ))}
@@ -159,11 +160,11 @@ export default function AdminLayout() {
             </button>
 
             <div className="relative w-full hidden sm:block">
-              <Search className="w-4 h-4 text-[#94a3b8] absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[#94a3b8] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search programs, candidates, workshops, or partner visits..."
-                className="w-full h-10 pl-9 pr-4 rounded-lg bg-[#f2f3ff] text-xs placeholder:text-[#94a3b8] focus:bg-white focus:ring-1 focus:ring-[#006398] outline-none transition-all"
+                className="w-full h-10 pl-10 pr-4 rounded-lg bg-[#f2f3ff] text-xs placeholder:text-[#94a3b8] focus:bg-white focus:ring-1 focus:ring-[#006398] outline-none transition-all"
               />
             </div>
           </div>

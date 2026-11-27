@@ -166,9 +166,9 @@ const prepareProgramData = (body) => {
 
   if (data.coordinatorName || data.coordinatorEmail) {
     data.coordinator = {
-      name: data.coordinatorName || data.coordinator?.name || 'Dilshan Perera',
+      name: data.coordinatorName || data.coordinator?.name || 'Ms. Neranjana Rashmi',
       email: data.coordinatorEmail || data.coordinator?.email || 'projects@trace.lk',
-      title: data.coordinatorTitle || data.coordinator?.title || 'Head of Programs & Incubation',
+      title: data.coordinatorTitle || data.coordinator?.title || 'Executive - Project Management',
       phone: data.coordinatorPhone || data.coordinator?.phone || '+94 70 181 0494',
     };
   }
@@ -179,6 +179,10 @@ const prepareProgramData = (body) => {
 // @desc    Create new program (admin)
 export const createProgram = async (req, res, next) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      await connectDB();
+    }
+
     const programData = prepareProgramData(req.body);
 
     if (isDbConnected()) {
@@ -202,6 +206,10 @@ export const createProgram = async (req, res, next) => {
 // @desc    Update program (admin)
 export const updateProgram = async (req, res, next) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      await connectDB();
+    }
+
     const id = req.params.id || req.params.slug;
     const updateData = prepareProgramData(req.body);
 
@@ -209,7 +217,7 @@ export const updateProgram = async (req, res, next) => {
       let program = null;
       if (mongoose.Types.ObjectId.isValid(id)) {
         program = await Program.findByIdAndUpdate(id, updateData, {
-          new: true,
+          returnDocument: 'after',
           runValidators: true,
         });
       }
@@ -217,7 +225,17 @@ export const updateProgram = async (req, res, next) => {
         program = await Program.findOneAndUpdate(
           { $or: [{ slug: id }, { programId: id }] },
           updateData,
-          { new: true, runValidators: true }
+          { returnDocument: 'after', runValidators: true }
+        );
+      }
+      if (!program && (updateData.slug || updateData.programId)) {
+        const orFilters = [];
+        if (updateData.slug) orFilters.push({ slug: updateData.slug });
+        if (updateData.programId) orFilters.push({ programId: updateData.programId });
+        program = await Program.findOneAndUpdate(
+          { $or: orFilters },
+          updateData,
+          { returnDocument: 'after', runValidators: true }
         );
       }
       if (!program) {
@@ -227,7 +245,9 @@ export const updateProgram = async (req, res, next) => {
     }
 
     // In-memory fallback
-    const idx = mockStore.programs.findIndex((p) => p._id === id || p.id === id || p.slug === id);
+    const idx = mockStore.programs.findIndex(
+      (p) => p._id === id || p.id === id || p.slug === id || (updateData.slug && p.slug === updateData.slug)
+    );
     if (idx === -1) {
       return res.status(404).json({ success: false, message: 'Program not found' });
     }
@@ -246,6 +266,10 @@ export const updateProgram = async (req, res, next) => {
 // @desc    Delete program (admin)
 export const deleteProgram = async (req, res, next) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      await connectDB();
+    }
+
     const id = req.params.id || req.params.slug;
 
     if (isDbConnected()) {

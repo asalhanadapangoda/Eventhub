@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { registrationService } from '../../services/api';
+import { formatImageUrl } from '../../utils/imageUrl';
 import { School, CheckCircle2, ArrowRight, Calendar, Award } from 'lucide-react';
 
 export default function MyPrograms() {
@@ -65,10 +66,11 @@ export default function MyPrograms() {
                   <div className="h-44 w-full relative overflow-hidden bg-[#0e1c2f]">
                     <img
                       src={
-                        program.coverImage ||
-                        (isProg1
-                          ? 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=800&q=80'
-                          : 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=800&q=80')
+                        program.coverImage
+                          ? formatImageUrl(program.coverImage)
+                          : (isProg1
+                            ? 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=800&q=80'
+                            : 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=800&q=80')
                       }
                       alt={reg.programTitle}
                       className="w-full h-full object-cover opacity-85"

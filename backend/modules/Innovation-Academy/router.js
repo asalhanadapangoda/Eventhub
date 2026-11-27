@@ -16,26 +16,35 @@ import { seedData } from './utils/seeder.js';
 const router = express.Router();
 
 let isAcademySeeded = false;
+let seedingPromise = null;
 
 export const seedAcademyIfNeeded = async () => {
   if (isAcademySeeded || mongoose.connection.readyState !== 1) return;
-  try {
-    const [userCount, programCount] = await Promise.all([
-      User.countDocuments(),
-      Program.countDocuments(),
-    ]);
-    if (userCount === 0 || programCount === 0) {
-      await seedData();
+  if (seedingPromise) return seedingPromise;
+
+  seedingPromise = (async () => {
+    try {
+      const [userCount, programCount] = await Promise.all([
+        User.countDocuments(),
+        Program.countDocuments(),
+      ]);
+      if (userCount === 0 || programCount === 0) {
+        await seedData();
+      }
+      isAcademySeeded = true;
+    } catch (err) {
+      console.warn('[Academy Seeder Notice]', err.message);
+    } finally {
+      seedingPromise = null;
     }
-    isAcademySeeded = true;
-  } catch (err) {
-    console.warn('[Academy Seeder Notice]', err.message);
-  }
+  })();
+
+  return seedingPromise;
 };
 
 router.use(async (req, res, next) => {
   if (!isAcademySeeded && mongoose.connection.readyState === 1) {
-    seedAcademyIfNeeded().catch(() => {});
+    await seedAcademyIfNeeded();
   }
   next();
 });

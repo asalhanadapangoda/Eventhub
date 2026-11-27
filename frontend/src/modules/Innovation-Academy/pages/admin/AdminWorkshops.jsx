@@ -620,7 +620,7 @@ export default function AdminWorkshops() {
                 {formData.coverImage && (
                   <div className="relative w-full rounded-xl overflow-hidden border border-slate-200 bg-white group shadow-inner flex items-center justify-center p-2 min-h-[200px]">
                     <img
-                      src={formData.coverImage}
+                      src={formatImageUrl(formData.coverImage)}
                       alt="Workshop Cover Preview"
                       className="w-full h-auto max-h-96 object-contain rounded-lg"
                       onError={handleImageError}
