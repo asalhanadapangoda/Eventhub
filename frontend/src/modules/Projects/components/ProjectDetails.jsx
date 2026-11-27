@@ -59,6 +59,18 @@ export function ProjectDetails({ project }) {
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
+    const payload = {
+      name: formState.name,
+      email: formState.email,
+      subject: `Project Inquiry: ${project.name}`,
+      programOfInterest: project.name,
+      message: `${formState.organization ? `[Organization: ${formState.organization}]\n` : ''}${formState.message}`,
+    };
+    fetch('/api/academy/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).catch(() => {});
     setSubmitted(true);
     setFormState({ name: '', email: '', organization: '', message: '' });
   };
@@ -137,7 +149,7 @@ export function ProjectDetails({ project }) {
 
               {project.about.applyNow && (
                 <div className="about-actions">
-                  {project.about.applyNow.url ? (
+                  {project.about.applyNow.url && !project.about.applyNow.url.includes('...') ? (
                     <a
                       href={project.about.applyNow.url}
                       target="_blank"

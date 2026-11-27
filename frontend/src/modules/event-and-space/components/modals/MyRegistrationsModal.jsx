@@ -21,8 +21,11 @@ export default function MyRegistrationsModal({ isOpen, onClose, showToast }) {
     setSearched(true);
 
     try {
+      const authToken = localStorage.getItem('eventhub_token');
+      const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+
       // 1. Fetch Event Registrations
-      const response = await fetch(`/api/registrations/user/${encodeURIComponent(email.trim())}`);
+      const response = await fetch(`/api/registrations/user/${encodeURIComponent(email.trim())}`, { headers });
       const result = await response.json();
       if (result.success) {
         setTickets(result.data || []);
@@ -31,7 +34,7 @@ export default function MyRegistrationsModal({ isOpen, onClose, showToast }) {
       }
 
       // 2. Fetch Venue Space Bookings
-      const resBookings = await fetch(`/api/venue-bookings/user/${encodeURIComponent(email.trim())}`);
+      const resBookings = await fetch(`/api/venue-bookings/user/${encodeURIComponent(email.trim())}`, { headers });
       const dataBookings = await resBookings.json();
       if (dataBookings.success) {
         setVenueBookings(dataBookings.data || []);

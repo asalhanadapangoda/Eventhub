@@ -1,8 +1,41 @@
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 const User = require("../model/User");
 const { signToken } = require("../middleware/authMiddleware");
 const crypto = require("crypto");
 const logger = require("../../../common/logger");
 const { parsePagination } = require("../../../common/pagination");
+
+// Sync Event & Space user record to Innovation Academy users collection (unified single account)
+const syncToAcademyUser = async (userDoc, plainPassword = null) => {
+  try {
+    if (mongoose.connection.readyState !== 1 || !userDoc?.email) return;
+    const acadCol = mongoose.connection.collection("academy_users");
+    const emailClean = userDoc.email.toLowerCase().trim();
+    const mappedRole = ["admin", "super_admin", "branch_admin"].includes(userDoc.role) ? "admin" : "participant";
+    const existing = await acadCol.findOne({ email: emailClean });
+    if (!existing) {
+      const hashedPassword = plainPassword ? await bcrypt.hash(plainPassword, 10) : userDoc.password;
+      await acadCol.insertOne({
+        name: userDoc.name,
+        email: emailClean,
+        password: hashedPassword,
+        phone: userDoc.contactNumber || "",
+        organization: "",
+        bio: "",
+        avatar: userDoc.avatar || "",
+        role: mappedRole,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    } else if (plainPassword) {
+      const hashedPassword = await bcrypt.hash(plainPassword, 10);
+      await acadCol.updateOne({ email: emailClean }, { $set: { password: hashedPassword, updatedAt: new Date() } });
+    }
+  } catch (err) {
+    logger.warn({ err: err.message }, "Cross-module user sync notice");
+  }
+};
 
 // POST /api/auth/signup
 const signupUser = async (req, res) => {
@@ -52,6 +85,7 @@ const signupUser = async (req, res) => {
     });
 
     await user.save();
+    await syncToAcademyUser(user);
 
     const token = signToken({ id: user._id, email: user.email, role: user.role });
 
@@ -85,7 +119,23 @@ const loginUser = async (req, res) => {
     }
 
     const emailClean = email.toLowerCase().trim();
-    const user = await User.findOne({ email: emailClean });
+    let user = await User.findOne({ email: emailClean });
+
+    // Unified auth bridge: if user registered on Innovation Academy first, auto-provision in Event & Space
+    if (!user && mongoose.connection.readyState === 1) {
+      const acadUser = await mongoose.connection.collection("academy_users").findOne({ email: emailClean });
+      if (acadUser && acadUser.password && (await bcrypt.compare(password, acadUser.password))) {
+        user = new User({
+          name: acadUser.name || emailClean.split("@")[0],
+          email: emailClean,
+          password,
+          contactNumber: acadUser.phone || "",
+          avatar: acadUser.avatar || "",
+          role: acadUser.role === "admin" ? "admin" : "user",
+        });
+        await user.save();
+      }
+    }
 
     if (!user) {
       return res.status(401).json({ success: false, message: "Invalid email or password." });
@@ -95,6 +145,8 @@ const loginUser = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ success: false, message: "Invalid email or password." });
     }
+
+    syncToAcademyUser(user).catch(() => {});
 
     const token = signToken({ id: user._id, email: user.email, role: user.role });
 

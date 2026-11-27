@@ -15,7 +15,7 @@ const {
   verifyResetOtp,
   resetPassword,
   changePassword,
-} = require("../controlers/authController");
+} = require("../controllers/authController");
 const { protect, authorize } = require("../middleware/authMiddleware");
 
 // Rate limiting for auth endpoints (prevents brute-force attacks)

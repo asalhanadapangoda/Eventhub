@@ -20,7 +20,9 @@ export default function MyEventsPage({
     setLoading(true);
 
     try {
-      const response = await fetch(`/api/registrations/user/${encodeURIComponent(emailToFetch.trim())}`);
+      const authToken = localStorage.getItem('eventhub_token');
+      const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+      const response = await fetch(`/api/registrations/user/${encodeURIComponent(emailToFetch.trim())}`, { headers });
       const result = await response.json();
 
       if (result.success && result.data && result.data.length > 0) {
@@ -161,8 +163,11 @@ export default function MyEventsPage({
       return;
     }
     try {
+      const authToken = localStorage.getItem('eventhub_token');
+      const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
       const res = await fetch(`/api/registrations/${registrationId}`, {
         method: 'DELETE',
+        headers,
       });
       const data = await res.json();
       if (data.success) {

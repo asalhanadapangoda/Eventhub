@@ -87,4 +87,53 @@ router.put("/hero", protect, authorize("admin", "super_admin", "branch_admin"), 
   }
 });
 
+// In-memory cache for dynamic CMS content (community, projects)
+const cachedContentByKey = new Map();
+
+// GET /api/settings/content/:key - Public endpoint for Community & Projects dynamic data
+router.get("/content/:key", async (req, res) => {
+  res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+  const cleanKey = `content_${String(req.params.key || "").toLowerCase().trim()}`;
+
+  if (cachedContentByKey.has(cleanKey)) {
+    return res.json({ success: true, data: cachedContentByKey.get(cleanKey) });
+  }
+
+  try {
+    const setting = await SiteSetting.findOne({ key: cleanKey }).lean();
+    const payload = setting?.data || null;
+    cachedContentByKey.set(cleanKey, payload);
+    res.json({ success: true, data: payload });
+  } catch (error) {
+    logger.error({ err: error.message, key: cleanKey }, "Error fetching dynamic content");
+    res.json({ success: true, data: null });
+  }
+});
+
+// PUT /api/settings/content/:key - Admin endpoint to update Community or Projects data in DB
+router.put("/content/:key", protect, authorize("admin", "super_admin", "branch_admin"), async (req, res) => {
+  try {
+    const cleanKey = `content_${String(req.params.key || "").toLowerCase().trim()}`;
+    const payload = req.body?.data !== undefined ? req.body.data : req.body;
+
+    const setting = await SiteSetting.findOneAndUpdate(
+      { key: cleanKey },
+      { $set: { key: cleanKey, data: payload } },
+      { upsert: true, new: true }
+    ).lean();
+
+    cachedContentByKey.set(cleanKey, setting.data);
+    logger.info({ key: cleanKey }, "[SETTINGS] Dynamic content updated");
+
+    res.json({
+      success: true,
+      message: `Content for '${req.params.key}' updated successfully`,
+      data: setting.data,
+    });
+  } catch (error) {
+    logger.error({ err: error.message }, "Error updating dynamic content");
+    res.status(500).json({ success: false, message: "Failed to update content", error: error.message });
+  }
+});
+
 module.exports = router;

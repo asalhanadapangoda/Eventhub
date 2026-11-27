@@ -12,10 +12,21 @@ import { Footer } from './components/Footer';
 import { useActiveSection } from './hooks/useActiveSection';
 import { Organization } from './types/organization';
 import { fallbackOrganizations } from './data/fallbackData';
+import { cachedFetchJson } from '../../common/apiCache';
 
 export const App: React.FC = () => {
-  const organizations = fallbackOrganizations;
+  const [organizations, setOrganizations] = React.useState<Organization[]>(fallbackOrganizations);
   const { scrollToSection } = useActiveSection();
+
+  React.useEffect(() => {
+    cachedFetchJson('/api/settings/content/community', { ttlMs: 120000 })
+      .then((res) => {
+        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+          setOrganizations(res.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Dynamic reactive category counts calculated directly from organizations
   const categoryCounts = React.useMemo(() => {

@@ -5,7 +5,7 @@ const {
   createVenue,
   updateVenue,
   deleteVenue,
-} = require("../controlers/venueController");
+} = require("../controllers/venueController");
 
 const { protect, authorize } = require("../middleware/authMiddleware");
 

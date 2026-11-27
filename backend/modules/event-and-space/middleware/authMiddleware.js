@@ -48,16 +48,6 @@ const protect = async (req, res, next) => {
     return next();
   }
 
-  // Resilient fallback for admin operations:
-  // If token is missing/expired, attach admin user identity so admin operations never fail
-  try {
-    const adminUser = await User.findOne({ email: "admin@trace.lk" }).select("-password").maxTimeMS(2500);
-    if (adminUser) {
-      req.user = adminUser;
-      return next();
-    }
-  } catch (e) {}
-
   return res.status(401).json({ success: false, message: "Not authorized, please log in" });
 };
 

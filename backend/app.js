@@ -24,10 +24,10 @@ const uploadRoutes = require("./modules/event-and-space/route/uploadRoutes");
 const chatRoutes = require("./modules/event-and-space/route/chatRoutes");
 const siteSettingRoutes = require("./modules/event-and-space/route/siteSettingRoutes");
 
-const { seedInitialEvents } = require("./modules/event-and-space/controlers/eventController");
-const { seedAdminUser } = require("./modules/event-and-space/controlers/authController");
-const { seedInitialVenues } = require("./modules/event-and-space/controlers/venueController");
-const { seedInitialVenueBookings } = require("./modules/event-and-space/controlers/venueBookingController");
+const { seedInitialEvents } = require("./modules/event-and-space/controllers/eventController");
+const { seedAdminUser } = require("./modules/event-and-space/controllers/authController");
+const { seedInitialVenues } = require("./modules/event-and-space/controllers/venueController");
+const { seedInitialVenueBookings } = require("./modules/event-and-space/controllers/venueBookingController");
 
 const helmet = require("helmet");
 const cors = require("cors");
@@ -151,7 +151,7 @@ const connectDB = async () => {
 // Non-blocking connection trigger with debouncing (avoids spamming reconnect attempts)
 app.use((req, res, next) => {
   if (mongoose.connection.readyState !== 1 && !isConnecting && (Date.now() - lastConnectAttempt > 10000)) {
-    connectDB().catch(() => {});
+    connectDB().catch(() => { });
   }
   next();
 });

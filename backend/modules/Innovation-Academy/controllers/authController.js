@@ -57,6 +57,26 @@ export const register = async (req, res, next) => {
         role: 'participant',
       });
 
+      // Unified auth bridge: sync new Academy account to main Event & Space users collection
+      try {
+        const mainCol = mongoose.connection.collection('users');
+        const existsMain = await mainCol.findOne({ email: cleanEmail });
+        if (!existsMain) {
+          await mainCol.insertOne({
+            name: user.name,
+            email: cleanEmail,
+            password: user.password,
+            contactNumber: user.phone || '',
+            avatar: user.avatar || '',
+            role: 'user',
+            branch: 'TRACE Main Branch (Colombo)',
+            permissions: [],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+        }
+      } catch {}
+
       const token = generateToken(user);
       return res.status(201).json({
         success: true,
@@ -166,6 +186,25 @@ export const login = async (req, res, next) => {
       if (cleanEmail === 'sachininisansala320@gmail.com' && user && user.role !== 'admin') {
         user.role = 'admin';
         await user.save();
+      }
+
+      // Unified auth bridge: if user registered on Event & Space first, auto-provision in Innovation Academy
+      if (!user) {
+        const mainUser = await mongoose.connection.collection('users').findOne({ email: cleanEmail });
+        if (mainUser && mainUser.password && (await bcrypt.compare(password, mainUser.password))) {
+          const mappedRole = ['admin', 'super_admin', 'branch_admin'].includes(mainUser.role)
+            ? 'admin'
+            : 'participant';
+          user = await User.create({
+            name: mainUser.name || cleanEmail.split('@')[0],
+            email: cleanEmail,
+            password,
+            phone: mainUser.contactNumber || '',
+            organization: mainUser.branch || '',
+            avatar: mainUser.avatar || '',
+            role: mappedRole,
+          });
+        }
       }
 
       if (!user) {

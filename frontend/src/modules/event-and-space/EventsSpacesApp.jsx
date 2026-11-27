@@ -673,7 +673,11 @@ export default function App() {
     if (sessionStorage.getItem(sessionKey)) return;
 
     try {
-      const res = await fetch(`/api/registrations/user/${encodeURIComponent(user.email.trim())}`);
+      const authToken = token || localStorage.getItem('eventhub_token');
+      if (!authToken) return;
+      const res = await fetch(`/api/registrations/user/${encodeURIComponent(user.email.trim())}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
       const data = await res.json();
       if (data.success && Array.isArray(data.data) && data.data.length > 0) {
         const now = new Date();

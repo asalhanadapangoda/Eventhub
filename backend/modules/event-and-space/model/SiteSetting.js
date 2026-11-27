@@ -38,6 +38,10 @@ const siteSettingSchema = new mongoose.Schema(
       default:
         "Be part of Sri Lanka's largest innovation ecosystem to make an impact.",
     },
+    data: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
   },
   { timestamps: true }
 );

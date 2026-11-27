@@ -6,7 +6,7 @@ const {
   createEvent,
   updateEvent,
   deleteEvent,
-} = require("../controlers/eventController");
+} = require("../controllers/eventController");
 
 const { protect, authorize } = require("../middleware/authMiddleware");
 

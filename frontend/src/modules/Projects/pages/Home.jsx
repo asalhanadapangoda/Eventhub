@@ -1,20 +1,38 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ProjectHeader } from '../components/ProjectHeader';
 import { ProjectCard } from '../components/ProjectCard';
-import { projects } from '../data/projects';
+import { projects as staticProjects } from '../data/projects';
+import { cachedFetchJson } from '../../../common/apiCache';
 
 export function Home() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [projectsList, setProjectsList] = useState(staticProjects);
 
   useEffect(() => {
     document.title = 'Our Projects | TRACE Sri Lanka';
+    cachedFetchJson('/api/settings/content/projects', { ttlMs: 120000 })
+      .then((res) => {
+        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+          const staticBySlug = new Map(staticProjects.map((p) => [p.slug, p]));
+          const merged = res.data.map((item) => {
+            const base = staticBySlug.get(item.slug) || {};
+            return {
+              ...base,
+              ...item,
+              image: item.image || base.image,
+            };
+          });
+          setProjectsList(merged);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const filteredProjects = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
-    if (!normalizedQuery) return projects;
+    if (!normalizedQuery) return projectsList;
 
-    return projects.filter((project) => {
+    return projectsList.filter((project) => {
       if (!normalizedQuery) return true;
 
       return (
@@ -23,7 +41,7 @@ export function Home() {
         project.category.toLowerCase().includes(normalizedQuery)
       );
     });
-  }, [searchQuery]);
+  }, [searchQuery, projectsList]);
 
   const handleReset = () => {
     setSearchQuery('');
@@ -34,7 +52,7 @@ export function Home() {
       <ProjectHeader
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        totalCount={projects.length}
+        totalCount={projectsList.length}
         filteredCount={filteredProjects.length}
       />
 

@@ -23,7 +23,9 @@ export default function CalendarPage({
 
       if (userEmail) {
         try {
-          const res = await fetch(`/api/registrations/user/${encodeURIComponent(userEmail.trim())}`);
+          const authToken = localStorage.getItem('eventhub_token');
+          const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+          const res = await fetch(`/api/registrations/user/${encodeURIComponent(userEmail.trim())}`, { headers });
           const data = await res.json();
 
           if (data.success && data.data) {

@@ -204,10 +204,38 @@ const updateRegistration = async (req, res) => {
   }
 };
 
+// DELETE /api/registrations/:id (Cancel registration)
+const deleteRegistration = async (req, res) => {
+  try {
+    const registration = await Registration.findById(req.params.id);
+    if (!registration) {
+      return res.status(404).json({ success: false, message: "Registration not found" });
+    }
+
+    const isAdmin = req.user && ["admin", "super_admin", "branch_admin"].includes(req.user.role);
+    if (!isAdmin && (!req.user || req.user.email.toLowerCase() !== registration.email.toLowerCase())) {
+      return res.status(403).json({ success: false, message: "Not authorized to cancel this registration" });
+    }
+
+    await Registration.findByIdAndDelete(req.params.id);
+    if (registration.eventId) {
+      await Event.findOneAndUpdate(
+        { _id: registration.eventId, registeredCount: { $gt: 0 } },
+        { $inc: { registeredCount: -1 } }
+      ).catch(() => {});
+    }
+
+    res.json({ success: true, message: "Registration cancelled successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to cancel registration", error: error.message });
+  }
+};
+
 module.exports = {
   registerForEvent,
   getUserRegistrations,
   getEventRegistrations,
   getAllRegistrations,
   updateRegistration,
+  deleteRegistration,
 };
