@@ -168,6 +168,7 @@ export default function Navbar() {
               src="/innovation-academy/trace-logo.png"
               alt="TRACE Innovation Academy - Powered by T2T"
               className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-[1.02]"
+              loading="lazy" decoding="async"
             />
           </Link>
 
@@ -463,6 +464,7 @@ export default function Navbar() {
                             src={user.avatar}
                             alt={user.name}
                             className="w-full h-full object-cover rounded-full"
+                            loading="lazy" decoding="async"
                           />
                         ) : (
                           <span>

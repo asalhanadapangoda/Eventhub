@@ -229,7 +229,7 @@ export default function ProfilePage({
           <div className="profile-left-column">
             <div className="avatar-card-box">
               <div className="avatar-wrapper">
-                <img src={avatar || getAvatarUrl(currentUser, name)} alt={name} />
+                <img src={avatar || getAvatarUrl(currentUser, name)} alt={name} loading="lazy" decoding="async" />
                 <label
                   htmlFor="avatar-file-input"
                   className="avatar-camera-btn"

@@ -8,7 +8,7 @@ export default function HeroSection() {
           MOBILE HERO VIEW (< lg)
           Text Directly Over High-Res Photo with Cinematic Contrast Scrim
           ======================================================== */}
-      <section className="relative block lg:hidden min-h-[580px] sm:min-h-[620px] flex items-center justify-center bg-[#071322] overflow-hidden">
+      <section className="relative block lg:hidden min-h-[620px] sm:min-h-[660px] flex items-center justify-center bg-[#071322] overflow-hidden">
         {/* Full Background Photo (Brighter and More Visible) */}
         <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
           <img
@@ -16,6 +16,7 @@ export default function HeroSection() {
             alt="TRACE Sri Lanka Innovation Academy"
             className="w-full h-full object-cover object-center select-none brightness-105 contrast-[1.02]"
             loading="eager"
+            decoding="async"
           />
         </div>
 
@@ -68,13 +69,15 @@ export default function HeroSection() {
           DESKTOP HERO VIEW (>= lg)
           Split Screen with S-Curve Wave Mask
           ======================================================== */}
-      <section className="hidden lg:flex relative min-h-[600px] xl:min-h-[640px] items-center bg-white">
+      <section className="hidden lg:flex relative min-h-[660px] xl:min-h-[720px] items-center bg-white">
         {/* Right Side: Clean High-Tech Lab Photo */}
         <div className="absolute top-0 right-0 w-[68%] h-full overflow-hidden z-0">
           <img
             src="/innovation-academy/hero-innovation.jpg"
             alt="TRACE Sri Lanka Innovation Academy"
             className="w-full h-full object-cover object-right select-none"
+            loading="eager"
+            decoding="async"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none"></div>
         </div>
@@ -96,7 +99,7 @@ export default function HeroSection() {
         </div>
 
         {/* Left Side Content */}
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 w-full relative z-20 py-20">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 w-full relative z-20 py-24">
           <div className="max-w-[460px] xl:max-w-[500px] flex flex-col items-start gap-5">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#e8f1fd] border border-[#d0e2fc] text-[11px] font-extrabold uppercase tracking-wider text-[#006398] shadow-2xs">
               <Sparkles className="w-3.5 h-3.5 text-[#006398]" />

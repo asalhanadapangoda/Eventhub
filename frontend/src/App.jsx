@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
-import EventsSpacesApp from './modules/event-and-space/EventsSpacesApp';
 
+const EventsSpacesApp = lazy(() => import('./modules/event-and-space/EventsSpacesApp'));
 const CommunityApp = lazy(() => import('./modules/Community/App.tsx'));
 const AcademyApp = lazy(() => import('./modules/Innovation-Academy/App.jsx'));
 const ProjectsApp = lazy(() => import('./modules/Projects/App.jsx'));
@@ -78,5 +78,9 @@ export default function App() {
     );
   }
 
-  return <EventsSpacesApp />;
+  return (
+    <Suspense fallback={<ModuleLoader />}>
+      <EventsSpacesApp />
+    </Suspense>
+  );
 }

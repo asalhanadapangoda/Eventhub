@@ -100,6 +100,7 @@ export function ProjectDetails({ project }) {
             alt={project.name}
             className="hero-banner-img"
             style={project.imagePosition ? { objectPosition: project.imagePosition } : undefined}
+            loading="eager" decoding="async"
           />
           <div className="hero-banner-scrim" />
 
@@ -208,6 +209,7 @@ export function ProjectDetails({ project }) {
                         alt={eventItem.title}
                         className="event-poster-img"
                         loading="lazy"
+                        decoding="async"
                       />
                     ) : (
                       <div className="event-poster-fallback">
@@ -276,7 +278,7 @@ export function ProjectDetails({ project }) {
                     aria-label={`View photo: ${photo.title}`}
                   >
                     <div className="gallery-media">
-                      <img src={photo.src} alt={photo.title} className="gallery-img" loading="lazy" />
+                      <img src={photo.src} alt={photo.title} className="gallery-img" loading="lazy" decoding="async" />
                       <span className="gallery-zoom-badge" aria-hidden="true">
                         <ZoomIn size={16} />
                       </span>
@@ -560,7 +562,7 @@ export function ProjectDetails({ project }) {
             >
               <X size={18} />
             </button>
-            <img src={lightboxPhoto.src} alt={lightboxPhoto.title} className="lightbox-img" />
+            <img src={lightboxPhoto.src} alt={lightboxPhoto.title} className="lightbox-img" loading="lazy" decoding="async" />
             <div className="lightbox-caption-bar">
               <h3>{lightboxPhoto.title}</h3>
               <p>{lightboxPhoto.caption}</p>

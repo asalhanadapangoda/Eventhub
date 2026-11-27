@@ -1,5 +1,6 @@
 const Registration = require("../model/Registration");
 const Event = require("../model/Event");
+const { parsePagination } = require("../../../common/pagination");
 
 // Generate unique ticket ID
 const generateTicketId = () => {
@@ -91,10 +92,15 @@ const registerForEvent = async (req, res) => {
 
     try {
       await registration.save();
-      registrationsCache = [registration.toObject ? registration.toObject() : registration, ...registrationsCache];
     } catch (saveErr) {
       // Revert reservation on failure
       await Event.findByIdAndUpdate(eventId, { $inc: { registeredCount: -1 } });
+      if (saveErr.code === 11000) {
+        return res.status(400).json({
+          success: false,
+          message: "You are already registered for this event with this email address.",
+        });
+      }
       throw saveErr;
     }
 
@@ -128,7 +134,10 @@ const getUserRegistrations = async (req, res) => {
       return res.status(403).json({ success: false, message: "Access denied. You can only view your own event registrations." });
     }
 
-    const registrations = await Registration.find({ email }).populate("eventId").sort({ createdAt: -1 });
+    const registrations = await Registration.find({ email })
+      .populate("eventId", "title date time location status coverImage")
+      .sort({ createdAt: -1 })
+      .lean();
     res.json({ success: true, count: registrations.length, data: registrations });
   } catch (error) {
     res.status(500).json({ success: false, message: "Failed to fetch user registrations", error: error.message });
@@ -138,37 +147,38 @@ const getUserRegistrations = async (req, res) => {
 // GET /api/registrations/event/:eventId
 const getEventRegistrations = async (req, res) => {
   try {
-    const registrations = await Registration.find({ eventId: req.params.eventId }).sort({ createdAt: -1 });
+    const registrations = await Registration.find({ eventId: req.params.eventId })
+      .sort({ createdAt: -1 })
+      .lean();
     res.json({ success: true, count: registrations.length, data: registrations });
   } catch (error) {
     res.status(500).json({ success: false, message: "Failed to fetch event registrations", error: error.message });
   }
 };
 
-// In-memory cache for instantaneous (0ms) response times
-let registrationsCache = [];
-
-// GET /api/registrations (All registrations for Admin Dashboard)
+// GET /api/registrations (All registrations for Admin Dashboard with pagination)
 const getAllRegistrations = async (req, res) => {
-  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-
-  if (registrationsCache.length > 0) {
-    res.json({ success: true, count: registrationsCache.length, data: registrationsCache });
-    // Silent background refresh
-    Registration.find().populate("eventId").sort({ createdAt: -1 }).lean()
-      .then((fresh) => {
-        if (Array.isArray(fresh)) registrationsCache = fresh;
-      })
-      .catch(() => {});
-    return;
-  }
+  res.setHeader("Cache-Control", "private, no-store");
+  const { page, limit, skip } = parsePagination(req.query);
 
   try {
-    const registrations = await Registration.find().populate("eventId").sort({ createdAt: -1 }).lean();
-    if (Array.isArray(registrations)) {
-      registrationsCache = registrations;
-    }
-    res.json({ success: true, count: registrations.length, data: registrations });
+    const [registrations, total] = await Promise.all([
+      Registration.find()
+        .populate("eventId", "title date time location status coverImage")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Registration.countDocuments(),
+    ]);
+    res.json({
+      success: true,
+      count: registrations.length,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      data: registrations,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: "Failed to fetch registrations", error: error.message });
   }
@@ -187,13 +197,6 @@ const updateRegistration = async (req, res) => {
     if (notes !== undefined) registration.notes = notes;
 
     await registration.save();
-
-    // Update in-memory cache
-    registrationsCache = registrationsCache.map(r =>
-      String(r._id) === String(req.params.id)
-        ? { ...r, status: status || r.status, notes: notes !== undefined ? notes : r.notes }
-        : r
-    );
 
     res.json({ success: true, message: "Registration updated successfully", data: registration });
   } catch (error) {

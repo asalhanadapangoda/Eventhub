@@ -1,4 +1,5 @@
 import React from 'react';
+import '../../common/tailwind-modules.css';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
 import { CorporatePartners } from './sections/CorporatePartners';

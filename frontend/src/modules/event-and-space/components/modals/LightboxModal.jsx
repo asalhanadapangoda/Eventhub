@@ -42,7 +42,7 @@ export default function LightboxModal({ isOpen, onClose, event, initialIndex = 0
         </button>
 
         <div className="lightbox-container">
-          <img src={imgUrl} alt={imgCaption} />
+          <img src={imgUrl} alt={imgCaption} loading="lazy" decoding="async" />
           <div className="lightbox-caption">{imgCaption}</div>
         </div>
 

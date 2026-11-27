@@ -16,7 +16,7 @@ export default function Footer({ setActiveTab }) {
         {/* Brand & Summary Column */}
         <div className="footer-brand">
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-            <img src={traceLogo} alt="TRACE SPACES" className="trace-logo-img" />
+            <img src={traceLogo} alt="TRACE SPACES" className="trace-logo-img" loading="lazy" decoding="async" />
           </div>
           <p className="footer-desc">
             Sri Lanka’s premier technology & innovation hub. Fostering tech entrepreneurs, innovation events, and world-class developer communities.

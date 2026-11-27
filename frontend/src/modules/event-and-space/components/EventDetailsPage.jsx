@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { cachedFetchJson } from '../../../common/apiCache';
 import traceLogo from '../assets/trace-logo.png';
 import Footer from './Footer';
 import FormattedText from './FormattedText';
@@ -45,11 +46,7 @@ export default function EventDetailsPage({
 
     if (eventId) {
       setLoadingEvent(true);
-      fetch(`/api/events/${eventId}?_t=${Date.now()}`, {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache, no-store' },
-      })
-        .then((res) => res.json())
+      cachedFetchJson(`/api/events/${eventId}`, { ttlMs: 60000 })
         .then((data) => {
           if (data.success && data.data) {
             setActiveEvent(data.data);
@@ -365,7 +362,7 @@ export default function EventDetailsPage({
       <header className="details-header">
         <div className="details-header-container">
           <div className="brand-logo" style={{ display: 'flex', alignItems: 'center' }}>
-            <img src={traceLogo} alt="TRACE SPACES" className="trace-logo-img" />
+            <img src={traceLogo} alt="TRACE SPACES" className="trace-logo-img" loading="lazy" decoding="async" />
           </div>
           <button className="btn-back-link" onClick={onBack}>
             <i className="fa-solid fa-arrow-left"></i> Back to Events
@@ -390,7 +387,7 @@ export default function EventDetailsPage({
 
                 {/* Event Summary Card */}
                 <div className="success-event-summary">
-                  <img src={imgMain} alt={event.title} className="summary-thumb" />
+                  <img src={imgMain} alt={event.title} className="summary-thumb" loading="lazy" decoding="async" />
                   <div className="summary-details">
                     <h3 className="summary-event-title">{event.title}</h3>
                     <div className="summary-meta-item">
@@ -448,19 +445,19 @@ export default function EventDetailsPage({
                 <div className={`media-collage-grid ${uploadedPhotos.length === 1 ? 'single-photo-mode' : ''}`}>
                   <div className="collage-main-photo">
                     <div className="collage-photo-backdrop" style={{ backgroundImage: `url(${imgMain})` }} />
-                    <img className="collage-main-img" src={imgMain} alt={event.title} />
+                    <img className="collage-main-img" src={imgMain} alt={event.title} loading="eager" decoding="async" />
                     <span className="free-event-badge">FREE EVENT</span>
                   </div>
                   {uploadedPhotos.length > 1 && (
                     <div className="collage-side-photos">
                       {uploadedPhotos[1] && (
                         <div className="side-photo-top">
-                          <img src={uploadedPhotos[1]} alt="Event photo 2" />
+                          <img src={uploadedPhotos[1]} alt="Event photo 2" loading="lazy" decoding="async" />
                         </div>
                       )}
                       {uploadedPhotos[2] && (
                         <div className="side-photo-bottom">
-                          <img src={uploadedPhotos[2]} alt="Event photo 3" />
+                          <img src={uploadedPhotos[2]} alt="Event photo 3" loading="lazy" decoding="async" />
                         </div>
                       )}
                     </div>
@@ -553,6 +550,7 @@ export default function EventDetailsPage({
                                 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80'
                               }
                               alt={event.speaker.name || 'Speaker'}
+                              loading="lazy" decoding="async"
                             />
                           </div>
                           <div className="speaker-info">
@@ -603,7 +601,7 @@ export default function EventDetailsPage({
                       <div className="details-gallery-showcase-grid">
                         {event.gallery.map((photo, idx) => (
                           <div key={idx} className="showcase-photo-card">
-                            <img src={photo.url} alt={photo.caption || 'Event gallery photo'} />
+                            <img src={photo.url} alt={photo.caption || 'Event gallery photo'} loading="lazy" decoding="async" />
                             {photo.caption && <span className="showcase-photo-caption">{photo.caption}</span>}
                           </div>
                         ))}

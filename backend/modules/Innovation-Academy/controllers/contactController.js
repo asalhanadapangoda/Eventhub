@@ -4,6 +4,7 @@ import Notification from '../models/Notification.js';
 import User from '../models/User.js';
 import { mockStore } from '../config/mockStore.js';
 import { sendEmailNotification } from '../utils/emailService.js';
+import logger from '../../../common/logger.js';
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
@@ -41,7 +42,7 @@ const dispatchContactEmails = ({ name, email, subject, programOfInterest, messag
         </div>
       </div>
     `,
-  }).catch((err) => console.warn('[Academy Contact Admin Email Notice]', err.message));
+  }).catch((err) => logger.warn({ err: err.message }, '[Academy Contact Admin Email Notice]'));
 
   // 2. Confirmation copy to sender
   sendEmailNotification({
@@ -62,7 +63,7 @@ const dispatchContactEmails = ({ name, email, subject, programOfInterest, messag
         </div>
       </div>
     `,
-  }).catch((err) => console.warn('[Academy Contact User Email Notice]', err.message));
+  }).catch((err) => logger.warn({ err: err.message }, '[Academy Contact User Email Notice]'));
 };
 
 // @desc    Submit contact message from homepage
@@ -410,7 +411,7 @@ export const updateContactMessageStatus = async (req, res, next) => {
             });
           }
         } catch (notifErr) {
-          console.warn('Failed to dispatch notification for contact reply:', notifErr.message);
+          logger.warn({ err: notifErr.message }, 'Failed to dispatch notification for contact reply');
         }
       }
 

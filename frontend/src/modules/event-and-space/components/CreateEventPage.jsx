@@ -469,7 +469,7 @@ export default function CreateEventPage({ onCancel, onEventCreated, showToast, c
                 <div className="speaker-top-row">
                   <label htmlFor="speaker-avatar-upload" className="speaker-avatar-upload-circle">
                     {speakerAvatar ? (
-                      <img src={speakerAvatar} alt="Speaker" />
+                      <img src={speakerAvatar} alt="Speaker" loading="lazy" decoding="async" />
                     ) : (
                       <>
                         <i className="fa-solid fa-camera"></i>
@@ -723,7 +723,7 @@ export default function CreateEventPage({ onCancel, onEventCreated, showToast, c
                 <label htmlFor="cover-file-upload-input" className="cover-dropzone-box">
                   {coverImage ? (
                     <div className="cover-preview-wrapper">
-                      <img src={coverImage} alt="Cover preview" />
+                      <img src={coverImage} alt="Cover preview" loading="lazy" decoding="async" />
                       <span className="file-name-pill">{coverFileName || 'Cover Photo'}</span>
                     </div>
                   ) : (

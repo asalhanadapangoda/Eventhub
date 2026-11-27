@@ -59,7 +59,7 @@ export default function ProgramsSection({ programs = [] }) {
   };
 
   return (
-    <section id="programs" className="py-14 sm:py-20 bg-[#faf8ff] border-b border-[#e2e8f0]">
+    <section id="programs" className="pt-8 pb-14 sm:pt-10 sm:pb-20 bg-[#faf8ff] border-b border-[#e2e8f0]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">

@@ -624,6 +624,7 @@ export default function AdminWorkshops() {
                       alt="Workshop Cover Preview"
                       className="w-full h-auto max-h-96 object-contain rounded-lg"
                       onError={handleImageError}
+                      loading="lazy" decoding="async"
                     />
                     <span className="absolute bottom-2.5 left-3 text-[11px] font-bold text-white bg-black/60 px-2 py-0.5 rounded backdrop-blur-sm truncate max-w-[80%]">
                       {formData.coverImage}

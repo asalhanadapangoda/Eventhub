@@ -183,6 +183,7 @@ export default function SignupModal({
                 objectFit: 'contain',
                 filter: 'drop-shadow(0 4px 10px rgba(93, 77, 246, 0.25))',
               }}
+              loading="lazy" decoding="async"
             />
           </div>
 

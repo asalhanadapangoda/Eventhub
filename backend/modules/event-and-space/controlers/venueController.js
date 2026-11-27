@@ -1,5 +1,6 @@
 const Venue = require("../model/Venue");
 const mongoose = require("mongoose");
+const logger = require("../../../common/logger");
 
 // Resilient in-memory cache for instantaneous (0ms) responses & network fault tolerance
 let venuesCache = [];
@@ -40,7 +41,7 @@ const sortVenuesWesternFirst = (arr) => {
 
 // GET /api/venues (Fetch all venues)
 const getVenues = async (req, res) => {
-  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
 
   // If memory cache is loaded, return immediately to make UI instant (0ms), then refresh in background
   if (isVenuesCacheLoaded && venuesCache.length > 0) {
@@ -77,7 +78,7 @@ const getVenues = async (req, res) => {
     const sanitized = sortVenuesWesternFirst(venuesCache.map(sanitizeVenueOutput));
     return res.json({ success: true, count: sanitized.length, data: sanitized });
   } catch (error) {
-    console.warn("Serving venues from resilient fallback cache:", error.message);
+    logger.warn({ err: error.message }, "Serving venues from resilient fallback cache");
     const sanitized = sortVenuesWesternFirst(venuesCache.map(sanitizeVenueOutput));
     return res.json({ success: true, count: sanitized.length, data: sanitized });
   }
@@ -158,7 +159,7 @@ const createVenue = async (req, res) => {
       const venue = new Venue(venueObj);
       await venue.save();
     } catch (dbErr) {
-      console.warn("MongoDB venue save notice (cached in memory):", dbErr.message);
+      logger.warn({ err: dbErr.message }, "MongoDB venue save notice (cached in memory)");
     }
 
     res.status(201).json({ success: true, message: "Venue added successfully!", data: venueObj });
@@ -408,7 +409,7 @@ const seedInitialVenues = async () => {
         },
       ];
       await Venue.insertMany(sampleVenues);
-      console.log("Sample multi-branch venues seeded successfully!");
+      logger.info("Sample multi-branch venues seeded successfully!");
     }
 
     // Always prime in-memory cache for 0ms response time
@@ -418,7 +419,7 @@ const seedInitialVenues = async () => {
       isVenuesCacheLoaded = true;
     }
   } catch (err) {
-    console.error("Error seeding/caching venues:", err);
+    logger.error({ err: err.message }, "Error seeding/caching venues");
   }
 };
 

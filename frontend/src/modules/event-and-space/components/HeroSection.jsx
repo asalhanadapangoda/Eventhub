@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import traceVideo from '../assets/Trace Vedio.mp4';
+import { optimizeImageUrl } from '../utils/eventUtils';
 
 const DEFAULT_SETTINGS = {
   heroMediaType: 'default',
@@ -113,9 +113,12 @@ export default function HeroSection({ scrollToEvents, onNavigateSpaces }) {
                 }}
               >
                 <img
-                  src={imgUrl}
+                  src={optimizeImageUrl(imgUrl, 1600)}
                   alt={`Hero Banner Photo ${index + 1}`}
                   className="hero-image-element"
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  fetchPriority={index === 0 ? 'high' : 'auto'}
+                  decoding="async"
                   onError={(e) => {
                     e.currentTarget.style.opacity = 0;
                   }}
@@ -144,7 +147,7 @@ export default function HeroSection({ scrollToEvents, onNavigateSpaces }) {
             loop
             muted
             playsInline
-            preload="auto"
+            preload="metadata"
           >
             <source src={settings.heroVideoUrl} />
           </video>
@@ -156,9 +159,8 @@ export default function HeroSection({ scrollToEvents, onNavigateSpaces }) {
             loop
             muted
             playsInline
-            preload="auto"
+            preload="metadata"
           >
-            <source src={traceVideo} type="video/mp4" />
             <source src="/trace-video.mp4" type="video/mp4" />
           </video>
         )}

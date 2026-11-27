@@ -2,6 +2,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import logger from '../../../common/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,7 +16,7 @@ try {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
 } catch (fsErr) {
-  console.warn('[FS Notice] Uploads directory skipped:', fsErr.message);
+  logger.warn({ err: fsErr.message }, '[FS Notice] Uploads directory skipped');
 }
 
 const storage = multer.diskStorage({

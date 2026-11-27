@@ -6,6 +6,21 @@
    Uses :where(.tw-module) so specificity is only (0,0,1) — always beaten by Tailwind
    utility classes (0,1,0) like bg-[#0070F3] or bg-white/[0.08], while keeping
    Event & Space custom CSS 100% untouched. */
+html,
+body,
+.tw-module,
+.tw-module * {
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 :where(.tw-module),
 :where(.tw-module) *,
 :where(.tw-module) ::before,
@@ -14,6 +29,7 @@
   border-width: 0;
   border-style: solid;
   border-color: #e5e7eb;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 :where(.tw-module) button,

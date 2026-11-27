@@ -4,13 +4,12 @@ const multerCloudinary = require('multer-storage-cloudinary');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const logger = require('./logger');
 
-// Ensure local uploads directories exist
+// Ensure local backend uploads directory exists
 const backendUploadDir = path.join(__dirname, '..', 'public', 'uploads');
-const frontendUploadDir = path.join(__dirname, '..', '..', 'frontend', 'public', 'uploads');
 try {
   fs.mkdirSync(backendUploadDir, { recursive: true });
-  fs.mkdirSync(frontendUploadDir, { recursive: true });
 } catch (e) {}
 
 // Configure Cloudinary SDK
@@ -37,7 +36,7 @@ const buildUploadParams = (file) => {
     allowed_formats: isVideo
       ? ['mp4', 'mov', 'avi', 'mkv', 'webm']
       : ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-    transformation: isVideo ? [{ quality: 'auto' }] : [{ width: 1200, crop: 'limit', quality: 'auto' }],
+    transformation: isVideo ? [{ quality: 'auto' }] : [{ width: 1200, crop: 'limit', quality: 'auto', fetch_format: 'auto' }],
   };
 };
 
@@ -70,7 +69,7 @@ if (isCloudinaryConfigured) {
       }
     }
   } catch (err) {
-    console.error('Failed to initialize Cloudinary storage, falling back to local disk storage:', err.message);
+    logger.error({ err: err.message }, 'Failed to initialize Cloudinary storage, falling back to local disk storage');
     storage = null;
   }
 }

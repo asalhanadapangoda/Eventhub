@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { cachedFetchJson } from '../../../common/apiCache';
 import FormattedText from './FormattedText';
 import { getEventSeriesCategory } from '../utils/eventUtils';
 
@@ -68,11 +69,7 @@ export default function PastEventDetailsPage({
       } catch (e) {}
 
       // Silent background fetch to guarantee latest updates
-      fetch(`/api/events/${eventId}?_t=${Date.now()}`, {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache, no-store' },
-      })
-        .then((res) => res.json())
+      cachedFetchJson(`/api/events/${eventId}`, { ttlMs: 60000 })
         .then((data) => {
           if (data.success && data.data) {
             setActiveEvent(data.data);
@@ -268,6 +265,7 @@ export default function PastEventDetailsPage({
                 e.target.onerror = null;
                 e.target.src = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=75';
               }}
+              loading="eager" decoding="async"
             />
             <div className="past-hero-overlay"></div>
             <span className="past-status-badge">
@@ -379,6 +377,7 @@ export default function PastEventDetailsPage({
                     src={pastEvent.speaker.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80'}
                     alt={pastEvent.speaker.name}
                     style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #2563eb' }}
+                    loading="lazy" decoding="async" width={70} height={70}
                   />
                   <div>
                     <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>{pastEvent.speaker.name}</h3>
@@ -413,6 +412,7 @@ export default function PastEventDetailsPage({
                         src={pastEvent.coverImage}
                         alt="Keynote Recording Thumbnail"
                         className="video-thumbnail"
+                        loading="lazy" decoding="async"
                       />
                       <div className="video-play-overlay">
                         <div
@@ -464,7 +464,7 @@ export default function PastEventDetailsPage({
                         title="Click to view full photo"
                         style={{ height: '120px' }}
                       >
-                        <img src={imgUrl} alt={`Gallery moment ${gIdx + 1}`} />
+                        <img src={imgUrl} alt={`Gallery moment ${gIdx + 1}`} loading="lazy" decoding="async" />
                         <div className="thumb-hover-overlay">
                           <i className="fa-solid fa-magnifying-glass-plus"></i>
                         </div>
@@ -602,7 +602,7 @@ export default function PastEventDetailsPage({
                         }
                         title="Click to view full photo"
                       >
-                        <img src={imgUrl} alt={`Gallery moment ${gIdx + 1}`} />
+                        <img src={imgUrl} alt={`Gallery moment ${gIdx + 1}`} loading="lazy" decoding="async" />
                         <div className="thumb-hover-overlay">
                           <i className="fa-solid fa-magnifying-glass-plus"></i>
                         </div>

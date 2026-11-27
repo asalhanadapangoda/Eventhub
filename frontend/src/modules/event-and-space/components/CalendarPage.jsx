@@ -354,6 +354,7 @@ export default function CalendarPage({
                       'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80'
                     }
                     alt={selectedEvent.title}
+                    loading="lazy" decoding="async"
                   />
                   <span className="registered-badge-pill">
                     <i className="fa-solid fa-circle-check"></i> Registered

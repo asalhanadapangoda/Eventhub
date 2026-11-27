@@ -273,6 +273,7 @@ export default function AdminModal({ isOpen, onClose, onEventCreated, showToast 
                   src={coverImage}
                   alt="Uploaded Cover Preview"
                   style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
+                  loading="lazy" decoding="async"
                 />
                 <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(180deg, transparent 0%, rgba(15,23,42,0.85) 100%)', padding: '0.5rem 0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ color: '#ffffff', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px' }}>

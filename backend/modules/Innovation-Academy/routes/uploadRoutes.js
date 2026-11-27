@@ -3,13 +3,14 @@ import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
 import { upload } from '../middleware/upload.js';
 import { protect } from '../middleware/auth.js';
+import logger from '../../../common/logger.js';
 
 const router = express.Router();
 
-// Cloudinary Configuration with safe persistent defaults
-const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || 'ogymjek8';
-const CLOUD_API_KEY = process.env.CLOUDINARY_API_KEY || '952847967259635';
-const CLOUD_API_SECRET = process.env.CLOUDINARY_API_SECRET || 'TOHOi8JQqnB5kwK5H-Q7Swh4Vdc';
+// Cloudinary Configuration from environment variables
+const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
+const CLOUD_API_KEY = process.env.CLOUDINARY_API_KEY;
+const CLOUD_API_SECRET = process.env.CLOUDINARY_API_SECRET;
 
 const isCloudinaryConfigured = () =>
   Boolean(CLOUD_NAME && CLOUD_API_KEY && CLOUD_API_SECRET);
@@ -34,6 +35,7 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
       const result = await cloudinary.uploader.upload(req.file.path, {
         folder: 'trace_innovation_academy',
         resource_type: 'auto',
+        transformation: [{ width: 1200, crop: 'limit', quality: 'auto', fetch_format: 'auto' }],
       });
 
       // Remove temporary local file
@@ -51,7 +53,7 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
         message: 'Image uploaded to Cloudinary successfully',
       });
     } catch (cloudErr) {
-      console.warn('[Cloudinary Upload Warning] Fallback to local storage:', cloudErr.message);
+      logger.warn({ err: cloudErr.message }, '[Cloudinary Upload Warning] Fallback to local storage');
     }
   }
 

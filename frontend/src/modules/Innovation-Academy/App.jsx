@@ -1,4 +1,5 @@
 import React, { Component, lazy, Suspense } from 'react';
+import '../../common/tailwind-modules.css';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';

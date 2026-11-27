@@ -587,6 +587,7 @@ export default function EditEventModal({
                     e.target.onerror = null;
                     e.target.src = DEFAULT_EVENT_BANNER;
                   }}
+                  loading="lazy" decoding="async"
                 />
                 <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(180deg, transparent 0%, rgba(15,23,42,0.85) 100%)', padding: '0.5rem 0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ color: '#ffffff', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -654,6 +655,7 @@ export default function EditEventModal({
                       src={speakerAvatar}
                       alt="Speaker"
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      loading="lazy" decoding="async"
                     />
                   ) : (
                     <>
@@ -839,7 +841,7 @@ export default function EditEventModal({
               <div className="edit-gallery-grid">
                 {gallery.map((photo, idx) => (
                   <div key={idx} className="edit-gallery-item">
-                    <img src={photo.url} alt={photo.caption || 'Event photo'} />
+                    <img src={photo.url} alt={photo.caption || 'Event photo'} loading="lazy" decoding="async" />
                     <span className="photo-caption-tag">{photo.caption || 'Photo'}</span>
                     <button
                       type="button"

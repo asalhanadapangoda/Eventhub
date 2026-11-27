@@ -312,6 +312,7 @@ export default function AuthModal() {
                 src="/innovation-academy/trace-logo.png"
                 alt="TRACE Innovation Academy"
                 className="h-10 w-auto object-contain mx-auto mb-3"
+                loading="lazy" decoding="async"
               />
               <h2 className="text-2xl font-extrabold text-[#0B192C]">Welcome Back</h2>
               <p className="text-xs text-[#44474c] mt-1">
@@ -687,6 +688,7 @@ export default function AuthModal() {
                 src="/innovation-academy/trace-logo.png"
                 alt="TRACE Innovation Academy"
                 className="h-10 w-auto object-contain mx-auto mb-3"
+                loading="lazy" decoding="async"
               />
               <h2 className="text-2xl font-extrabold text-[#0B192C]">Create Account</h2>
               <p className="text-xs text-[#44474c] mt-1">

@@ -1,5 +1,6 @@
 import express from 'express';
 import mongoose from 'mongoose';
+import logger from '../../common/logger.js';
 
 import authRoutes from './routes/authRoutes.js';
 import programRoutes from './routes/programRoutes.js';
@@ -16,7 +17,6 @@ import { seedData } from './utils/seeder.js';
 const router = express.Router();
 
 let isAcademySeeded = false;
-let seedingPromise = null;
 
 export const seedAcademyIfNeeded = async () => {
   if (isAcademySeeded || mongoose.connection.readyState !== 1) return;
@@ -33,7 +33,7 @@ export const seedAcademyIfNeeded = async () => {
       }
       isAcademySeeded = true;
     } catch (err) {
-      console.warn('[Academy Seeder Notice]', err.message);
+      logger.warn({ err: err.message }, '[Academy Seeder Notice]');
     } finally {
       seedingPromise = null;
     }
@@ -44,7 +44,7 @@ export const seedAcademyIfNeeded = async () => {
 
 router.use(async (req, res, next) => {
   if (!isAcademySeeded && mongoose.connection.readyState === 1) {
-    await seedAcademyIfNeeded();
+    seedAcademyIfNeeded().catch(() => { });
   }
   next();
 });
@@ -67,9 +67,16 @@ router.get('/health', (req, res) => {
   });
 });
 
+const publicCache = (req, res, next) => {
+  if (req.method === 'GET') {
+    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+  }
+  next();
+};
+
 router.use('/auth', authRoutes);
-router.use('/programs', programRoutes);
-router.use('/workshops', workshopRoutes);
+router.use('/programs', publicCache, programRoutes);
+router.use('/workshops', publicCache, workshopRoutes);
 router.use('/registrations', registrationRoutes);
 router.use('/visits', visitRoutes);
 router.use('/contact', contactRoutes);

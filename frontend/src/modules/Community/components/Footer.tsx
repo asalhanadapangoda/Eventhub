@@ -27,6 +27,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                   src="/community/trace-logo.png"
                   alt="TRACE Logo"
                   className="w-full h-full object-contain"
+                  loading="lazy" decoding="async"
                 />
               </div>
               <div className="flex flex-col">

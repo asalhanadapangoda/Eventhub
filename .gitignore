@@ -27,7 +27,8 @@ Thumbs.db
 # User uploads & media files
 backend/public/uploads/
 backend/uploads/
-# Ignore heavy video files in frontend uploads (GitHub rejects files > 100MB)
+# Ignore heavy video & new local upload files in frontend/public/uploads
+frontend/public/uploads/*
 frontend/public/uploads/*.mp4
 frontend/public/uploads/*.mov
 frontend/public/uploads/*.avi

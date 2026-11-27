@@ -63,4 +63,7 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
+// High Performance Query Indexes
+userSchema.index({ role: 1, createdAt: -1 });
+
 module.exports = mongoose.model("User", userSchema);

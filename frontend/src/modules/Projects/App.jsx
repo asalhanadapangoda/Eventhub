@@ -14,7 +14,7 @@ export function App() {
           <div className="brand-corner-wrap">
             <div className="container">
               <Link to="/projects" className="brand-logo-link" aria-label="TRACE Sri Lanka Projects">
-                <img src={traceLogo} alt="TRACE Sri Lanka" className="brand-logo-img" />
+                <img src={traceLogo} alt="TRACE Sri Lanka" className="brand-logo-img" loading="eager" decoding="async" />
               </Link>
             </div>
           </div>

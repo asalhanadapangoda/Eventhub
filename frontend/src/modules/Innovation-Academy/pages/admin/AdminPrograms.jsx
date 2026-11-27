@@ -704,6 +704,7 @@ export default function AdminPrograms() {
                         alt="Program Cover Preview"
                         className="w-full h-full object-cover"
                         onError={handleImageError}
+                        loading="lazy" decoding="async"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none"></div>
                       <span className="absolute bottom-2.5 left-3 text-[11px] font-bold text-white bg-black/50 px-2 py-0.5 rounded backdrop-blur-sm truncate max-w-[80%]">

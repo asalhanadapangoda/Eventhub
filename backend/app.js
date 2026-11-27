@@ -2,6 +2,16 @@ const path = require("path");
 const { loadSharedEnv } = require("./common/env");
 loadSharedEnv();
 
+const logger = require("./common/logger");
+
+process.on("unhandledRejection", (reason) => {
+  logger.error({ err: reason }, "Unhandled Promise Rejection");
+});
+
+process.on("uncaughtException", (err) => {
+  logger.fatal({ err }, "Uncaught Exception");
+});
+
 const express = require("express");
 const mongoose = require("mongoose");
 
@@ -95,23 +105,23 @@ const connectDB = async () => {
     lastConnectAttempt = Date.now();
     try {
       await tryConnect(primaryUri);
-      console.log("Connected to MongoDB successfully!");
+      logger.info("Connected to MongoDB successfully!");
     } catch (err) {
       if (primaryUri !== DIRECT_REPLICA_URI) {
-        console.warn(`Primary MongoDB URI failed (${err.message}). Retrying with direct replica set connection...`);
+        logger.warn({ err: err.message }, "Primary MongoDB URI failed. Retrying with direct replica set connection...");
         try {
           await tryConnect(DIRECT_REPLICA_URI);
-          console.log("Connected to MongoDB successfully via direct replica set fallback!");
+          logger.info("Connected to MongoDB successfully via direct replica set fallback!");
         } catch (fallbackErr) {
           dbConnectionPromise = null;
           isConnecting = false;
-          console.error("MongoDB Connection Error:", fallbackErr.message);
+          logger.error({ err: fallbackErr.message }, "MongoDB Connection Error");
           throw fallbackErr;
         }
       } else {
         dbConnectionPromise = null;
         isConnecting = false;
-        console.error("MongoDB Connection Error:", err.message);
+        logger.error({ err: err.message }, "MongoDB Connection Error");
         throw err;
       }
     }
@@ -129,7 +139,7 @@ const connectDB = async () => {
         academyModule.seedAcademyIfNeeded ? academyModule.seedAcademyIfNeeded() : Promise.resolve(),
       ]);
     } catch (seedErr) {
-      console.warn("Database initial seed notice:", seedErr.message);
+      logger.warn({ err: seedErr.message }, "Database initial seed notice");
     }
 
     return mongoose.connection;
@@ -145,6 +155,20 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+// Health & uptime endpoints (used by Render/monitoring probes)
+const healthHandler = (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  res.status(200).json({
+    status: "ok",
+    service: "TRACE Projects Unified Backend API",
+    db: mongoose.connection.readyState === 1 ? "connected" : "connecting",
+    uptimeSeconds: Math.round(process.uptime()),
+    timestamp: new Date().toISOString(),
+  });
+};
+app.get("/health", healthHandler);
+app.get("/api/health", healthHandler);
 
 // Unified Innovation Academy ESM Sub-Router (lazy-loaded once)
 let academyRouterPromise = null;
@@ -231,14 +255,28 @@ app.use((req, res) => {
   });
 });
 
+// Central Express error handler
+app.use((err, req, res, next) => {
+  logger.error({ err, method: req.method, path: req.originalUrl }, "Unhandled Express error");
+  if (res.headersSent) return next(err);
+  const status = err.status || err.statusCode || 500;
+  res.status(status).json({
+    success: false,
+    message:
+      status >= 500 && process.env.NODE_ENV === "production"
+        ? "Internal server error"
+        : err.message || "Internal server error",
+  });
+});
+
 const PORT = process.env.EVENTS_PORT || process.env.PORT || 5000;
 
 // Start server locally when not running inside Vercel serverless runtime
 if (!process.env.VERCEL) {
-  const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  const server = app.listen(PORT, () => logger.info({ port: PORT }, `Server running on port ${PORT}`));
   server.timeout = 300000; // 5 minutes timeout for large video uploads
   server.keepAliveTimeout = 65000;
-  connectDB().catch((err) => console.log("MongoDB initial connection error:", err.message));
+  connectDB().catch((err) => logger.warn({ err: err.message }, "MongoDB initial connection error"));
 }
 
 module.exports = app;

@@ -67,6 +67,7 @@ export default function AdminLayout() {
                 src="/innovation-academy/trace-logo-white.png"
                 alt="TRACE Innovation Academy"
                 className="h-8 w-auto object-contain"
+                loading="lazy" decoding="async"
               />
             </Link>
 

@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import EditEventModal from './modals/EditEventModal';
-import AddVenueModal, { PRESET_BRANCHES } from './modals/AddVenueModal';
-import CreateEventPage from './CreateEventPage';
-import CloudinaryUploader from './CloudinaryUploader';
-import { notifyEventUpdated, notifyVenueUpdated, optimizeImageUrl, DEFAULT_EVENT_BANNER, getSpaceTypes, getSpaceTypeIcon, AVAILABLE_SPACE_TYPES, isWesternSpace } from '../utils/eventUtils';
+import { notifyEventUpdated, notifyVenueUpdated, optimizeImageUrl, DEFAULT_EVENT_BANNER, PRESET_BRANCHES, getSpaceTypes, getSpaceTypeIcon, AVAILABLE_SPACE_TYPES, isWesternSpace } from '../utils/eventUtils';
+import { cachedFetchJson } from '../../../common/apiCache';
+
+const EditEventModal = React.lazy(() => import('./modals/EditEventModal'));
+const AddVenueModal = React.lazy(() => import('./modals/AddVenueModal'));
+const CreateEventPage = React.lazy(() => import('./CreateEventPage'));
+const CloudinaryUploader = React.lazy(() => import('./CloudinaryUploader'));
 
 export default function AdminDashboardPage({
   currentUser,
@@ -272,7 +274,7 @@ export default function AdminDashboardPage({
 
   const isAdmin = currentUser && (currentUser.role === 'admin' || currentUser.role === 'super_admin' || currentUser.role === 'branch_admin' || currentUser.email === 'admin@trace.lk' || currentUser.isAdmin);
 
-  const fetchDashboardData = async (silent = false) => {
+  const fetchDashboardData = async (silent = false, bustCache = true) => {
     // Only show blocking spinner if cache is completely empty
     if (!silent && events.length === 0 && registrations.length === 0) {
       setLoading(true);
@@ -285,15 +287,12 @@ export default function AdminDashboardPage({
       // Execute all 6 dashboard fetches in parallel for instant 0ms/fast load
       const [eventsResult, regsResult, venuesResult, bookingsResult, usersResult, heroResult] =
         await Promise.allSettled([
-          fetch(`/api/events?_t=${Date.now()}`, {
-            headers: { ...headers, 'Cache-Control': 'no-cache, no-store' },
-            cache: 'no-store',
-          }).then((r) => r.json()),
-          fetch('/api/registrations', { headers }).then((r) => r.json()),
-          fetch('/api/venues', { headers }).then((r) => r.json()),
-          fetch('/api/venue-bookings', { headers }).then((r) => r.json()),
-          fetch('/api/auth/users', { headers }).then((r) => r.json()),
-          fetch('/api/settings/hero').then((r) => r.json()),
+          cachedFetchJson('/api/events', { headers, ttlMs: 30000, bustCache }),
+          cachedFetchJson('/api/registrations', { headers, ttlMs: 15000, bustCache }),
+          cachedFetchJson('/api/venues', { headers, ttlMs: 30000, bustCache }),
+          cachedFetchJson('/api/venue-bookings', { headers, ttlMs: 15000, bustCache }),
+          cachedFetchJson('/api/auth/users', { headers, ttlMs: 15000, bustCache }),
+          cachedFetchJson('/api/settings/hero', { ttlMs: 60000 }),
         ]);
 
       // 1. Events
@@ -1874,7 +1873,7 @@ export default function AdminDashboardPage({
                                   {photoIdx === 0 ? 'Photo 1 (Cover)' : `Photo ${photoIdx + 1}`}
                                 </div>
                                 <div className="hero-photo-manage-img-box">
-                                  <img src={photoUrl} alt={`Photo ${photoIdx + 1}`} loading="lazy" />
+                                  <img src={photoUrl} alt={`Photo ${photoIdx + 1}`} loading="lazy" decoding="async" />
                                 </div>
                                 <div className="hero-photo-manage-actions">
                                   <button
@@ -1946,19 +1945,21 @@ export default function AdminDashboardPage({
                         >
                           1. Upload Video from Computer
                         </label>
-                        <CloudinaryUploader
-                          accept="video/*"
-                          label="Upload Custom Video"
-                          onUploadSuccess={(url) => {
-                            const updated = {
-                              ...heroSettings,
-                              heroVideoUrl: url,
-                              heroMediaType: 'video',
-                            };
-                            setHeroSettings(updated);
-                            handleSaveHeroSettings(updated);
-                          }}
-                        />
+                        <React.Suspense fallback={<div style={{ fontSize: '0.82rem', color: '#64748b' }}>Loading uploader...</div>}>
+                          <CloudinaryUploader
+                            accept="video/*"
+                            label="Upload Custom Video"
+                            onUploadSuccess={(url) => {
+                              const updated = {
+                                ...heroSettings,
+                                heroVideoUrl: url,
+                                heroMediaType: 'video',
+                              };
+                              setHeroSettings(updated);
+                              handleSaveHeroSettings(updated);
+                            }}
+                          />
+                        </React.Suspense>
                       </div>
 
                       {/* Direct Video URL input */}
@@ -2210,6 +2211,7 @@ export default function AdminDashboardPage({
                                 transition: 'opacity 0.8s ease-in-out',
                                 zIndex: pIdx === heroMockupSlideIndex ? 1 : 0,
                               }}
+                              loading="lazy" decoding="async"
                             />
                           ))}
                           {heroPhotosList.length > 1 && (
@@ -2777,6 +2779,7 @@ export default function AdminDashboardPage({
                                       border: '2px solid #eef2ff',
                                       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06)',
                                     }}
+                                    loading="lazy" decoding="async" width={40} height={40}
                                   />
                                   <div>
                                     <div style={{ color: '#0f172a', fontWeight: '700', fontSize: '0.94rem' }}>{u.name}</div>
@@ -3100,6 +3103,7 @@ export default function AdminDashboardPage({
                                 const fallback = e.currentTarget.parentElement?.querySelector('.admin-venue-no-image-banner');
                                 if (fallback) fallback.style.display = 'flex';
                               }}
+                              loading="lazy" decoding="async"
                             />
                           ) : null}
                           <div
@@ -3811,6 +3815,7 @@ export default function AdminDashboardPage({
                                     e.target.onerror = null;
                                     e.target.src = DEFAULT_EVENT_BANNER;
                                   }}
+                                  decoding="async"
                                 />
                                 <div>
                                   <div className="event-cell-title">{evt.title}</div>
@@ -4051,6 +4056,7 @@ export default function AdminDashboardPage({
                                     e.target.onerror = null;
                                     e.target.src = DEFAULT_EVENT_BANNER;
                                   }}
+                                  decoding="async"
                                 />
                                 <div>
                                   <div className="event-cell-title">{evt.title}</div>
@@ -4409,52 +4415,60 @@ export default function AdminDashboardPage({
 
       {/* Create Event Professional Modal Overlay */}
       {activeMenu === 'create-event' && (
-        <CreateEventPage
-          onCancel={() => setActiveMenu('events')}
-          onEventCreated={(newEvent) => {
-            if (newEvent && newEvent._id) {
-              setEvents((prev) => [newEvent, ...prev]);
-            }
-            if (onEventCreated) onEventCreated(newEvent);
-            fetchDashboardData();
-            setActiveMenu('events');
-          }}
-          showToast={showToast}
-          currentUser={currentUser}
-        />
+        <React.Suspense fallback={<div className="modal-overlay"><div style={{ color: '#fff', fontWeight: 600 }}>Loading editor...</div></div>}>
+          <CreateEventPage
+            onCancel={() => setActiveMenu('events')}
+            onEventCreated={(newEvent) => {
+              if (newEvent && newEvent._id) {
+                setEvents((prev) => [newEvent, ...prev]);
+              }
+              if (onEventCreated) onEventCreated(newEvent);
+              fetchDashboardData();
+              setActiveMenu('events');
+            }}
+            showToast={showToast}
+            currentUser={currentUser}
+          />
+        </React.Suspense>
       )}
 
       {/* Edit Event Modal */}
-      <EditEventModal
-        isOpen={Boolean(editingEvent)}
-        onClose={() => setEditingEvent(null)}
-        event={editingEvent}
-        token={token || localStorage.getItem('eventhub_token')}
-        currentUser={currentUser}
-        onEventUpdated={(updatedEvent) => {
-          const targetId = String(updatedEvent?._id || updatedEvent?.id || '');
-          if (targetId) {
-            setEvents((prev) => {
-              const next = prev.map((e) =>
-                String(e._id || e.id) === targetId ? { ...e, ...updatedEvent } : e
-              );
-              try {
-                sessionStorage.setItem('eventhub_admin_cached_events', JSON.stringify(next));
-                sessionStorage.setItem('eventhub_cached_events', JSON.stringify(next));
-                localStorage.setItem('eventhub_cached_events', JSON.stringify(next));
-              } catch (e) { }
-              return next;
-            });
-          }
-          if (onEventUpdated) onEventUpdated(updatedEvent);
-          fetchDashboardData(true);
-        }}
-        showToast={showToast}
-      />
+      {Boolean(editingEvent) && (
+        <React.Suspense fallback={null}>
+          <EditEventModal
+            isOpen={Boolean(editingEvent)}
+            onClose={() => setEditingEvent(null)}
+            event={editingEvent}
+            token={token || localStorage.getItem('eventhub_token')}
+            currentUser={currentUser}
+            onEventUpdated={(updatedEvent) => {
+              const targetId = String(updatedEvent?._id || updatedEvent?.id || '');
+              if (targetId) {
+                setEvents((prev) => {
+                  const next = prev.map((e) =>
+                    String(e._id || e.id) === targetId ? { ...e, ...updatedEvent } : e
+                  );
+                  try {
+                    sessionStorage.setItem('eventhub_admin_cached_events', JSON.stringify(next));
+                    sessionStorage.setItem('eventhub_cached_events', JSON.stringify(next));
+                    localStorage.setItem('eventhub_cached_events', JSON.stringify(next));
+                  } catch (e) { }
+                  return next;
+                });
+              }
+              if (onEventUpdated) onEventUpdated(updatedEvent);
+              fetchDashboardData(true);
+            }}
+            showToast={showToast}
+          />
+        </React.Suspense>
+      )}
 
       {/* Add / Edit Venue Modal */}
-      <AddVenueModal
-        isOpen={showAddVenueModal || Boolean(editingVenue)}
+      {(showAddVenueModal || Boolean(editingVenue)) && (
+        <React.Suspense fallback={null}>
+          <AddVenueModal
+            isOpen={showAddVenueModal || Boolean(editingVenue)}
         onClose={() => {
           setShowAddVenueModal(false);
           setEditingVenue(null);
@@ -4475,6 +4489,8 @@ export default function AdminDashboardPage({
         }}
         showToast={showToast}
       />
+        </React.Suspense>
+      )}
       {/* Assign Branch Admin Modal */}
       {showAddBranchAdminModal && (
         <div className="modal-overlay" onClick={() => setShowAddBranchAdminModal(false)}>
@@ -4694,6 +4710,7 @@ export default function AdminDashboardPage({
                       src={editingAdminForm.avatar}
                       alt="Admin Avatar Preview"
                       style={{ width: '54px', height: '54px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #5d4df6' }}
+                      loading="lazy" decoding="async" width={54} height={54}
                     />
                     <div>
                       <span style={{ fontSize: '0.78rem', color: '#059669', fontWeight: '700', display: 'block' }}>✓ Current Avatar Loaded</span>
@@ -4708,11 +4725,13 @@ export default function AdminDashboardPage({
                   </div>
                 )}
 
-                <CloudinaryUploader
-                  accept="image/*"
-                  label="Upload New Admin Photo to Cloudinary"
-                  onUploadSuccess={(url) => setEditingAdminForm({ ...editingAdminForm, avatar: url })}
-                />
+                <React.Suspense fallback={<div style={{ fontSize: '0.82rem', color: '#64748b' }}>Loading uploader...</div>}>
+                  <CloudinaryUploader
+                    accept="image/*"
+                    label="Upload New Admin Photo to Cloudinary"
+                    onUploadSuccess={(url) => setEditingAdminForm({ ...editingAdminForm, avatar: url })}
+                  />
+                </React.Suspense>
 
                 <div style={{ marginTop: '0.5rem' }}>
                   <label style={{ fontSize: '0.78rem', color: '#64748b', marginBottom: '0.25rem', display: 'block' }}>Or Paste Image URL directly:</label>

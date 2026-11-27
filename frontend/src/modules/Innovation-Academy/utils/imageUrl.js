@@ -4,8 +4,13 @@ const DEFAULT_FALLBACK_IMAGE =
 /**
  * Formats image URL to ensure compatibility across cloud CDN and backend
  */
-export function formatImageUrl(url) {
+export function formatImageUrl(url, width = 900) {
   if (!url) return DEFAULT_FALLBACK_IMAGE;
+
+  // Cloudinary auto WebP/AVIF format & quality
+  if (url.includes('cloudinary.com') && url.includes('/upload/') && !url.includes('/f_auto,q_auto')) {
+    return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width},c_limit/`);
+  }
 
   // Fully-qualified URLs (Cloudinary, Unsplash, HTTPS external)
   if (

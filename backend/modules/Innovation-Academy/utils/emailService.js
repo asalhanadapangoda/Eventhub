@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import logger from '../../../common/logger.js';
 
 /**
  * Configure Nodemailer transport using environment variables
@@ -61,21 +62,19 @@ export const sendEmailNotification = async ({ to, subject, html, text, replyTo }
       if (replyTo) mailOptions.replyTo = replyTo;
 
       const info = await transporter.sendMail(mailOptions);
-      console.log(`[Email Service] Dispatched live email to ${to} with subject: "${subject}" (MessageId: ${info.messageId})`);
+      logger.info({ to, subject, messageId: info.messageId }, '[Email Service] Dispatched live email');
       return { success: true, mode: 'live', recipient: to, messageId: info.messageId };
     } catch (err) {
-      console.error(`[Email Service ERROR] Failed to send email to ${to}:`, err.message);
+      logger.error({ to, err: err.message }, '[Email Service ERROR] Failed to send email');
       return { success: false, mode: 'error', error: err.message };
     }
   }
 
   // Graceful development / demo logger
-  console.log('---------------------------------------------------------');
-  console.log(`[TRACE Notification System - Mock Email Dispatched]`);
-  console.log(`To: ${to}`);
-  console.log(`Subject: ${subject}`);
-  console.log(`Message: ${text || html?.substring(0, 150)}...`);
-  console.log('---------------------------------------------------------');
+  logger.info(
+    { to, subject, preview: (text || html?.substring(0, 150) || '') },
+    '[TRACE Notification System - Mock Email Dispatched]'
+  );
 
   return { success: true, mode: 'mock', recipient: to };
 };
@@ -224,17 +223,17 @@ export const sendPasswordResetEmail = async ({ to, name, code }) => {
         html,
         text: `Hello ${name || 'User'},\n\nYour TRACE Innovation Academy password reset code is: ${code}\n\nThis code will expire in 15 minutes.\n\nIf you did not request this, please ignore this email.`,
       });
-      console.log(`[SMTP] Password reset email sent successfully to ${to}. MessageId: ${info.messageId}`);
+      logger.info({ to, messageId: info.messageId }, '[SMTP] Password reset email sent successfully');
       return { sent: true, messageId: info.messageId };
     } catch (err) {
-      console.error(`[SMTP ERROR] Failed to send email to ${to}:`, err.message);
+      logger.error({ to, err: err.message }, '[SMTP ERROR] Failed to send email');
       return {
         sent: false,
         error: `Email delivery failed: ${err.message}. Please check your SMTP settings in server/.env.`,
       };
     }
   } else {
-    console.warn(`[SMTP NOTICE] SMTP credentials not configured in server/.env. Cannot send live email.`);
+    logger.warn('[SMTP NOTICE] SMTP credentials not configured in server/.env. Cannot send live email.');
     return {
       sent: false,
       error: 'SMTP email credentials are not configured in server/.env. Please set SMTP_USER and SMTP_PASS (e.g. Gmail App Password).',

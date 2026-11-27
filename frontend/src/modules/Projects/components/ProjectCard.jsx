@@ -15,6 +15,7 @@ export function ProjectCard({ project }) {
           className="project-card-img"
           style={project.imagePosition ? { objectPosition: project.imagePosition } : undefined}
           loading="lazy"
+          decoding="async"
         />
         <div className="project-card-overlay" />
         <span className="project-card-badge">{project.category}</span>

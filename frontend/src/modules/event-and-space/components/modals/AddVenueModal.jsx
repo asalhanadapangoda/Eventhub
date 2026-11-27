@@ -1,19 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import RichTextEditor from '../RichTextEditor';
-import { notifyVenueUpdated, AVAILABLE_SPACE_TYPES, normalizeSingleSpaceType } from '../../utils/eventUtils';
+import { notifyVenueUpdated, AVAILABLE_SPACE_TYPES, PRESET_BRANCHES, normalizeSingleSpaceType } from '../../utils/eventUtils';
 
-export { AVAILABLE_SPACE_TYPES };
-
-export const PRESET_BRANCHES = [
-  'TRACE Expert City Colombo 10',
-  'TRACE Coworking Colombo 02',
-  'TRACE Coworking Jaffna City',
-  'TRACE BREAD Center, Makandura',
-  'TRACE Creators Space, Rathnapura',
-  'Innovator Park - Kandy',
-  'ASAYA Workation By the Sea',
-  'UVA Co-Working Space',
-];
+export { AVAILABLE_SPACE_TYPES, PRESET_BRANCHES };
 
 export default function AddVenueModal({
   isOpen,
@@ -1366,7 +1355,7 @@ export default function AddVenueModal({
                           }}
                           title={isCover ? 'Primary Cover Photo' : 'Click to make this the main Cover Photo'}
                         >
-                          <img src={url} alt={`Preview ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <img src={url} alt={`Preview ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" decoding="async" />
                           {isCover && (
                             <span style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', color: '#fff', fontSize: '9px', fontWeight: 'bold', textAlign: 'center', padding: '2px 0', letterSpacing: '0.5px' }}>
                               ★ MAIN COVER

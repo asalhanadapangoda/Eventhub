@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import logger from '../../../common/logger.js';
 import User from '../models/User.js';
 import Program from '../models/Program.js';
 import Workshop from '../models/Workshop.js';
@@ -12,7 +13,7 @@ dotenv.config();
 
 export const seedData = async () => {
   try {
-    console.log('[Seeder] Initializing database seeding for TRACE Sri Lanka...');
+    logger.info('[Seeder] Initializing database seeding for TRACE Sri Lanka...');
 
     // Clear existing collections
     await User.deleteMany();
@@ -57,7 +58,7 @@ export const seedData = async () => {
       avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80',
     });
 
-    console.log('[Seeder] Users created (Admin: admin@trace.lk / admin123, Participant: kavindu@eng.mrt.ac.lk / user123)');
+    logger.info('[Seeder] Users created');
 
     // 2. Create the TWO Main Programs
     const program1 = await Program.create({
@@ -183,7 +184,7 @@ export const seedData = async () => {
       cohort: 'Cohort 08 (Execution Phase)',
     });
 
-    console.log('[Seeder] Programs created (Program 01 & Program 02)');
+    logger.info('[Seeder] Programs created (Program 01 & Program 02)');
 
     // 3. Create Workshops connected to their parent programs
     // PROGRAM 01 WORKSHOPS
@@ -411,7 +412,7 @@ export const seedData = async () => {
       },
     ]);
 
-    console.log('[Seeder] Workshops created for both programs');
+    logger.info('[Seeder] Workshops created for both programs');
 
     // 4. Create Program Registrations (enrolling participant in Program 01)
     await ProgramRegistration.create({
@@ -448,7 +449,7 @@ export const seedData = async () => {
       reviewedAt: new Date(),
     });
 
-    console.log('[Seeder] Program Registrations seeded (automatically granting workshop access)');
+    logger.info('[Seeder] Program Registrations seeded (automatically granting workshop access)');
 
     // 5. Create Sample Industry Visit Requests
     await VisitRequest.create([
@@ -523,7 +524,7 @@ export const seedData = async () => {
       },
     ]);
 
-    console.log('[Seeder] Industry Visit Requests seeded');
+    logger.info('[Seeder] Industry Visit Requests seeded');
 
     // 6. Create Contact Messages
     await ContactMessage.create([
@@ -549,10 +550,10 @@ export const seedData = async () => {
     ]);
 
     // 7. Notifications (No demo notifications - real notifications only)
-    console.log('[Seeder] Notifications and Contact Messages seeded successfully!');
+    logger.info('[Seeder] Notifications and Contact Messages seeded successfully!');
     return true;
   } catch (error) {
-    console.error('[Seeder Error]:', error);
+    logger.error({ err: error.message }, '[Seeder Error]');
     return false;
   }
 };
@@ -563,13 +564,13 @@ if (process.argv[1]?.includes('seeder.js')) {
   mongoose
     .connect(mongoURI)
     .then(async () => {
-      console.log('Connected to MongoDB. Running seeder...');
+      logger.info('Connected to MongoDB. Running seeder...');
       await seedData();
-      console.log('Seeding complete. Exiting...');
+      logger.info('Seeding complete. Exiting...');
       process.exit(0);
     })
     .catch((err) => {
-      console.error('Seeder connection error:', err);
+      logger.error({ err: err.message }, 'Seeder connection error');
       process.exit(1);
     });
 }

@@ -63,7 +63,7 @@ export default {
         background: '#faf8ff',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         display: ['Plus Jakarta Sans', 'sans-serif'],
         heading: ['Outfit', 'Plus Jakarta Sans', 'Inter', 'sans-serif'],
       },

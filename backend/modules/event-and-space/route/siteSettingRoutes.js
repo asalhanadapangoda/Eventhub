@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const SiteSetting = require("../model/SiteSetting");
 const { protect, authorize } = require("../middleware/authMiddleware");
+const logger = require("../../../common/logger");
 
 // Default Fallback Hero Configuration (Exact original video & text)
 const DEFAULT_HERO_SETTINGS = {
@@ -21,6 +22,8 @@ let cachedHeroSettings = null;
 
 // GET /api/settings/hero - Public endpoint for frontend HeroSection
 router.get("/hero", async (req, res) => {
+  res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+
   if (cachedHeroSettings) {
     return res.json({ success: true, data: cachedHeroSettings });
   }
@@ -33,7 +36,7 @@ router.get("/hero", async (req, res) => {
     cachedHeroSettings = setting;
     res.json({ success: true, data: setting });
   } catch (error) {
-    console.error("Error fetching hero settings:", error);
+    logger.error({ err: error.message }, "Error fetching hero settings");
     res.json({ success: true, data: cachedHeroSettings || DEFAULT_HERO_SETTINGS });
   }
 });
@@ -64,7 +67,14 @@ router.put("/hero", protect, authorize("admin", "super_admin", "branch_admin"), 
     await setting.save();
     cachedHeroSettings = setting.toObject ? setting.toObject() : setting;
 
-    console.log(`[SETTINGS] Hero settings updated: mediaType=${setting.heroMediaType}, imagesCount=${setting.heroImages ? setting.heroImages.length : 0}, videoUrl=${setting.heroVideoUrl}`);
+    logger.info(
+      {
+        mediaType: setting.heroMediaType,
+        imagesCount: setting.heroImages ? setting.heroImages.length : 0,
+        videoUrl: setting.heroVideoUrl,
+      },
+      "[SETTINGS] Hero settings updated"
+    );
 
     res.json({
       success: true,
@@ -72,7 +82,7 @@ router.put("/hero", protect, authorize("admin", "super_admin", "branch_admin"), 
       data: setting,
     });
   } catch (error) {
-    console.error("Error updating hero settings:", error);
+    logger.error({ err: error.message }, "Error updating hero settings");
     res.status(500).json({ success: false, message: "Failed to update hero settings", error: error.message });
   }
 });

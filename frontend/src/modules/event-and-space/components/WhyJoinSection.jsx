@@ -38,6 +38,7 @@ export default function WhyJoinSection({ onNavigateSpaces }) {
                   alt="TRACE Spaces Island-Wide Network across Sri Lanka" 
                   className="trace-map-image"
                   loading="lazy"
+                  decoding="async"
                 />
                 <span className="trace-map-zoom-hint">
                   <i className="fa-solid fa-magnifying-glass-plus"></i> Click to Zoom
@@ -128,6 +129,7 @@ export default function WhyJoinSection({ onNavigateSpaces }) {
                 src={traceSpacesMap} 
                 alt="TRACE Spaces Map Full" 
                 style={{ maxWidth: '100%', maxHeight: '78vh', objectFit: 'contain', borderRadius: '12px' }}
+                loading="lazy" decoding="async"
               />
             </div>
           </div>

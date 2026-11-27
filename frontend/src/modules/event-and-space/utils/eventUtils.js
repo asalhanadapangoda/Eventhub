@@ -1,3 +1,5 @@
+import { invalidateApiCache } from '../../../common/apiCache';
+
 /**
  * Calculates the exact end DateTime of an event based on its date and time string.
  * @param {Date|string} dateVal - Event date (e.g. '2026-08-25' or ISO string)
@@ -107,6 +109,7 @@ export function stripHtml(html) {
 export function notifyEventUpdated(detail) {
   if (!detail) return;
   try {
+    invalidateApiCache('/api/events');
     // 1. In-tab custom event
     window.dispatchEvent(new CustomEvent('eventhub_events_updated', { detail }));
 
@@ -134,6 +137,7 @@ export function notifyEventUpdated(detail) {
 export function notifyVenueUpdated(detail) {
   if (!detail) return;
   try {
+    invalidateApiCache('/api/venues');
     sessionStorage.removeItem('eventhub_cached_venues');
     window.dispatchEvent(new CustomEvent('eventhub_venues_updated', { detail }));
     if (typeof BroadcastChannel !== 'undefined') {
@@ -299,6 +303,17 @@ export function getEventSeriesCategory(evt) {
 /**
  * Standard Space Types across TRACE Venues & Facilities
  */
+export const PRESET_BRANCHES = [
+  'TRACE Expert City Colombo 10',
+  'TRACE Coworking Colombo 02',
+  'TRACE Coworking Jaffna City',
+  'TRACE BREAD Center, Makandura',
+  'TRACE Creators Space, Rathnapura',
+  'Innovator Park - Kandy',
+  'ASAYA Workation By the Sea',
+  'UVA Co-Working Space',
+];
+
 export const AVAILABLE_SPACE_TYPES = [
   'Meeting Rooms',
   'Conference Hall',

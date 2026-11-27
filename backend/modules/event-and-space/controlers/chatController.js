@@ -3,6 +3,7 @@ const Venue = require("../model/Venue");
 const Registration = require("../model/Registration");
 const { getEventsCache } = require("./eventController");
 const { getVenuesCache } = require("./venueController");
+const logger = require("../../../common/logger");
 
 /**
  * Helper to call Google Gemini API if GEMINI_API_KEY is defined in environment.
@@ -65,15 +66,15 @@ Instructions:
           const botReply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
           if (botReply) return botReply;
         } else {
-          console.warn(`Gemini API ${modelName} returned status:`, response.status);
+          logger.warn({ modelName, status: response.status }, "Gemini API returned non-OK status");
         }
       } catch (err) {
-        console.warn(`Error with Gemini ${modelName}:`, err.message);
+        logger.warn({ modelName, err: err.message }, "Error with Gemini model");
       }
     }
     return null;
   } catch (err) {
-    console.error("Gemini API error:", err.message);
+    logger.error({ err: err.message }, "Gemini API error");
     return null;
   }
 }
@@ -216,7 +217,7 @@ async function generateSmartFallbackResponse(userPrompt, upcomingEvents, allEven
       };
     }
   } catch (err) {
-    console.error("DB Search error:", err);
+    logger.error({ err: err.message }, "DB Search error");
   }
 
   // If query is an unknown question and no DB matches found
@@ -304,7 +305,7 @@ REAL MONGO DATABASE KNOWLEDGE:
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Chat Controller Error:", error);
+    logger.error({ err: error.message }, "Chat Controller Error");
     return res.status(500).json({
       success: false,
       message: "Server error processing chat message.",

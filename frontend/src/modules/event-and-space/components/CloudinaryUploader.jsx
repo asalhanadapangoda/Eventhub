@@ -168,7 +168,7 @@ export default function CloudinaryUploader({
           {resourceType === 'video' ? (
             <video src={previewUrl} controls style={{ width: '100%', maxHeight: '250px', borderRadius: '8px', objectFit: 'cover' }} />
           ) : (
-            <img src={previewUrl} alt="Uploaded Media Preview" style={{ width: '100%', maxHeight: '250px', borderRadius: '8px', objectFit: 'cover' }} />
+            <img src={previewUrl} alt="Uploaded Media Preview" style={{ width: '100%', maxHeight: '250px', borderRadius: '8px', objectFit: 'cover' }} loading="lazy" decoding="async" />
           )}
           
           <input 

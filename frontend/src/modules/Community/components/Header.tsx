@@ -23,6 +23,7 @@ export const Header: React.FC = () => {
                   src="/community/trace-logo.png"
                   alt="TRACE Logo"
                   className="w-full h-full object-contain"
+                  loading="eager" decoding="async"
                 />
               </div>
               <div className="flex flex-col">

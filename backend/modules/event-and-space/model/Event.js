@@ -90,6 +90,8 @@ const eventSchema = new mongoose.Schema(
 
 // High Performance Query Indexes
 eventSchema.index({ status: 1, date: 1 });
+eventSchema.index({ date: 1 });
+eventSchema.index({ status: 1, createdAt: -1 });
 eventSchema.index({ category: 1 });
 
 module.exports = mongoose.model("Event", eventSchema);

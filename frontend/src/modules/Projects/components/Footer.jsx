@@ -35,7 +35,7 @@ export function Footer() {
             {/* Column 1: Brand & Description */}
             <div className="footer-brand-col">
               <Link to="/projects" className="footer-logo-wrap" aria-label="TRACE Sri Lanka Home">
-                <img src={traceLogo} alt="TRACE Sri Lanka" className="footer-logo-img" />
+                <img src={traceLogo} alt="TRACE Sri Lanka" className="footer-logo-img" loading="lazy" decoding="async" />
                 <span className="footer-logo-tagline">PROJECTS &amp; INITIATIVES</span>
               </Link>
 

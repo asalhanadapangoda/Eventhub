@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const logger = require("./logger");
 
 /**
  * Send Email Notification helper using configured Gmail SMTP or Ethereal fallback
@@ -16,7 +17,7 @@ const sendEmail = async ({ to, subject, html, replyTo }) => {
       !cleanUser.includes("your_gmail_address");
 
     if (isRealConfigured) {
-      console.log(`[SMTP] Dispatching email to: ${to} | Subject: ${subject}`);
+      logger.info({ to, subject }, "[SMTP] Dispatching email");
       transporter = nodemailer.createTransport({
         host: process.env.EMAIL_HOST || "smtp.gmail.com",
         port: parseInt(process.env.EMAIL_PORT || "587", 10),
@@ -27,7 +28,7 @@ const sendEmail = async ({ to, subject, html, replyTo }) => {
         },
       });
     } else {
-      console.log(`[SMTP Test] Dispatching test email via Ethereal to: ${to}`);
+      logger.info({ to }, "[SMTP Test] Dispatching test email via Ethereal");
       const testAccount = await nodemailer.createTestAccount();
       transporter = nodemailer.createTransport({
         host: "smtp.ethereal.email",
@@ -55,13 +56,13 @@ const sendEmail = async ({ to, subject, html, replyTo }) => {
 
     if (!isRealConfigured) {
       const previewUrl = nodemailer.getTestMessageUrl(info);
-      console.log(`Preview Email URL: ${previewUrl}`);
+      logger.info({ previewUrl }, "Preview Email URL");
       return { success: true, previewUrl };
     }
 
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error("[SMTP Error] Failed to send email:", error.message);
+    logger.error({ err: error.message }, "[SMTP Error] Failed to send email");
     return { success: false, error: error.message };
   }
 };

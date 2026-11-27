@@ -1,5 +1,6 @@
 const Event = require("../model/Event");
 const mongoose = require("mongoose");
+const logger = require("../../../common/logger");
 
 // Helper function to calculate exact end date and time of an event
 const getEventEndDateTime = (dateVal, timeStr) => {
@@ -107,18 +108,16 @@ const saveBackupAsync = () => {
         fs.mkdirSync(dataDir, { recursive: true });
       }
       fs.writeFile(backupFilePath, JSON.stringify(eventsCache, null, 2), (err) => {
-        if (err) console.warn("Failed to save events backup:", err.message);
+        if (err) logger.warn({ err: err.message }, "Failed to save events backup");
       });
     } catch (err) {
-      console.warn("Save backup error:", err.message);
+      logger.warn({ err: err.message }, "Save backup error");
     }
   }, 2000);
 };
 
-// Static uploads directories
-
+// Static uploads directory
 const uploadsDir = path.join(__dirname, "../../../public/uploads");
-const frontendUploadsDir = path.join(__dirname, "../../../../frontend/public/uploads");
 
 // Helper to save base64 data to static upload file so API and cache remain ultra-lightweight
 const saveBase64ToFile = (dataUri, prefix) => {
@@ -134,11 +133,9 @@ const saveBase64ToFile = (dataUri, prefix) => {
     const buffer = Buffer.from(match[2], "base64");
     if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
     fs.writeFileSync(path.join(uploadsDir, filename), buffer);
-    if (!fs.existsSync(frontendUploadsDir)) fs.mkdirSync(frontendUploadsDir, { recursive: true });
-    fs.writeFileSync(path.join(frontendUploadsDir, filename), buffer);
     return `/uploads/${filename}`;
   } catch (err) {
-    console.warn("Error saving base64 to file:", err.message);
+    logger.warn({ err: err.message }, "Error saving base64 to file");
     return dataUri;
   }
 };
@@ -197,7 +194,7 @@ const seedInitialEvents = async () => {
       }
     }
   } catch (e) {
-    console.warn("Local events backup notice:", e.message);
+    logger.warn({ err: e.message }, "Local events backup notice");
   }
 
   // 2. Fetch full events from MongoDB
@@ -209,15 +206,13 @@ const seedInitialEvents = async () => {
       saveBackupAsync();
     }
   } catch (err) {
-    console.warn("Initial events database load notice:", err.message);
+    logger.warn({ err: err.message }, "Initial events database load notice");
   }
 };
 
 // GET /api/events?status=upcoming|past
 const getEvents = async (req, res) => {
-  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-  res.setHeader("Pragma", "no-cache");
-  res.setHeader("Expires", "0");
+  res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
   const { status, category } = req.query;
 
   // Format list: lightweight response with clean static URLs
@@ -284,7 +279,7 @@ const getEvents = async (req, res) => {
     const result = formatList(eventsCache);
     return res.json({ success: true, count: result.length, data: result });
   } catch (error) {
-    console.warn("Serving events from resilient fallback cache:", error.message);
+    logger.warn({ err: error.message }, "Serving events from resilient fallback cache");
     const result = formatList(eventsCache);
     return res.json({ success: true, count: result.length, data: result });
   }
@@ -292,9 +287,7 @@ const getEvents = async (req, res) => {
 
 // GET /api/events/:id
 const getEventById = async (req, res) => {
-  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-  res.setHeader("Pragma", "no-cache");
-  res.setHeader("Expires", "0");
+  res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
   const eventId = String(req.params.id);
 
   // 1. First check in-memory cache: if found, return immediately for 0ms loading
@@ -313,7 +306,7 @@ const getEventById = async (req, res) => {
       return res.json({ success: true, data: sanitized });
     }
   } catch (error) {
-    console.warn("Direct findById notice:", error.message);
+    logger.warn({ err: error.message }, "Direct findById notice");
   }
 
   return res.status(404).json({ success: false, message: "Event not found" });
@@ -344,7 +337,7 @@ const createEvent = async (req, res) => {
     try {
       await newEvent.save();
     } catch (saveErr) {
-      console.warn("MongoDB event save notice (cached in memory):", saveErr.message);
+      logger.warn({ err: saveErr.message }, "MongoDB event save notice (cached in memory)");
     }
 
     res.status(201).json({ success: true, message: "Event created successfully", data: eventData });
@@ -396,7 +389,7 @@ const updateEvent = async (req, res) => {
         }
       }
     } catch (updateErr) {
-      console.warn("MongoDB update event notice:", updateErr.message);
+      logger.warn({ err: updateErr.message }, "MongoDB update event notice");
     }
 
     const mergedEvent = {
@@ -421,7 +414,7 @@ const updateEvent = async (req, res) => {
 
     return res.json({ success: true, message: "Event updated successfully", data: mergedEvent });
   } catch (error) {
-    console.error("Error in updateEvent:", error);
+    logger.error({ err: error.message }, "Error in updateEvent");
     res.status(500).json({ success: false, message: "Event updated error", data: req.body });
   }
 };
@@ -436,7 +429,7 @@ const deleteEvent = async (req, res) => {
       const Registration = require("../model/Registration");
       await Registration.deleteMany({ eventId: req.params.id });
     } catch (delErr) {
-      console.warn("MongoDB delete event notice:", delErr.message);
+      logger.warn({ err: delErr.message }, "MongoDB delete event notice");
     }
 
     res.json({ success: true, message: "Event deleted successfully" });

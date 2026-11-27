@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import logger from '../../../common/logger.js';
 
 let cachedPromise = null;
 
@@ -14,7 +15,7 @@ export const connectDB = async () => {
 
   const effectiveURI = process.env.MONGO_URI || process.env.MONGODB_URI;
   if (!effectiveURI) {
-    console.warn('[Academy MongoDB] Waiting for unified backend MONGO_URI connection.');
+    logger.warn('[Academy MongoDB] Waiting for unified backend MONGO_URI connection.');
     return null;
   }
 
@@ -23,12 +24,15 @@ export const connectDB = async () => {
       serverSelectionTimeoutMS: 15000,
     })
     .then((conn) => {
-      console.log(`[MongoDB] Academy connected to unified database: ${conn.connection.host} / ${conn.connection.name}`);
+      logger.info(
+        { host: conn.connection.host, db: conn.connection.name },
+        '[MongoDB] Academy connected to unified database'
+      );
       return conn;
     })
     .catch((err) => {
       cachedPromise = null;
-      console.warn(`[MongoDB Warning] Could not connect to unified MongoDB: ${err.message}`);
+      logger.warn({ err: err.message }, '[MongoDB Warning] Could not connect to unified MongoDB');
       return null;
     });
 

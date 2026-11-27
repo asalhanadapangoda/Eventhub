@@ -123,6 +123,16 @@ export default function PastEventsSection({
     });
   }, [allPastEvents, selectedSeriesId, searchQuery, selectedLocation, selectedDate]);
 
+  const homeDisplayEvents = useMemo(() => {
+    if (selectedSeriesId !== 'all') {
+      const targetSeries = SERIES_CATEGORIES.find((s) => s.id === selectedSeriesId);
+      if (targetSeries) {
+        return allPastEvents.filter((e) => targetSeries.match(e)).slice(0, 3);
+      }
+    }
+    return allPastEvents.slice(0, 3);
+  }, [allPastEvents, selectedSeriesId]);
+
   const handleClearFilters = () => {
     setSearchQuery('');
     setSelectedDate('');
@@ -404,6 +414,7 @@ export default function PastEventsSection({
                             e.target.onerror = null;
                             e.target.src = s.defaultCover;
                           }}
+                          decoding="async"
                         />
                         <div className="past-series-card-overlay">
                           <span className="past-series-icon-pill" style={{ background: s.accentColor }}>
@@ -472,6 +483,7 @@ export default function PastEventsSection({
                                 src={optimizeImageUrl(item.coverImage, 800)}
                                 alt={item.title}
                                 loading="lazy"
+                                decoding="async"
                               />
                               <span className={`cat-pill ${badgeClass}`}>{badgeText}</span>
                               <span className="completed-badge-overlay">
@@ -506,16 +518,6 @@ export default function PastEventsSection({
   // ----------------------------------------------------
   // HOME PAGE FEATURED SHOWCASE SECTION VIEW
   // ----------------------------------------------------
-  const homeDisplayEvents = useMemo(() => {
-    if (selectedSeriesId !== 'all') {
-      const targetSeries = SERIES_CATEGORIES.find((s) => s.id === selectedSeriesId);
-      if (targetSeries) {
-        return allPastEvents.filter((e) => targetSeries.match(e)).slice(0, 3);
-      }
-    }
-    return allPastEvents.slice(0, 3);
-  }, [allPastEvents, selectedSeriesId]);
-
   const handleNavigateToPastEvents = (seriesId = 'all') => {
     if (setActiveTab) {
       setActiveTab('past');

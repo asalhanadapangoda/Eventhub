@@ -70,6 +70,7 @@ export const OrganizationCard: React.FC<OrganizationCardProps> = ({
               loading="lazy"
               onError={() => setImageError(true)}
               className="w-full h-full object-contain filter transition-transform duration-200 group-hover:scale-105"
+              decoding="async"
             />
           ) : (
             /* Styled Monogram Fallback */

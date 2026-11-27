@@ -14,6 +14,7 @@ export default function Footer() {
                 src="/innovation-academy/trace-logo-white.png"
                 alt="TRACE Innovation Academy - Powered by T2T"
                 className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-[1.02]"
+                loading="lazy" decoding="async"
               />
             </Link>
 

@@ -1,4 +1,6 @@
+import './index.css';
 import React, { useState, useEffect } from 'react';
+import { cachedFetchJson } from '../../common/apiCache';
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import WhyJoinSection from './components/WhyJoinSection';
@@ -406,19 +408,24 @@ export default function App() {
     }, 5500);
   };
 
-  const fetchEvents = async (silent = false) => {
+  const fetchEvents = async (silent = false, bustCache = false) => {
     if (!silent && events.length === 0) {
       setLoading(true);
     }
     try {
-      const response = await fetch(`/api/events?_t=${Date.now()}`, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          Pragma: 'no-cache',
+      const result = await cachedFetchJson('/api/events', {
+        ttlMs: 60000,
+        bustCache,
+        onRevalidate: (fresh) => {
+          if (fresh.success && Array.isArray(fresh.data)) {
+            setEvents(fresh.data);
+            try {
+              localStorage.setItem('eventhub_cached_events', JSON.stringify(fresh.data));
+              sessionStorage.setItem('eventhub_cached_events', JSON.stringify(fresh.data));
+            } catch (e) { }
+          }
         },
       });
-      const result = await response.json();
       if (result.success && Array.isArray(result.data)) {
         setEvents(result.data);
         try {
@@ -438,8 +445,7 @@ export default function App() {
 
   const prefetchVenues = async () => {
     try {
-      const res = await fetch('/api/venues');
-      const data = await res.json();
+      const data = await cachedFetchJson('/api/venues', { ttlMs: 60000 });
       if (data.success && Array.isArray(data.data)) {
         sessionStorage.setItem('eventhub_cached_venues', JSON.stringify(data.data));
       }
@@ -480,10 +486,7 @@ export default function App() {
     try {
       const headers = { Authorization: `Bearer ${authToken}` };
       Promise.allSettled([
-        fetch(`/api/events?_t=${Date.now()}`, {
-          headers: { ...headers, 'Cache-Control': 'no-cache, no-store' },
-          cache: 'no-store',
-        }).then(r => r.json()).then(d => {
+        cachedFetchJson('/api/events', { headers, ttlMs: 30000 }).then(d => {
           if (d.success && Array.isArray(d.data)) {
             sessionStorage.setItem('eventhub_admin_cached_events', JSON.stringify(d.data));
             sessionStorage.setItem('eventhub_cached_events', JSON.stringify(d.data));

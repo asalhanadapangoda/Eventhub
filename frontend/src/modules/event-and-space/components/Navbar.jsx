@@ -41,7 +41,7 @@ export default function Navbar({
     <header className={`navbar ${isTransparent ? 'navbar-transparent' : 'navbar-solid'} ${isScrolled ? 'navbar-scrolled' : ''}`}>
       <div className="nav-container">
         <div className="brand" onClick={() => { scrollToHero(); closeMobile(); }} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-          <img src={traceLogo} alt="TRACE SPACES" className="trace-logo-img" />
+          <img src={traceLogo} alt="TRACE SPACES" className="trace-logo-img" loading="eager" decoding="async" />
         </div>
 
         {/* Mobile Hamburger Button */}
@@ -129,6 +129,7 @@ export default function Navbar({
                   }
                   alt={currentUser.name}
                   style={{ width: '26px', height: '26px', borderRadius: '50%', objectFit: 'cover' }}
+                  loading="lazy" decoding="async" width={26} height={26}
                 />
                 <span>{currentUser.name}</span>
               </div>

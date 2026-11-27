@@ -258,7 +258,7 @@ export default function MyEventsPage({
                   style={{ cursor: 'pointer' }}
                   title="Click / tap to view event details"
                 >
-                  <img src={item.coverImage} alt={item.title} />
+                  <img src={item.coverImage} alt={item.title} loading="lazy" decoding="async" />
                   <span className="registered-tag-pill">
                     <i className="fa-solid fa-circle-check"></i> Registered
                   </span>

@@ -8,6 +8,8 @@ export default function ImageCarouselSlider({
   style = {},
   children
 }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
   // Extract and normalize image list
   let imgList = [];
   if (Array.isArray(images) && images.length > 0) {
@@ -35,8 +37,6 @@ export default function ImageCarouselSlider({
     }
   }
 
-  const [currentIndex, setCurrentIndex] = useState(0);
-
   const handlePrev = (e) => {
     if (e) e.stopPropagation();
     setCurrentIndex((prev) => (prev === 0 ? imgList.length - 1 : prev - 1));
@@ -56,6 +56,7 @@ export default function ImageCarouselSlider({
         src={activeImage}
         alt={`${alt} slide ${currentIndex + 1}`}
         className="carousel-slide-img"
+        loading="lazy" decoding="async"
       />
 
       {/* Navigation Controls when multiple photos exist */}

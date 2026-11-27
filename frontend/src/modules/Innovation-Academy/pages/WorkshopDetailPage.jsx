@@ -374,6 +374,7 @@ export default function WorkshopDetailPage() {
                         alt={workshop.speakerName}
                         className="w-full h-full object-cover rounded-full"
                         onError={handleImageError}
+                        loading="lazy" decoding="async"
                       />
                     ) : (
                       <User className="w-7 h-7" />

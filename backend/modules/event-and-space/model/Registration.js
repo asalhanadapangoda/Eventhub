@@ -56,5 +56,7 @@ const registrationSchema = new mongoose.Schema(
 // High Performance Query Indexes
 registrationSchema.index({ eventId: 1 });
 registrationSchema.index({ email: 1 });
+registrationSchema.index({ eventId: 1, email: 1 }, { unique: true });
+registrationSchema.index({ status: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Registration", registrationSchema);

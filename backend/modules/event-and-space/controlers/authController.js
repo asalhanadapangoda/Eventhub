@@ -1,6 +1,8 @@
 const User = require("../model/User");
 const { signToken } = require("../middleware/authMiddleware");
 const crypto = require("crypto");
+const logger = require("../../../common/logger");
+const { parsePagination } = require("../../../common/pagination");
 
 // POST /api/auth/signup
 const signupUser = async (req, res) => {
@@ -203,14 +205,14 @@ const changePassword = async (req, res) => {
     user.password = newPassword;
     await user.save();
 
-    console.log(`[AUTH] Password changed successfully for ${user.email}`);
+    logger.info({ email: user.email }, "[AUTH] Password changed successfully");
 
     res.json({
       success: true,
       message: "Password changed successfully!",
     });
   } catch (error) {
-    console.error("Change password error:", error);
+    logger.error({ err: error.message }, "Change password error");
     res.status(500).json({ success: false, message: "Failed to change password", error: error.message });
   }
 };
@@ -229,36 +231,36 @@ const seedAdminUser = async () => {
         avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
       });
       await admin.save();
-      console.log("Default Admin user seeded successfully (admin@trace.lk / admin123)");
+      logger.info("Default Admin user seeded successfully (admin@trace.lk)");
     }
   } catch (err) {
-    console.error("Error seeding admin user:", err);
+    logger.error({ err: err.message }, "Error seeding admin user");
   }
 };
 
-// In-memory cache for registered users (Admin Portal)
-let usersCache = [];
-
-// GET /api/auth/users (Get all registered users for Admin)
+// GET /api/auth/users (Get registered users for Admin with pagination)
 const getAllUsers = async (req, res) => {
-  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-
-  if (usersCache.length > 0) {
-    res.json({ success: true, count: usersCache.length, data: usersCache });
-    User.find().select("-password -resetPasswordOtp -resetPasswordOtpExpires").sort({ createdAt: -1 }).lean()
-      .then((fresh) => {
-        if (Array.isArray(fresh)) usersCache = fresh;
-      })
-      .catch(() => {});
-    return;
-  }
+  res.setHeader("Cache-Control", "private, max-age=15");
+  const { page, limit, skip } = parsePagination(req.query);
 
   try {
-    const users = await User.find().select("-password -resetPasswordOtp -resetPasswordOtpExpires").sort({ createdAt: -1 }).lean();
-    if (Array.isArray(users)) {
-      usersCache = users;
-    }
-    res.json({ success: true, count: users.length, data: users });
+    const [users, total] = await Promise.all([
+      User.find()
+        .select("-password -resetPasswordOtp -resetPasswordOtpExpires")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      User.countDocuments(),
+    ]);
+    res.json({
+      success: true,
+      count: users.length,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      data: users,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: "Failed to fetch registered users", error: error.message });
   }
@@ -271,7 +273,6 @@ const deleteUser = async (req, res) => {
     if (!deletedUser) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
-    usersCache = usersCache.filter(u => String(u._id) !== String(req.params.id));
     res.json({ success: true, message: "User account deleted successfully" });
   } catch (error) {
     res.status(500).json({ success: false, message: "Failed to delete user", error: error.message });
@@ -327,7 +328,7 @@ const sendRealEmail = async ({ to, subject, html }) => {
       !cleanUser.includes("your_gmail_address");
 
     if (isRealConfigured) {
-      console.log(`Sending REAL email via Gmail SMTP (${cleanUser}) to: ${to}`);
+      logger.info({ to }, `Sending REAL email via Gmail SMTP (${cleanUser})`);
       transporter = nodemailer.createTransport({
         host: process.env.EMAIL_HOST || "smtp.gmail.com",
         port: parseInt(process.env.EMAIL_PORT || "587", 10),
@@ -338,7 +339,7 @@ const sendRealEmail = async ({ to, subject, html }) => {
         },
       });
     } else {
-      console.log(`Sending test email via Ethereal SMTP fallback to: ${to}`);
+      logger.info({ to }, "Sending test email via Ethereal SMTP fallback");
       const testAccount = await nodemailer.createTestAccount();
       transporter = nodemailer.createTransport({
         host: "smtp.ethereal.email",
@@ -361,7 +362,7 @@ const sendRealEmail = async ({ to, subject, html }) => {
     const previewUrl = nodemailer.getTestMessageUrl(info);
     return { success: true, messageId: info.messageId, previewUrl };
   } catch (err) {
-    console.error("Nodemailer dispatch error:", err);
+    logger.error({ err: err.message }, "Nodemailer dispatch error");
     return { success: false, error: err.message };
   }
 };
@@ -558,7 +559,7 @@ const forgotPassword = async (req, res) => {
     user.resetPasswordOtpExpires = expires;
     await user.save();
 
-    console.log(`[AUTH] Password reset code generated for ${user.email}: ${otp}`);
+    logger.info({ email: user.email }, "[AUTH] Password reset code generated");
 
     const emailSubject = `🔐 TRACE Event Hub - Password Reset Code: ${otp}`;
     const emailHtml = `
@@ -609,7 +610,7 @@ const forgotPassword = async (req, res) => {
       previewUrl: emailResult.previewUrl || null,
     });
   } catch (error) {
-    console.error("Forgot password error:", error);
+    logger.error({ err: error.message }, "Forgot password error");
     res.status(500).json({ success: false, message: "Failed to send password reset code.", error: error.message });
   }
 };
@@ -684,14 +685,14 @@ const resetPassword = async (req, res) => {
     user.resetPasswordOtpExpires = undefined;
     await user.save();
 
-    console.log(`[AUTH] Password successfully reset for user ${user.email}`);
+    logger.info({ email: user.email }, "[AUTH] Password successfully reset for user");
 
     res.json({
       success: true,
       message: "Your password has been successfully reset! You can now log in with your new password.",
     });
   } catch (error) {
-    console.error("Reset password error:", error);
+    logger.error({ err: error.message }, "Reset password error");
     res.status(500).json({ success: false, message: "Failed to reset password.", error: error.message });
   }
 };

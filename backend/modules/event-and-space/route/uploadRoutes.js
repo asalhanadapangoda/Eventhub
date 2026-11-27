@@ -3,24 +3,9 @@ const router = express.Router();
 const { upload } = require('../../../common/cloudinary');
 const { verifyToken } = require('../middleware/authMiddleware');
 const User = require('../model/User');
+const logger = require('../../../common/logger');
 
 const path = require('path');
-const fs = require('fs');
-
-// Helper to copy uploaded file to frontend public folder so Vite dev server also serves it immediately
-const copyToFrontend = (filename) => {
-    try {
-        const src = path.join(__dirname, '..', '..', '..', 'public', 'uploads', filename);
-        const dest = path.join(__dirname, '..', '..', '..', '..', 'frontend', 'public', 'uploads', filename);
-        const destDir = path.dirname(dest);
-        if (!fs.existsSync(destDir)) {
-            fs.mkdirSync(destDir, { recursive: true });
-        }
-        if (fs.existsSync(src)) {
-            fs.copyFileSync(src, dest);
-        }
-    } catch (e) {}
-};
 
 // Optional auth: if token is supplied and valid, attaches user; does NOT block upload if token is absent/expired
 const optionalAuth = async (req, res, next) => {
@@ -47,7 +32,7 @@ const optionalAuth = async (req, res, next) => {
 const handleSingleUpload = (req, res, next) => {
     upload.single('file')(req, res, (err) => {
         if (err) {
-            console.error('Multer single upload error:', err);
+            logger.error({ err: err.message }, 'Multer single upload error');
             let msg = err.message || 'File upload error';
             if (err.code === 'LIMIT_FILE_SIZE') {
                 msg = 'File too large. Maximum supported file/video size is 500MB.';
@@ -62,7 +47,7 @@ const handleSingleUpload = (req, res, next) => {
 const handleArrayUpload = (req, res, next) => {
     upload.array('files', 10)(req, res, (err) => {
         if (err) {
-            console.error('Multer array upload error:', err);
+            logger.error({ err: err.message }, 'Multer array upload error');
             let msg = err.message || 'Gallery upload error';
             if (err.code === 'LIMIT_FILE_SIZE') {
                 msg = 'One or more files are too large. Maximum supported file size is 500MB.';
@@ -83,7 +68,6 @@ const resolveUploadedFile = (file) => {
         fileUrl = remoteUrl;
     } else {
         fileUrl = `/uploads/${file.filename}`;
-        copyToFrontend(file.filename);
     }
     return {
         url: fileUrl,
