@@ -1,9 +1,8 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// Unified TRACE Projects Frontend (Events, Spaces, Community, Innovation Academy)
+// Unified TRACE Projects Frontend (Events, Spaces, Community, Innovation Academy, Projects)
 export default defineConfig({
-  envDir: '..',
   plugins: [react()],
   build: {
     rollupOptions: {

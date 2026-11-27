@@ -3,6 +3,7 @@ import EventsSpacesApp from './modules/event-and-space/EventsSpacesApp';
 
 const CommunityApp = lazy(() => import('./modules/Community/App.tsx'));
 const AcademyApp = lazy(() => import('./modules/Innovation-Academy/App.jsx'));
+const ProjectsApp = lazy(() => import('./modules/Projects/App.jsx'));
 
 const getActiveModule = (pathname) => {
   const clean = (pathname || '/').toLowerCase();
@@ -11,6 +12,9 @@ const getActiveModule = (pathname) => {
   }
   if (clean === '/innovation-academy' || clean.startsWith('/innovation-academy/')) {
     return 'academy';
+  }
+  if (clean === '/projects' || clean.startsWith('/projects/')) {
+    return 'projects';
   }
   return 'events-spaces';
 };
@@ -39,6 +43,8 @@ export default function App() {
       }
     } else if (activeModule === 'academy') {
       document.title = 'TRACE Sri Lanka | Innovation Academy';
+    } else if (activeModule === 'projects') {
+      document.title = 'Our Projects | TRACE Sri Lanka';
     } else {
       document.title = 'TRACE EventHub & Spaces Tracker - Discover Tech Events & Book Hub Facilities in Sri Lanka';
     }
@@ -61,6 +67,14 @@ export default function App() {
           <AcademyApp />
         </Suspense>
       </div>
+    );
+  }
+
+  if (activeModule === 'projects') {
+    return (
+      <Suspense fallback={<ModuleLoader />}>
+        <ProjectsApp />
+      </Suspense>
     );
   }
 

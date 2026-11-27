@@ -222,9 +222,13 @@ app.use(
   })
 );
 
-// Fallback to index.html for non-API single page navigation
+// Root / fallback API status response
 app.use((req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.json({
+    success: true,
+    service: "TRACE Projects Unified Backend API",
+    endpoints: ["/api/events", "/api/venues", "/api/auth", "/api/academy/health"],
+  });
 });
 
 const PORT = process.env.EVENTS_PORT || process.env.PORT || 5000;

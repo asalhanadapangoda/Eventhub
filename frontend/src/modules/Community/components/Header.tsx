@@ -38,34 +38,6 @@ export const Header: React.FC = () => {
               </div>
             </a>
           </div>
-
-          {/* Right Side: Cross-Site TRACE Ecosystem Navigation */}
-          <nav className="hidden md:flex items-center gap-1.5 text-sm font-semibold">
-            <a
-              href="/events"
-              className="px-3 py-1.5 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 transition-colors"
-            >
-              Events
-            </a>
-            <a
-              href="/spaces"
-              className="px-3 py-1.5 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 transition-colors"
-            >
-              Spaces
-            </a>
-            <a
-              href="/community"
-              className="px-3 py-1.5 rounded-lg bg-[#0070F3] text-white shadow-sm"
-            >
-              Community
-            </a>
-            <a
-              href="/innovation-academy"
-              className="px-3 py-1.5 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 transition-colors"
-            >
-              Innovation Academy
-            </a>
-          </nav>
         </div>
       </div>
     </header>
