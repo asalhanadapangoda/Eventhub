@@ -4,9 +4,6 @@ import { Search, X } from 'lucide-react';
 export function ProjectHeader({
   searchQuery,
   onSearchChange,
-  categories,
-  activeCategory,
-  onCategoryChange,
   totalCount,
   filteredCount,
 }) {
@@ -53,25 +50,6 @@ export function ProjectHeader({
             <div className="results-badge" aria-live="polite">
               Showing {filteredCount} of {totalCount} projects
             </div>
-          </div>
-
-          <div className="filter-pills" role="tablist" aria-label="Filter projects by category">
-            {categories.map((cat) => {
-              const isActive = activeCategory === cat.label;
-              return (
-                <button
-                  key={cat.label}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  className={`filter-pill ${isActive ? 'active' : ''}`}
-                  onClick={() => onCategoryChange(cat.label)}
-                >
-                  <span>{cat.label}</span>
-                  <span className="filter-count">{cat.count}</span>
-                </button>
-              );
-            })}
           </div>
         </div>
       </div>
