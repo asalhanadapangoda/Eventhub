@@ -36,6 +36,9 @@ const rateLimit = require("express-rate-limit");
 
 const app = express();
 
+// Trust reverse proxy headers (Render, Vercel, Cloudflare, AWS ALB) for accurate client IP identification in express-rate-limit
+app.set("trust proxy", 1);
+
 // High Performance Gzip / Brotli response compression
 app.use(compression());
 
@@ -115,28 +118,33 @@ app.use(
 );
 
 // Rate Limiters: global API limiter + stricter limiters for AI chat, contact, registrations, and bookings
+// validate: { xForwardedForHeader: false, default: true } prevents express-rate-limit v7 validation errors on proxy setups (Render, Vercel)
+const rateLimitCommonOptions = {
+  standardHeaders: true,
+  legacyHeaders: false,
+  // trust proxy is enabled above, so IPs come from X-Forwarded-For; silence both proxy-header validations
+  validate: { xForwardedForHeader: false, forwardedHeader: false },
+};
+
 const globalApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 300,
-  standardHeaders: true,
-  legacyHeaders: false,
   message: { success: false, message: "Too many requests from this IP, please try again later." },
+  ...rateLimitCommonOptions,
 });
 
 const chatRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 20, // Protect Gemini API quota/cost
-  standardHeaders: true,
-  legacyHeaders: false,
   message: { success: false, message: "Too many chat requests. Please wait a few minutes before sending more messages." },
+  ...rateLimitCommonOptions,
 });
 
 const submissionRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 30,
-  standardHeaders: true,
-  legacyHeaders: false,
   message: { success: false, message: "Too many submissions from this IP, please try again after 15 minutes." },
+  ...rateLimitCommonOptions,
 });
 
 app.use("/api", globalApiLimiter);
