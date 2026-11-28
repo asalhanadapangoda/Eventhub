@@ -7,6 +7,7 @@ import VisitRequest from '../models/VisitRequest.js';
 import ContactMessage from '../models/ContactMessage.js';
 import Notification from '../models/Notification.js';
 import { mockStore } from '../config/mockStore.js';
+import { parsePagination } from '../../../common/pagination.js';
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
@@ -34,16 +35,20 @@ export const getAdminStats = async (req, res, next) => {
       const unreadInquiries = await ContactMessage.countDocuments({ status: 'Unread' });
 
       const recentRegistrations = await ProgramRegistration.find()
+        .select('-__v')
         .populate('userId', 'name email avatar phone organization')
         .populate('programId', 'title slug badge')
         .sort({ createdAt: -1 })
-        .limit(6);
+        .limit(6)
+        .lean();
 
       const upcomingWorkshopList = await Workshop.find({
         status: { $in: ['Upcoming', 'Ongoing'] },
       })
+        .select('-__v')
         .sort({ date: 1 })
-        .limit(4);
+        .limit(4)
+        .lean();
 
       return res.json({
         success: true,
@@ -112,14 +117,14 @@ export const getParticipantOverview = async (req, res, next) => {
     const userId = req.user.id || req.user._id;
 
     if (isDbConnected()) {
-      const registrations = await ProgramRegistration.find({ userId }).populate('programId');
+      const registrations = await ProgramRegistration.find({ userId }).select('-__v').populate('programId').lean();
 
       // Unlocked workshops for all programs the user is registered for
       const userProgramSlugs = registrations.map((r) => r.programSlug);
 
       const availableWorkshops = await Workshop.find({
         programSlug: { $in: userProgramSlugs },
-      }).sort({ date: 1 });
+      }).select('-__v').sort({ date: 1 }).lean();
 
       const upcomingWorkshops = availableWorkshops.filter(
         (w) => w.status === 'Upcoming' || w.status === 'Ongoing'
@@ -127,13 +132,15 @@ export const getParticipantOverview = async (req, res, next) => {
 
       const visitRequests = await VisitRequest.find({
         $or: [{ userId }, { email: req.user.email?.toLowerCase() }],
-      }).sort({ createdAt: -1 });
+      }).select('-__v').sort({ createdAt: -1 }).limit(50).lean();
 
       const notifications = await Notification.find({
         $or: [{ userId }, { userId: null }],
       })
+        .select('-__v')
         .sort({ createdAt: -1 })
-        .limit(6);
+        .limit(6)
+        .lean();
 
       return res.json({
         success: true,
@@ -193,12 +200,18 @@ export const getParticipantOverview = async (req, res, next) => {
 export const getNotifications = async (req, res, next) => {
   try {
     const userId = req.user.id || req.user._id;
+    const { page, limit, skip } = parsePagination(req.query);
 
     if (isDbConnected()) {
       const notifications = await Notification.find({
         $or: [{ userId }, { userId: null }],
-      }).sort({ createdAt: -1 });
-      return res.json({ success: true, count: notifications.length, data: notifications });
+      })
+        .select('-__v')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean();
+      return res.json({ success: true, count: notifications.length, page, data: notifications });
     }
 
     const list = mockStore.notifications.filter(
@@ -231,25 +244,49 @@ export const markNotificationRead = async (req, res, next) => {
 // @desc    Get all participants & user accounts (admin)
 export const getAllParticipants = async (req, res, next) => {
   try {
-    if (isDbConnected()) {
-      const users = await User.find()
-        .select('-password')
-        .sort({ role: 1, createdAt: -1 });
+    const { page, limit, skip } = parsePagination(req.query);
 
-      const enriched = await Promise.all(
-        users.map(async (p) => {
-          const regs = await ProgramRegistration.find({ userId: p._id }).populate(
-            'programId',
-            'title slug badge'
-          );
-          return {
-            ...p.toObject(),
-            registrations: regs,
-            enrolledCount: regs.length,
-          };
-        })
-      );
-      return res.json({ success: true, count: enriched.length, data: enriched });
+    if (isDbConnected()) {
+      const [users, total] = await Promise.all([
+        User.find()
+          .select('-password -resetPasswordCode -resetPasswordExpires -__v')
+          .sort({ role: 1, createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        User.countDocuments(),
+      ]);
+
+      const userIds = users.map((u) => u._id);
+      const allRegs = await ProgramRegistration.find({ userId: { $in: userIds } })
+        .select('-__v')
+        .populate('programId', 'title slug badge')
+        .lean();
+
+      const regsByUser = new Map();
+      for (const r of allRegs) {
+        const key = String(r.userId);
+        if (!regsByUser.has(key)) regsByUser.set(key, []);
+        regsByUser.get(key).push(r);
+      }
+
+      const enriched = users.map((p) => {
+        const regs = regsByUser.get(String(p._id)) || [];
+        return {
+          ...p,
+          registrations: regs,
+          enrolledCount: regs.length,
+        };
+      });
+
+      return res.json({
+        success: true,
+        count: enriched.length,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit) || 1,
+        data: enriched,
+      });
     }
 
     const users = mockStore.users;

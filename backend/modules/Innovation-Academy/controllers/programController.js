@@ -4,6 +4,7 @@ import Workshop from '../models/Workshop.js';
 import ProgramRegistration from '../models/ProgramRegistration.js';
 import { mockStore } from '../config/mockStore.js';
 import { connectDB } from '../config/db.js';
+import { parsePagination } from '../../../common/pagination.js';
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
@@ -14,9 +15,11 @@ export const getPrograms = async (req, res, next) => {
       await connectDB();
     }
 
+    const { page, limit, skip } = parsePagination(req.query);
+
     if (isDbConnected()) {
       const [programs, workshopCounts, registrationCounts] = await Promise.all([
-        Program.find().sort({ createdAt: 1 }).lean(),
+        Program.find().select('-__v').sort({ createdAt: 1 }).skip(skip).limit(limit).lean(),
         Workshop.aggregate([{ $group: { _id: '$programId', count: { $sum: 1 } } }]),
         ProgramRegistration.aggregate([{ $group: { _id: '$programId', count: { $sum: 1 } } }]),
       ]);
@@ -32,7 +35,7 @@ export const getPrograms = async (req, res, next) => {
 
       // High-performance Vercel Edge caching
       res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
-      return res.json({ success: true, count: enriched.length, data: enriched });
+      return res.json({ success: true, count: enriched.length, page, data: enriched });
     }
 
     // In-memory fallback
@@ -80,7 +83,7 @@ export const getProgramBySlug = async (req, res, next) => {
 
       const workshops = await Workshop.find({
         $or: [{ programId: program._id }, { programSlug: program.slug }],
-      }).sort({ date: 1 });
+      }).select('-__v').sort({ date: 1 }).lean();
 
       const registrationCount = await ProgramRegistration.countDocuments({
         programId: program._id,

@@ -1,6 +1,7 @@
 const Venue = require("../model/Venue");
 const mongoose = require("mongoose");
 const logger = require("../../../common/logger");
+const { parsePagination } = require("../../../common/pagination");
 
 // Resilient in-memory cache for instantaneous (0ms) responses & network fault tolerance
 let venuesCache = [];
@@ -39,17 +40,31 @@ const sortVenuesWesternFirst = (arr) => {
   });
 };
 
-// GET /api/venues (Fetch all venues)
+// GET /api/venues (Fetch venues with optional pagination)
 const getVenues = async (req, res) => {
   res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+  const { page, limit, skip } = parsePagination(req.query);
+
+  const sendPaginated = (allVenues) => {
+    const total = allVenues.length;
+    const paged = allVenues.slice(skip, skip + limit);
+    return res.json({
+      success: true,
+      count: paged.length,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit) || 1,
+      data: paged,
+    });
+  };
 
   // If memory cache is loaded, return immediately to make UI instant (0ms), then refresh in background
   if (isVenuesCacheLoaded && venuesCache.length > 0) {
     const sanitizedCache = sortVenuesWesternFirst(venuesCache.map(sanitizeVenueOutput));
-    res.json({ success: true, count: sanitizedCache.length, data: sanitizedCache });
+    sendPaginated(sanitizedCache);
     
     // Background silent refresh from DB if connected
-    Venue.find().sort({ createdAt: -1 }).lean()
+    Venue.find().select("-__v").sort({ createdAt: -1 }).limit(500).lean()
       .then((freshVenues) => {
         if (Array.isArray(freshVenues) && freshVenues.length > 0) {
           const freshMap = new Map(freshVenues.map(v => [String(v._id || v.id), v]));
@@ -70,17 +85,17 @@ const getVenues = async (req, res) => {
 
   // If cache is empty, query DB directly
   try {
-    const venues = await Venue.find().sort({ createdAt: -1 }).lean();
+    const venues = await Venue.find().select("-__v").sort({ createdAt: -1 }).limit(500).lean();
     if (Array.isArray(venues) && venues.length > 0) {
       venuesCache = sortVenuesWesternFirst(venues.map(sanitizeVenueOutput));
       isVenuesCacheLoaded = true;
     }
     const sanitized = sortVenuesWesternFirst(venuesCache.map(sanitizeVenueOutput));
-    return res.json({ success: true, count: sanitized.length, data: sanitized });
+    return sendPaginated(sanitized);
   } catch (error) {
     logger.warn({ err: error.message }, "Serving venues from resilient fallback cache");
     const sanitized = sortVenuesWesternFirst(venuesCache.map(sanitizeVenueOutput));
-    return res.json({ success: true, count: sanitized.length, data: sanitized });
+    return sendPaginated(sanitized);
   }
 };
 
@@ -413,7 +428,7 @@ const seedInitialVenues = async () => {
     }
 
     // Always prime in-memory cache for 0ms response time
-    const freshVenues = await Venue.find().sort({ createdAt: -1 }).lean();
+    const freshVenues = await Venue.find().select("-__v").sort({ createdAt: -1 }).limit(500).lean();
     if (Array.isArray(freshVenues)) {
       venuesCache = sortVenuesWesternFirst(freshVenues.map(sanitizeVenueOutput));
       isVenuesCacheLoaded = true;

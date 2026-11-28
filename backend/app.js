@@ -358,9 +358,22 @@ const PORT = process.env.EVENTS_PORT || process.env.PORT || 5000;
 // Start server locally when not running inside Vercel serverless runtime
 if (!process.env.VERCEL) {
   const server = app.listen(PORT, () => logger.info({ port: PORT }, `Server running on port ${PORT}`));
-  server.timeout = 300000; // 5 minutes timeout for large video uploads
+  server.timeout = 300000; // 5 minutes timeout
   server.keepAliveTimeout = 65000;
   connectDB().catch((err) => logger.warn({ err: err.message }, "MongoDB initial connection error"));
+
+  // Automatic 5-minute self-ping on Render free tier to prevent cold-start spin-down
+  const keepAliveUrl =
+    process.env.KEEP_ALIVE_URL ||
+    (process.env.RENDER_EXTERNAL_URL ? `${process.env.RENDER_EXTERNAL_URL.replace(/\/$/, "")}/health` : null);
+  if (keepAliveUrl) {
+    const pingTimer = setInterval(() => {
+      fetch(keepAliveUrl).catch(() => {});
+    }, 5 * 60 * 1000);
+    if (typeof pingTimer.unref === "function") {
+      pingTimer.unref();
+    }
+  }
 }
 
 module.exports = app;

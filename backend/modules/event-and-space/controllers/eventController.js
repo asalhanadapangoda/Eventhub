@@ -1,6 +1,8 @@
 const Event = require("../model/Event");
 const mongoose = require("mongoose");
 const logger = require("../../../common/logger");
+const { parsePagination } = require("../../../common/pagination");
+const { cloudinary, isCloudinaryConfigured } = require("../../../common/cloudinary");
 
 // Helper function to calculate exact end date and time of an event
 const getEventEndDateTime = (dateVal, timeStr) => {
@@ -199,7 +201,7 @@ const seedInitialEvents = async () => {
 
   // 2. Fetch full events from MongoDB
   try {
-    const docs = await Event.find().lean().maxTimeMS(6000);
+    const docs = await Event.find().select("-__v").sort({ date: -1 }).limit(500).lean().maxTimeMS(6000);
     if (Array.isArray(docs) && docs.length > 0) {
       eventsCache = docs.map((doc) => sanitizeEvent(doc));
       isEventsCacheLoaded = true;
@@ -210,10 +212,11 @@ const seedInitialEvents = async () => {
   }
 };
 
-// GET /api/events?status=upcoming|past
+// GET /api/events?status=upcoming|past&page=1&limit=50
 const getEvents = async (req, res) => {
   res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
   const { status, category } = req.query;
+  const { page, limit, skip } = parsePagination(req.query);
 
   // Format list: lightweight response with clean static URLs
   const formatList = (list) => {
@@ -233,13 +236,25 @@ const getEvents = async (req, res) => {
     });
   };
 
+  const sendPaginated = (allFormatted) => {
+    const total = allFormatted.length;
+    const paged = allFormatted.slice(skip, skip + limit);
+    return res.json({
+      success: true,
+      count: paged.length,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit) || 1,
+      data: paged,
+    });
+  };
+
   // 1. If cache is loaded, return immediately for instant 0ms UI
   if (isEventsCacheLoaded && eventsCache.length > 0) {
-    const result = formatList(eventsCache);
-    res.json({ success: true, count: result.length, data: result });
+    sendPaginated(formatList(eventsCache));
 
     // Background silent refresh with short timeout
-    Event.find().lean().maxTimeMS(5000)
+    Event.find().select("-__v").sort({ date: -1 }).limit(500).lean().maxTimeMS(5000)
       .then((fresh) => {
         if (Array.isArray(fresh) && fresh.length > 0) {
           const freshMap = new Map(fresh.map(d => [String(d._id), d]));
@@ -270,18 +285,16 @@ const getEvents = async (req, res) => {
 
   // 2. If cache not loaded yet, query DB directly
   try {
-    const events = await Event.find().lean().maxTimeMS(5000);
+    const events = await Event.find().select("-__v").sort({ date: -1 }).limit(500).lean().maxTimeMS(5000);
     if (Array.isArray(events) && events.length > 0) {
       eventsCache = events.map(sanitizeEvent);
       isEventsCacheLoaded = true;
       saveBackupAsync();
     }
-    const result = formatList(eventsCache);
-    return res.json({ success: true, count: result.length, data: result });
+    return sendPaginated(formatList(eventsCache));
   } catch (error) {
     logger.warn({ err: error.message }, "Serving events from resilient fallback cache");
-    const result = formatList(eventsCache);
-    return res.json({ success: true, count: result.length, data: result });
+    return sendPaginated(formatList(eventsCache));
   }
 };
 

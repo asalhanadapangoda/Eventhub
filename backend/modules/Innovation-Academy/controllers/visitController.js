@@ -3,6 +3,7 @@ import VisitRequest from '../models/VisitRequest.js';
 import Notification from '../models/Notification.js';
 import { sendVisitRequestEmail } from '../utils/emailService.js';
 import { mockStore } from '../config/mockStore.js';
+import { parsePagination } from '../../../common/pagination.js';
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
@@ -120,12 +121,18 @@ export const createVisitRequest = async (req, res, next) => {
 export const getMyVisitRequests = async (req, res, next) => {
   try {
     const userId = req.user.id || req.user._id;
+    const { page, limit, skip } = parsePagination(req.query);
 
     if (isDbConnected()) {
       const requests = await VisitRequest.find({
         $or: [{ userId }, { email: req.user.email?.toLowerCase() }],
-      }).sort({ createdAt: -1 });
-      return res.json({ success: true, count: requests.length, data: requests });
+      })
+        .select('-__v')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean();
+      return res.json({ success: true, count: requests.length, page, data: requests });
     }
 
     const list = mockStore.visitRequests.filter(
@@ -142,6 +149,7 @@ export const getMyVisitRequests = async (req, res, next) => {
 export const getAllVisitRequests = async (req, res, next) => {
   try {
     const { status, search } = req.query;
+    const { page, limit, skip } = parsePagination(req.query);
 
     if (isDbConnected()) {
       const query = {};
@@ -153,8 +161,18 @@ export const getAllVisitRequests = async (req, res, next) => {
           { referenceNumber: { $regex: search, $options: 'i' } },
         ];
       }
-      const requests = await VisitRequest.find(query).sort({ createdAt: -1 });
-      return res.json({ success: true, count: requests.length, data: requests });
+      const [requests, total] = await Promise.all([
+        VisitRequest.find(query).select('-__v').sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+        VisitRequest.countDocuments(query),
+      ]);
+      return res.json({
+        success: true,
+        count: requests.length,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit) || 1,
+        data: requests,
+      });
     }
 
     let list = [...mockStore.visitRequests];

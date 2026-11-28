@@ -4,6 +4,7 @@ import Program from '../models/Program.js';
 import Notification from '../models/Notification.js';
 import { sendProgramRegistrationEmail } from '../utils/emailService.js';
 import { mockStore } from '../config/mockStore.js';
+import { parsePagination } from '../../../common/pagination.js';
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
@@ -147,12 +148,17 @@ export const registerProgram = async (req, res, next) => {
 export const getMyRegistrations = async (req, res, next) => {
   try {
     const userId = req.user.id || req.user._id;
+    const { page, limit, skip } = parsePagination(req.query);
 
     if (isDbConnected()) {
       const registrations = await ProgramRegistration.find({ userId })
+        .select('-__v')
         .populate('programId')
-        .sort({ createdAt: -1 });
-      return res.json({ success: true, count: registrations.length, data: registrations });
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean();
+      return res.json({ success: true, count: registrations.length, page, data: registrations });
     }
 
     const list = mockStore.programRegistrations.filter(
@@ -179,6 +185,7 @@ export const getMyRegistrations = async (req, res, next) => {
 export const getAllRegistrations = async (req, res, next) => {
   try {
     const { programSlug, status, search } = req.query;
+    const { page, limit, skip } = parsePagination(req.query);
 
     if (isDbConnected()) {
       const query = {};
@@ -191,12 +198,26 @@ export const getAllRegistrations = async (req, res, next) => {
           { referenceNumber: { $regex: search, $options: 'i' } },
         ];
       }
-      const registrations = await ProgramRegistration.find(query)
-        .populate('userId', 'name email avatar phone organization')
-        .populate('programId', 'title slug badge coverImage')
-        .sort({ createdAt: -1 });
+      const [registrations, total] = await Promise.all([
+        ProgramRegistration.find(query)
+          .select('-__v')
+          .populate('userId', 'name email avatar phone organization')
+          .populate('programId', 'title slug badge coverImage')
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        ProgramRegistration.countDocuments(query),
+      ]);
 
-      return res.json({ success: true, count: registrations.length, data: registrations });
+      return res.json({
+        success: true,
+        count: registrations.length,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit) || 1,
+        data: registrations,
+      });
     }
 
     let list = [...mockStore.programRegistrations];

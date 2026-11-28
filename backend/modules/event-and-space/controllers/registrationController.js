@@ -134,11 +134,15 @@ const getUserRegistrations = async (req, res) => {
       return res.status(403).json({ success: false, message: "Access denied. You can only view your own event registrations." });
     }
 
+    const { page, limit, skip } = parsePagination(req.query);
     const registrations = await Registration.find({ email })
+      .select("-__v")
       .populate("eventId", "title date time location status coverImage")
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
-    res.json({ success: true, count: registrations.length, data: registrations });
+    res.json({ success: true, count: registrations.length, page, data: registrations });
   } catch (error) {
     res.status(500).json({ success: false, message: "Failed to fetch user registrations", error: error.message });
   }
@@ -147,10 +151,14 @@ const getUserRegistrations = async (req, res) => {
 // GET /api/registrations/event/:eventId
 const getEventRegistrations = async (req, res) => {
   try {
+    const { page, limit, skip } = parsePagination(req.query);
     const registrations = await Registration.find({ eventId: req.params.eventId })
+      .select("-__v")
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
-    res.json({ success: true, count: registrations.length, data: registrations });
+    res.json({ success: true, count: registrations.length, page, data: registrations });
   } catch (error) {
     res.status(500).json({ success: false, message: "Failed to fetch event registrations", error: error.message });
   }
@@ -164,6 +172,7 @@ const getAllRegistrations = async (req, res) => {
   try {
     const [registrations, total] = await Promise.all([
       Registration.find()
+        .select("-__v")
         .populate("eventId", "title date time location status coverImage")
         .sort({ createdAt: -1 })
         .skip(skip)

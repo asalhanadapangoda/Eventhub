@@ -4,6 +4,7 @@ import Program from '../models/Program.js';
 import ProgramRegistration from '../models/ProgramRegistration.js';
 import { mockStore } from '../config/mockStore.js';
 import { connectDB } from '../config/db.js';
+import { parsePagination } from '../../../common/pagination.js';
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
@@ -11,6 +12,7 @@ const isDbConnected = () => mongoose.connection.readyState === 1;
 export const getWorkshops = async (req, res, next) => {
   try {
     const { programSlug, programId, status } = req.query;
+    const { page, limit, skip } = parsePagination(req.query);
 
     if (mongoose.connection.readyState !== 1) {
       await connectDB();
@@ -23,13 +25,16 @@ export const getWorkshops = async (req, res, next) => {
       if (status) filter.status = status;
 
       const workshops = await Workshop.find(filter)
+        .select('-__v')
         .populate('programId', 'title slug badge')
         .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
         .lean();
 
       // High-performance Vercel Edge caching
       res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
-      return res.json({ success: true, count: workshops.length, data: workshops });
+      return res.json({ success: true, count: workshops.length, page, data: workshops });
     }
 
     // In-memory fallback

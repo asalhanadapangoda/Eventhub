@@ -5,6 +5,7 @@ import User from '../models/User.js';
 import { mockStore } from '../config/mockStore.js';
 import { sendEmailNotification } from '../utils/emailService.js';
 import logger from '../../../common/logger.js';
+import { parsePagination } from '../../../common/pagination.js';
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
@@ -342,12 +343,18 @@ export const groupMessagesBySender = (rawMessages) => {
 export const getAllContactMessages = async (req, res, next) => {
   try {
     const { status } = req.query;
+    const { page, limit, skip } = parsePagination(req.query);
 
     if (isDbConnected()) {
       const filter = status ? { status } : {};
-      const rawMessages = await ContactMessage.find(filter).sort({ createdAt: -1 });
+      const rawMessages = await ContactMessage.find(filter)
+        .select('-__v')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean();
       const messages = groupMessagesBySender(rawMessages);
-      return res.json({ success: true, count: messages.length, data: messages });
+      return res.json({ success: true, count: messages.length, page, data: messages });
     }
 
     let list = groupMessagesBySender(mockStore.contactMessages);
@@ -477,15 +484,21 @@ export const getMyContactMessages = async (req, res, next) => {
     const userEmail = req.user.email ? req.user.email.toLowerCase() : '';
 
     if (isDbConnected()) {
+      const { page, limit, skip } = parsePagination(req.query);
       const rawMessages = await ContactMessage.find({
         $or: [
           { userId: userId },
           { email: userEmail },
         ],
-      }).sort({ createdAt: -1 });
+      })
+        .select('-__v')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean();
 
       const messages = groupMessagesBySender(rawMessages);
-      return res.json({ success: true, count: messages.length, data: messages });
+      return res.json({ success: true, count: messages.length, page, data: messages });
     }
 
     const list = mockStore.contactMessages.filter(

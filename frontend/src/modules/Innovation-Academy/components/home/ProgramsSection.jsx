@@ -59,10 +59,10 @@ export default function ProgramsSection({ programs = [] }) {
   };
 
   return (
-    <section id="programs" className="pt-8 pb-14 sm:pt-10 sm:pb-20 bg-[#faf8ff] border-b border-[#e2e8f0]">
+    <section id="programs" className="pt-4 pb-12 sm:pt-6 sm:pb-16 bg-[#faf8ff] border-b border-[#e2e8f0]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
+        <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-12">
           <span className="inline-block px-3.5 py-1 rounded-full bg-[#e8f1fd] text-xs font-extrabold uppercase tracking-wider text-[#006398] mb-3">
             STRUCTURED LEARNING PATHS
           </span>

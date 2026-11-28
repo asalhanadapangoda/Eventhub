@@ -147,7 +147,7 @@ export default function HeroSection({ scrollToEvents, onNavigateSpaces }) {
             loop
             muted
             playsInline
-            preload="metadata"
+            preload="none"
           >
             <source src={settings.heroVideoUrl} />
           </video>
@@ -159,9 +159,9 @@ export default function HeroSection({ scrollToEvents, onNavigateSpaces }) {
             loop
             muted
             playsInline
-            preload="metadata"
+            preload="none"
           >
-            <source src="/trace-video.mp4" type="video/mp4" />
+            <source src={import.meta.env.VITE_HERO_VIDEO_URL || "/trace-video.mp4"} type="video/mp4" />
           </video>
         )}
 

@@ -11,7 +11,7 @@ const getAllVenueBookings = async (req, res) => {
 
   try {
     const [bookings, total] = await Promise.all([
-      VenueBooking.find().sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      VenueBooking.find().select("-__v").sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
       VenueBooking.countDocuments(),
     ]);
     res.json({
@@ -38,11 +38,12 @@ const getUserVenueBookings = async (req, res) => {
       return res.status(403).json({ success: false, message: "Access denied. You can only view your own venue booking inquiries." });
     }
 
+    const { page, limit, skip } = parsePagination(req.query);
     const bookings = await VenueBooking.find({
       email: email
-    }).sort({ createdAt: -1 }).lean();
+    }).select("-__v").sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
 
-    res.json({ success: true, count: bookings.length, data: bookings });
+    res.json({ success: true, count: bookings.length, page, data: bookings });
   } catch (error) {
     res.status(500).json({ success: false, message: "Failed to fetch user venue bookings", error: error.message });
   }
